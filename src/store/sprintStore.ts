@@ -48,11 +48,15 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       averageVelocity = lastThreeSprints.reduce((acc, sprint) => 
         acc + (sprint.velocityAchieved || 0), 0) / lastThreeSprints.length;
     } else {
-      averageVelocity = 1; // Default velocity of 1 SP per day per resource
+      averageVelocity = 1;
     }
 
-    const totalResourceCapacity = resources.reduce((acc, resource) => 
-      acc + resource.capacityPerDay, 0);
+    const totalResourceCapacity = resources.reduce((acc, resource) => {
+      if (resource.dailyCapacities && resource.dailyCapacities.length > 0) {
+        return acc + (resource.dailyCapacities.reduce((sum, dc) => sum + dc.capacity, 0) / resource.dailyCapacities.length);
+      }
+      return acc + resource.capacityPerDay;
+    }, 0);
 
     return averageVelocity * totalResourceCapacity * duration;
   },
