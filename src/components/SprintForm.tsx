@@ -18,7 +18,8 @@ export const SprintForm = () => {
   const [showDailyCapacities, setShowDailyCapacities] = useState<{ [key: string]: boolean }>({});
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
 
-  const { addSprint, calculateTheoreticalCapacity } = useSprintStore();
+  const { addSprint, calculateTheoreticalCapacity, getAverageVelocity } = useSprintStore();
+  const averageVelocity = getAverageVelocity();
 
   useEffect(() => {
     if (startDate && duration) {
@@ -148,15 +149,27 @@ export const SprintForm = () => {
             </Button>
           </div>
 
-          <div>
-            <Label htmlFor="theoreticalCapacity">Theoretical Capacity (SP)</Label>
-            <Input
-              id="theoreticalCapacity"
-              type="number"
-              value={theoreticalCapacity.toFixed(1)}
-              readOnly
-              className="bg-muted"
-            />
+          <div className="space-y-2">
+            <div>
+              <Label>Average Velocity (SP/day/resource)</Label>
+              <Input
+                type="number"
+                value={averageVelocity.toFixed(2)}
+                readOnly
+                className="bg-muted"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="theoreticalCapacity">Theoretical Capacity (SP)</Label>
+              <Input
+                id="theoreticalCapacity"
+                type="number"
+                value={theoreticalCapacity.toFixed(1)}
+                readOnly
+                className="bg-muted"
+              />
+            </div>
           </div>
 
           <div>

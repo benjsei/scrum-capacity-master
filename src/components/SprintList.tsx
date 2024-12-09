@@ -24,7 +24,7 @@ export const SprintList = () => {
       return;
     }
     completeSprint(sprintId, storyPoints);
-    toast.success("Sprint completed successfully!");
+    toast.success("Sprint completed successfully! This will affect future sprints' theoretical capacity.");
   };
 
   return (
@@ -75,7 +75,10 @@ export const SprintList = () => {
                   </div>
                 )}
                 {sprint.isSuccessful !== undefined && (
-                  <span>Completed: {sprint.storyPointsCompleted} SP</span>
+                  <div className="space-y-1">
+                    <div>Completed: {sprint.storyPointsCompleted} SP</div>
+                    <div>Velocity: {sprint.velocityAchieved?.toFixed(2)} SP/day</div>
+                  </div>
                 )}
               </TableCell>
             </TableRow>
