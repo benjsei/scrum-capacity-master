@@ -8,6 +8,7 @@ interface ResourceInputProps {
   onDailyCapacityChange: (resourceId: string, date: string, capacity: number) => void;
   showDailyCapacities: { [key: string]: boolean };
   onToggleDailyCapacities: (resourceId: string) => void;
+  totalPresenceDays: number;
 }
 
 export const ResourceInput = ({
@@ -16,6 +17,7 @@ export const ResourceInput = ({
   onDailyCapacityChange,
   showDailyCapacities,
   onToggleDailyCapacities,
+  totalPresenceDays,
 }: ResourceInputProps) => {
   return (
     <div className="space-y-2">
@@ -28,12 +30,9 @@ export const ResourceInput = ({
         />
         <Input
           type="number"
-          step="0.1"
-          min="0.1"
-          placeholder="Default Capacity/day"
-          value={resource.capacityPerDay}
-          onChange={(e) => onResourceChange(resource.id, 'capacityPerDay', Number(e.target.value))}
-          required
+          value={totalPresenceDays.toFixed(1)}
+          readOnly
+          className="bg-muted w-32"
         />
       </div>
       

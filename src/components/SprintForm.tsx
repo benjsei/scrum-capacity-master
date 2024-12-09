@@ -17,9 +17,20 @@ export const SprintForm = () => {
   const [storyPoints, setStoryPoints] = useState('');
   const [showDailyCapacities, setShowDailyCapacities] = useState<{ [key: string]: boolean }>({});
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
+  const [resourcePresenceDays, setResourcePresenceDays] = useState<{ [key: string]: number }>({});
 
-  const { addSprint, calculateTheoreticalCapacity, getAverageVelocity } = useSprintStore();
+  const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, sprints } = useSprintStore();
   const averageVelocity = getAverageVelocity();
+
+  useEffect(() => {
+    // Set initial date based on last sprint's end date
+    if (sprints.length > 0 && !startDate) {
+      const lastSprint = sprints[sprints.length - 1];
+      const nextDay = new Date(lastSprint.endDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      setStartDate(nextDay.toISOString().split('T')[0]);
+    }
+  }, [sprints]);
 
   useEffect(() => {
     if (startDate && duration) {
@@ -50,6 +61,13 @@ export const SprintForm = () => {
     if (duration && resources.length > 0) {
       const capacity = calculateTheoreticalCapacity(resources, Number(duration));
       setTheoreticalCapacity(capacity);
+
+      // Calculate total presence days for each resource
+      const presenceDays = resources.reduce((acc, resource) => {
+        const total = resource.dailyCapacities?.reduce((sum, dc) => sum + dc.capacity, 0) || 0;
+        return { ...acc, [resource.id]: total };
+      }, {});
+      setResourcePresenceDays(presenceDays);
     }
   }, [duration, resources, calculateTheoreticalCapacity]);
 
@@ -142,6 +160,7 @@ export const SprintForm = () => {
                 onDailyCapacityChange={handleDailyCapacityChange}
                 showDailyCapacities={showDailyCapacities}
                 onToggleDailyCapacities={toggleDailyCapacities}
+                totalPresenceDays={resourcePresenceDays[resource.id] || 0}
               />
             ))}
             <Button type="button" variant="outline" onClick={handleAddResource}>
