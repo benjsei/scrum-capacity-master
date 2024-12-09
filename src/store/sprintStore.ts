@@ -7,6 +7,7 @@ interface SprintStore {
   addSprint: (sprint: Sprint) => void;
   updateSprint: (sprintId: string, sprint: Partial<Sprint>) => void;
   deleteSprint: (sprintId: string) => void;
+  completeSprint: (sprintId: string, storyPointsCompleted: number) => void;
   calculateTheoreticalCapacity: (resources: Resource[], duration: number) => number;
 }
 
@@ -36,9 +37,27 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }));
   },
 
+  completeSprint: (sprintId, storyPointsCompleted) => {
+    set((state) => ({
+      sprints: state.sprints.map((sprint) =>
+        sprint.id === sprintId
+          ? {
+              ...sprint,
+              storyPointsCompleted,
+              isSuccessful: storyPointsCompleted >= sprint.storyPointsCommitted,
+              velocityAchieved: storyPointsCompleted / sprint.duration,
+              commitmentRespected: (storyPointsCompleted / sprint.storyPointsCommitted) * 100,
+            }
+          : sprint
+      ),
+      activeSprint: null,
+    }));
+  },
+
   calculateTheoreticalCapacity: (resources: Resource[], duration: number) => {
     const { sprints } = get();
-    const lastThreeSprints = sprints.slice(-3);
+    const completedSprints = sprints.filter(s => s.velocityAchieved !== undefined);
+    const lastThreeSprints = completedSprints.slice(-3);
     
     let averageVelocity;
     if (lastThreeSprints.length >= 3) {

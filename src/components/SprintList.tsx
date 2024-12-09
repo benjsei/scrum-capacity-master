@@ -1,5 +1,9 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useSprintStore } from '../store/sprintStore';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -10,7 +14,18 @@ import {
 } from "@/components/ui/table";
 
 export const SprintList = () => {
-  const { sprints } = useSprintStore();
+  const { sprints, completeSprint } = useSprintStore();
+  const [completionData, setCompletionData] = useState<{ [key: string]: number }>({});
+
+  const handleCompleteSprint = (sprintId: string) => {
+    const storyPoints = completionData[sprintId];
+    if (storyPoints === undefined) {
+      toast.error("Please enter the number of completed story points");
+      return;
+    }
+    completeSprint(sprintId, storyPoints);
+    toast.success("Sprint completed successfully!");
+  };
 
   return (
     <Card className="p-6">
@@ -22,6 +37,7 @@ export const SprintList = () => {
             <TableHead>Story Points Committed</TableHead>
             <TableHead>Theoretical Capacity</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -34,6 +50,33 @@ export const SprintList = () => {
               <TableCell>
                 {sprint.isSuccessful === undefined ? 'In Progress' : 
                  sprint.isSuccessful ? 'Success' : 'Failed'}
+              </TableCell>
+              <TableCell>
+                {sprint.isSuccessful === undefined && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="Story points completed"
+                      value={completionData[sprint.id] || ''}
+                      onChange={(e) => setCompletionData({
+                        ...completionData,
+                        [sprint.id]: Number(e.target.value)
+                      })}
+                      className="w-40"
+                    />
+                    <Button 
+                      onClick={() => handleCompleteSprint(sprint.id)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Complete Sprint
+                    </Button>
+                  </div>
+                )}
+                {sprint.isSuccessful !== undefined && (
+                  <span>Completed: {sprint.storyPointsCompleted} SP</span>
+                )}
               </TableCell>
             </TableRow>
           ))}

@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSprintStore } from '../store/sprintStore';
-import { Resource, ResourceDailyCapacity } from '../types/sprint';
+import { Resource } from '../types/sprint';
 import { toast } from 'sonner';
+import { ResourceInput } from './ResourceInput';
 
 export const SprintForm = () => {
   const [startDate, setStartDate] = useState('');
@@ -15,6 +16,7 @@ export const SprintForm = () => {
   ]);
   const [storyPoints, setStoryPoints] = useState('');
   const [showDailyCapacities, setShowDailyCapacities] = useState<{ [key: string]: boolean }>({});
+  const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
 
   const { addSprint, calculateTheoreticalCapacity } = useSprintStore();
 
@@ -42,6 +44,13 @@ export const SprintForm = () => {
       setResources([...resources]);
     }
   }, [startDate, duration, resources.length]);
+
+  useEffect(() => {
+    if (duration && resources.length > 0) {
+      const capacity = calculateTheoreticalCapacity(resources, Number(duration));
+      setTheoreticalCapacity(capacity);
+    }
+  }, [duration, resources, calculateTheoreticalCapacity]);
 
   const handleAddResource = () => {
     setResources([
@@ -80,11 +89,6 @@ export const SprintForm = () => {
 
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + Number(duration));
-
-    const theoreticalCapacity = calculateTheoreticalCapacity(
-      resources,
-      Number(duration)
-    );
 
     const newSprint = {
       id: Date.now().toString(),
@@ -130,54 +134,29 @@ export const SprintForm = () => {
           <div className="space-y-4">
             <Label>Resources</Label>
             {resources.map((resource) => (
-              <div key={resource.id} className="space-y-2">
-                <div className="flex gap-4">
-                  <Input
-                    placeholder="Name"
-                    value={resource.name}
-                    onChange={(e) => handleResourceChange(resource.id, 'name', e.target.value)}
-                    required
-                  />
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    placeholder="Default Capacity/day"
-                    value={resource.capacityPerDay}
-                    onChange={(e) => handleResourceChange(resource.id, 'capacityPerDay', Number(e.target.value))}
-                    required
-                  />
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => toggleDailyCapacities(resource.id)}
-                  >
-                    {showDailyCapacities[resource.id] ? 'Hide Daily' : 'Show Daily'}
-                  </Button>
-                </div>
-                
-                {showDailyCapacities[resource.id] && resource.dailyCapacities && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
-                    {resource.dailyCapacities.map((dc) => (
-                      <div key={dc.date} className="flex flex-col space-y-1">
-                        <Label className="text-xs">{new Date(dc.date).toLocaleDateString()}</Label>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          value={dc.capacity}
-                          onChange={(e) => handleDailyCapacityChange(resource.id, dc.date, Number(e.target.value))}
-                          className="h-8"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <ResourceInput
+                key={resource.id}
+                resource={resource}
+                onResourceChange={handleResourceChange}
+                onDailyCapacityChange={handleDailyCapacityChange}
+                showDailyCapacities={showDailyCapacities}
+                onToggleDailyCapacities={toggleDailyCapacities}
+              />
             ))}
             <Button type="button" variant="outline" onClick={handleAddResource}>
               Add Resource
             </Button>
+          </div>
+
+          <div>
+            <Label htmlFor="theoreticalCapacity">Theoretical Capacity (SP)</Label>
+            <Input
+              id="theoreticalCapacity"
+              type="number"
+              value={theoreticalCapacity.toFixed(1)}
+              readOnly
+              className="bg-muted"
+            />
           </div>
 
           <div>
