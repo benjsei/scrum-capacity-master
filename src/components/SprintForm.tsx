@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSprintStore } from '../store/sprintStore';
 import { Resource } from '../types/sprint';
-import { toast } from 'sonner';
+import { toast } from "sonner";
 import { ResourceInput } from './ResourceInput';
+import { useScrumTeamStore } from '../store/scrumTeamStore';
 
 export const SprintForm = () => {
   const [startDate, setStartDate] = useState('');
@@ -103,14 +104,22 @@ export const SprintForm = () => {
     }));
   };
 
+  const { activeTeam } = useScrumTeamStore();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!activeTeam) {
+      toast.error("Please select a team first");
+      return;
+    }
 
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + Number(duration));
 
     const newSprint = {
       id: Date.now().toString(),
+      teamId: activeTeam.id,
       startDate,
       endDate: endDate.toISOString().split('T')[0],
       duration: Number(duration),

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Sprint, Resource } from '../types/sprint';
 import { useScrumTeamStore } from './scrumTeamStore';
+import { toast } from "sonner";
 
 interface SprintStore {
   sprints: Sprint[];
@@ -21,7 +22,10 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
   addSprint: (sprint) => {
     const activeTeam = useScrumTeamStore.getState().activeTeam;
-    if (!activeTeam) return;
+    if (!activeTeam) {
+      toast.error("No active team selected");
+      return;
+    }
 
     const teamSprints = get().getActiveTeamSprints();
     const hasActiveSprint = teamSprints.some(s => s.isSuccessful === undefined);
