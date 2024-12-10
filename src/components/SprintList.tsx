@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/table";
 
 export const SprintList = () => {
-  const { sprints, completeSprint } = useSprintStore();
+  const { getActiveTeamSprints, completeSprint } = useSprintStore();
   const [completionData, setCompletionData] = useState<{ [key: string]: number }>({});
+  const sprints = getActiveTeamSprints();
 
   const handleCompleteSprint = (sprintId: string) => {
     const storyPoints = completionData[sprintId];

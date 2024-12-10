@@ -12,6 +12,7 @@ export interface Resource {
 
 export interface Sprint {
   id: string;
+  teamId: string;
   startDate: string;
   endDate: string;
   duration: number;

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Sprint, Resource } from '../types/sprint';
+import { useScrumTeamStore } from './scrumTeamStore';
 
 interface SprintStore {
   sprints: Sprint[];
@@ -10,6 +11,8 @@ interface SprintStore {
   completeSprint: (sprintId: string, storyPointsCompleted: number) => void;
   calculateTheoreticalCapacity: (resources: Resource[], duration: number) => number;
   getAverageVelocity: () => number;
+  getActiveTeamSprints: () => Sprint[];
+  canCreateNewSprint: () => boolean;
 }
 
 export const useSprintStore = create<SprintStore>((set, get) => ({
@@ -17,9 +20,32 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
   activeSprint: null,
 
   addSprint: (sprint) => {
+    const activeTeam = useScrumTeamStore.getState().activeTeam;
+    if (!activeTeam) return;
+
+    const teamSprints = get().getActiveTeamSprints();
+    const hasActiveSprint = teamSprints.some(s => s.isSuccessful === undefined);
+    
+    if (hasActiveSprint) {
+      toast.error("Cannot create a new sprint while another is active");
+      return;
+    }
+
+    const lastSprint = teamSprints[teamSprints.length - 1];
+    if (lastSprint) {
+      const nextStartDate = new Date(lastSprint.endDate);
+      nextStartDate.setDate(nextStartDate.getDate() + 1);
+      const expectedStartDate = nextStartDate.toISOString().split('T')[0];
+      
+      if (sprint.startDate !== expectedStartDate) {
+        toast.error("Sprint must start the day after the previous sprint ends");
+        return;
+      }
+    }
+
     set((state) => ({
-      sprints: [...state.sprints, sprint],
-      activeSprint: sprint,
+      sprints: [...state.sprints, { ...sprint, teamId: activeTeam.id }],
+      activeSprint: { ...sprint, teamId: activeTeam.id },
     }));
   },
 
@@ -56,8 +82,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
   },
 
   getAverageVelocity: () => {
-    const { sprints } = get();
-    const completedSprints = sprints.filter(s => s.storyPointsCompleted !== undefined);
+    const teamSprints = get().getActiveTeamSprints();
+    const completedSprints = teamSprints.filter(s => s.storyPointsCompleted !== undefined);
     const lastThreeSprints = completedSprints.slice(-3);
     
     if (lastThreeSprints.length === 0) return 1;
@@ -79,5 +105,16 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }, 0);
 
     return averageVelocity * totalResourceCapacity;
+  },
+
+  getActiveTeamSprints: () => {
+    const activeTeam = useScrumTeamStore.getState().activeTeam;
+    if (!activeTeam) return [];
+    return get().sprints.filter(sprint => sprint.teamId === activeTeam.id);
+  },
+
+  canCreateNewSprint: () => {
+    const teamSprints = get().getActiveTeamSprints();
+    return !teamSprints.some(sprint => sprint.isSuccessful === undefined);
   },
 }));
