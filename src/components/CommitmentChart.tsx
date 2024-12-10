@@ -13,7 +13,8 @@ export const CommitmentChart = () => {
       committed: sprint.storyPointsCommitted,
       completed: sprint.storyPointsCompleted || 0,
       theoretical: sprint.theoreticalCapacity,
-    }));
+    }))
+    .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
 
   return (
     <Card className="p-6">
