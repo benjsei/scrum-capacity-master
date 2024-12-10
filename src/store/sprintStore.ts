@@ -31,20 +31,27 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     const hasActiveSprint = teamSprints.some(s => s.isSuccessful === undefined);
     
     if (hasActiveSprint) {
-      toast.error("Cannot create a new sprint while another is active");
+      toast.error("Un sprint est déjà en cours pour cette équipe");
       return;
     }
 
-    const lastSprint = teamSprints[teamSprints.length - 1];
-    if (lastSprint) {
-      const nextStartDate = new Date(lastSprint.endDate);
-      nextStartDate.setDate(nextStartDate.getDate() + 1);
-      const expectedStartDate = nextStartDate.toISOString().split('T')[0];
+    // Vérification des chevauchements de dates
+    const hasOverlap = teamSprints.some(s => {
+      const newStart = new Date(sprint.startDate);
+      const newEnd = new Date(sprint.endDate);
+      const sprintStart = new Date(s.startDate);
+      const sprintEnd = new Date(s.endDate);
       
-      if (sprint.startDate !== expectedStartDate) {
-        toast.error("Sprint must start the day after the previous sprint ends");
-        return;
-      }
+      return (
+        (newStart >= sprintStart && newStart <= sprintEnd) ||
+        (newEnd >= sprintStart && newEnd <= sprintEnd) ||
+        (newStart <= sprintStart && newEnd >= sprintEnd)
+      );
+    });
+
+    if (hasOverlap) {
+      toast.error("Les dates du sprint se chevauchent avec un sprint existant");
+      return;
     }
 
     set((state) => ({
@@ -118,7 +125,10 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
   },
 
   canCreateNewSprint: () => {
+    const activeTeam = useScrumTeamStore.getState().activeTeam;
+    if (!activeTeam) return false;
+    
     const teamSprints = get().getActiveTeamSprints();
-    return !teamSprints.some(sprint => sprint.isSuccessful === undefined);
+    return !teamSprints.some(s => s.isSuccessful === undefined);
   },
 }));

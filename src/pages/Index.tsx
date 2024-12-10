@@ -1,6 +1,8 @@
 import { SprintForm } from "@/components/SprintForm";
 import { SprintList } from "@/components/SprintList";
 import { VelocityChart } from "@/components/VelocityChart";
+import { TeamVelocityChart } from "@/components/TeamVelocityChart";
+import { CommitmentChart } from "@/components/CommitmentChart";
 import { TeamManagement } from "@/components/TeamManagement";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 
@@ -20,6 +22,11 @@ const Index = () => {
           <TeamManagement />
         </div>
 
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Comparaison des équipes</h2>
+          <TeamVelocityChart />
+        </div>
+
         {activeTeam ? (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -33,9 +40,9 @@ const Index = () => {
               </div>
             </div>
 
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Performance Analytics</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <VelocityChart />
+              <CommitmentChart />
             </div>
           </>
         ) : (
