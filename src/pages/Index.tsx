@@ -5,9 +5,13 @@ import { TeamVelocityChart } from "@/components/TeamVelocityChart";
 import { CommitmentChart } from "@/components/CommitmentChart";
 import { TeamManagement } from "@/components/TeamManagement";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
+import { useSprintStore } from '../store/sprintStore';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Index = () => {
   const { activeTeam } = useScrumTeamStore();
+  const { canCreateNewSprint } = useSprintStore();
 
   return (
     <div className="min-h-screen p-6 space-y-6">
@@ -32,7 +36,16 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <h2 className="text-xl font-semibold mb-4">Create New Sprint for {activeTeam.name}</h2>
-                <SprintForm />
+                {canCreateNewSprint() ? (
+                  <SprintForm />
+                ) : (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Cannot create a new sprint while another sprint is active for this team.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-4">Sprint History</h2>
