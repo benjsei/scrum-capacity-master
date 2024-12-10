@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useSprintStore } from '../store/sprintStore';
 import { Resource } from '../types/sprint';
 import { toast } from "sonner";
-import { ResourceInput } from './ResourceInput';
 import { useScrumTeamStore } from '../store/scrumTeamStore';
+import { SprintDatesInput } from './sprint/SprintDatesInput';
+import { SprintCapacityInfo } from './sprint/SprintCapacityInfo';
+import { SprintResourcesSection } from './sprint/SprintResourcesSection';
 
 export const SprintForm = () => {
   const [startDate, setStartDate] = useState('');
@@ -24,7 +24,6 @@ export const SprintForm = () => {
   const averageVelocity = getAverageVelocity();
 
   useEffect(() => {
-    // Set initial date based on last sprint's end date
     if (sprints.length > 0 && !startDate) {
       const lastSprint = sprints[sprints.length - 1];
       const nextDay = new Date(lastSprint.endDate);
@@ -63,7 +62,6 @@ export const SprintForm = () => {
       const capacity = calculateTheoreticalCapacity(resources, Number(duration));
       setTheoreticalCapacity(capacity);
 
-      // Calculate total presence days for each resource
       const presenceDays = resources.reduce((acc, resource) => {
         const total = resource.dailyCapacities?.reduce((sum, dc) => sum + dc.capacity, 0) || 0;
         return { ...acc, [resource.id]: total };
@@ -135,83 +133,29 @@ export const SprintForm = () => {
   return (
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="startDate">Start Date</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-            />
-          </div>
+        <SprintDatesInput
+          startDate={startDate}
+          duration={duration}
+          onStartDateChange={setStartDate}
+          onDurationChange={setDuration}
+        />
 
-          <div>
-            <Label htmlFor="duration">Duration (days)</Label>
-            <Input
-              id="duration"
-              type="number"
-              min="1"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              required
-            />
-          </div>
+        <SprintResourcesSection
+          resources={resources}
+          showDailyCapacities={showDailyCapacities}
+          resourcePresenceDays={resourcePresenceDays}
+          onResourceChange={handleResourceChange}
+          onDailyCapacityChange={handleDailyCapacityChange}
+          onToggleDailyCapacities={toggleDailyCapacities}
+          onAddResource={handleAddResource}
+        />
 
-          <div className="space-y-4">
-            <Label>Resources</Label>
-            {resources.map((resource) => (
-              <ResourceInput
-                key={resource.id}
-                resource={resource}
-                onResourceChange={handleResourceChange}
-                onDailyCapacityChange={handleDailyCapacityChange}
-                showDailyCapacities={showDailyCapacities}
-                onToggleDailyCapacities={toggleDailyCapacities}
-                totalPresenceDays={resourcePresenceDays[resource.id] || 0}
-              />
-            ))}
-            <Button type="button" variant="outline" onClick={handleAddResource}>
-              Add Resource
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            <div>
-              <Label>Average Velocity (SP/day/resource)</Label>
-              <Input
-                type="number"
-                value={averageVelocity.toFixed(2)}
-                readOnly
-                className="bg-muted"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="theoreticalCapacity">Theoretical Capacity (SP)</Label>
-              <Input
-                id="theoreticalCapacity"
-                type="number"
-                value={theoreticalCapacity.toFixed(1)}
-                readOnly
-                className="bg-muted"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="storyPoints">Story Points Committed</Label>
-            <Input
-              id="storyPoints"
-              type="number"
-              min="0"
-              value={storyPoints}
-              onChange={(e) => setStoryPoints(e.target.value)}
-              required
-            />
-          </div>
-        </div>
+        <SprintCapacityInfo
+          averageVelocity={averageVelocity}
+          theoreticalCapacity={theoreticalCapacity}
+          storyPoints={storyPoints}
+          onStoryPointsChange={setStoryPoints}
+        />
 
         <Button type="submit" className="w-full">
           Create Sprint

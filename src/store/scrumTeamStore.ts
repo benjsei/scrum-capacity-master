@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { ScrumTeam } from '../types/scrumTeam';
+import { Resource } from '../types/sprint';
 
 interface ScrumTeamStore {
   teams: ScrumTeam[];
