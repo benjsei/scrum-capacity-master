@@ -1,6 +1,8 @@
 import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
 import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
+import { useResourceStore } from "../store/resourceStore";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface ResourceInputProps {
   resource: Resource;
@@ -19,15 +21,26 @@ export const ResourceInput = ({
   onToggleDailyCapacities,
   totalPresenceDays,
 }: ResourceInputProps) => {
+  const { resources } = useResourceStore();
+
   return (
     <div className="space-y-2">
       <div className="flex gap-4">
-        <Input
-          placeholder="Nom"
+        <Select
           value={resource.name}
-          onChange={(e) => onResourceChange(resource.id, 'name', e.target.value)}
-          required
-        />
+          onValueChange={(value) => onResourceChange(resource.id, 'name', value)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Sélectionner une ressource" />
+          </SelectTrigger>
+          <SelectContent>
+            {resources.map((r) => (
+              <SelectItem key={r.id} value={r.name}>
+                {r.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Input
           type="number"
           value={totalPresenceDays.toFixed(1)}
@@ -39,8 +52,8 @@ export const ResourceInput = ({
       <ResourceDailyCapacityCalendar
         resource={resource}
         onDailyCapacityChange={onDailyCapacityChange}
-        showDailyCapacities={showDailyCapacities[resource.id]}
-        onToggleDailyCapacities={() => onToggleDailyCapacities(resource.id)}
+        showDailyCapacities={showDailyCapacities}
+        onToggleDailyCapacities={onToggleDailyCapacities}
       />
     </div>
   );
