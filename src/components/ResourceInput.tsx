@@ -20,10 +20,9 @@ export const ResourceInput = ({
   onToggleDailyCapacities,
   totalPresenceDays,
 }: ResourceInputProps) => {
-  // Calcul du total directement à partir des props
   const total = useMemo(() => {
     if (!resource.dailyCapacities) return 0;
-    return resource.dailyCapacities.reduce((sum, dc) => sum + (dc.capacity || 0), 0);
+    return resource.dailyCapacities.reduce((sum, dc) => sum + dc.capacity, 0);
   }, [resource.dailyCapacities]);
 
   return (
@@ -31,10 +30,7 @@ export const ResourceInput = ({
       <div className="flex gap-4">
         <Input
           value={resource.name}
-          onChange={(e) => {
-            const value = e.target.value;
-            onResourceChange(resource.id, 'name', value);
-          }}
+          onChange={(e) => onResourceChange(resource.id, 'name', e.target.value)}
           className="w-full"
           placeholder="Nom de la ressource"
         />

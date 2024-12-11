@@ -2,8 +2,8 @@ import { Button } from "./ui/button";
 import { Resource } from "../types/sprint";
 import { DayCell } from "./calendar/DayCell";
 import { WeekHeader } from "./calendar/WeekHeader";
-import { PresetButtons, PRESET_VALUES } from "./calendar/PresetButtons";
-import { useState, useEffect, useCallback } from "react";
+import { PresetButtons } from "./calendar/PresetButtons";
+import { useState, useEffect } from "react";
 
 interface ResourceDailyCapacityCalendarProps {
   resource: Resource;
@@ -20,35 +20,25 @@ export const ResourceDailyCapacityCalendar = ({
 }: ResourceDailyCapacityCalendarProps) => {
   const [localCapacities, setLocalCapacities] = useState(resource.dailyCapacities || []);
 
-  // Mise à jour du state local uniquement lors du changement initial des props
   useEffect(() => {
-    if (resource.dailyCapacities) {
-      setLocalCapacities(resource.dailyCapacities);
-    }
-  }, [resource.id]); // Ne se déclenche que lors du changement de ressource
+    setLocalCapacities(resource.dailyCapacities || []);
+  }, [resource.dailyCapacities]);
 
-  const applyPresetValue = useCallback((value: number) => {
-    if (!localCapacities) {
-      console.log("Pas de dailyCapacities trouvé");
-      return;
-    }
+  const applyPresetValue = (value: number) => {
+    if (!resource.dailyCapacities) return;
 
-    const updatedCapacities = localCapacities.map(dc => {
+    resource.dailyCapacities.forEach(dc => {
       const date = new Date(dc.date);
       const dayOfWeek = date.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       
       if (!isWeekend) {
         onDailyCapacityChange(resource.id, dc.date, value);
-        return { ...dc, capacity: value };
       }
-      return dc;
     });
-    
-    setLocalCapacities(updatedCapacities);
-  }, [localCapacities, resource.id, onDailyCapacityChange]);
+  };
 
-  const groupCapacitiesByWeek = useCallback(() => {
+  const groupCapacitiesByWeek = () => {
     if (!localCapacities) return [];
     
     const weeks: typeof localCapacities[] = [];
@@ -85,16 +75,6 @@ export const ResourceDailyCapacityCalendar = ({
         weeks.push(currentWeek);
         currentWeek = [dc];
       } else {
-        const lastDate = new Date(currentWeek[currentWeek.length - 1].date);
-        const daysToAdd = Math.floor((date.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)) - 1;
-        for (let i = 0; i < daysToAdd; i++) {
-          const emptyDate = new Date(lastDate);
-          emptyDate.setDate(lastDate.getDate() + i + 1);
-          currentWeek.push({
-            date: emptyDate.toISOString().split('T')[0],
-            capacity: 0
-          });
-        }
         currentWeek.push(dc);
       }
     });
@@ -112,16 +92,11 @@ export const ResourceDailyCapacityCalendar = ({
     }
     
     return weeks;
-  }, [localCapacities]);
+  };
 
-  const handleCapacityChange = useCallback((date: string, newCapacity: number) => {
+  const handleCapacityChange = (date: string, newCapacity: number) => {
     onDailyCapacityChange(resource.id, date, newCapacity);
-    setLocalCapacities(prev => 
-      prev.map(cap => 
-        cap.date === date ? { ...cap, capacity: newCapacity } : cap
-      )
-    );
-  }, [resource.id, onDailyCapacityChange]);
+  };
 
   return (
     <div className="space-y-4">
