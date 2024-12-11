@@ -1,6 +1,7 @@
 import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
 import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
+import { ResourceAutocompleteInput } from "./ResourceAutocompleteInput";
 
 interface ResourceInputProps {
   resource: Resource;
@@ -19,17 +20,17 @@ export const ResourceInput = ({
   onToggleDailyCapacities,
   totalPresenceDays,
 }: ResourceInputProps) => {
+  const handleResourceSelect = (selectedResource: Resource) => {
+    onResourceChange(resource.id, 'name', selectedResource.name);
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex gap-4">
-        <Input
+        <ResourceAutocompleteInput
           value={resource.name}
-          onChange={(e) => {
-            const value = e.target.value;
-            onResourceChange(resource.id, 'name', value);
-          }}
+          onChange={handleResourceSelect}
           className="w-full"
-          placeholder="Nom de la ressource"
         />
         <Input
           type="number"
