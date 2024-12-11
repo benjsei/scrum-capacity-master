@@ -8,7 +8,7 @@ import { TeamPodium } from "@/components/TeamPodium";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
 import { Button } from "@/components/ui/button";
-import { Download, Upload } from "lucide-react";
+import { Download, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { 
@@ -30,6 +30,7 @@ const Index = () => {
   const { canCreateNewSprint, sprints, setSprints } = useSprintStore();
   const { resources, setResources } = useResourceStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
+  const [showResourceManagement, setShowResourceManagement] = useState(false);
 
   const handleExport = () => {
     const data = {
@@ -114,8 +115,16 @@ const Index = () => {
                       onChange={handleImport}
                     />
                   </label>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={() => setShowResourceManagement(true)}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Ressources
+                  </Button>
                 </div>
-                <ResourceManagement />
               </div>
             </PopoverContent>
           </Popover>
@@ -123,6 +132,15 @@ const Index = () => {
         <h1 className="text-3xl font-bold text-primary">Gestionnaire de Capacité Scrum</h1>
         <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
       </header>
+
+      <Dialog open={showResourceManagement} onOpenChange={setShowResourceManagement}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Gestion des ressources</DialogTitle>
+          </DialogHeader>
+          <ResourceManagement />
+        </DialogContent>
+      </Dialog>
 
       <div className="space-y-6">
         <div>

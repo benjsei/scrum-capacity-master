@@ -21,7 +21,6 @@ export const ResourceManagement = () => {
 
   return (
     <div className="space-y-4">
-      <h3 className="font-medium">Ressources</h3>
       <div className="space-y-2">
         {resources.map((resource) => (
           <div key={resource.id} className="flex items-center gap-2">
