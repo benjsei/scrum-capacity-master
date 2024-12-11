@@ -11,6 +11,7 @@ interface SprintResourcesSectionProps {
   onDailyCapacityChange: (resourceId: string, date: string, capacity: number) => void;
   onToggleDailyCapacities: () => void;
   onAddResource: () => void;
+  onDeleteResource: (resourceId: string) => void;
 }
 
 export const SprintResourcesSection = ({
@@ -21,20 +22,37 @@ export const SprintResourcesSection = ({
   onDailyCapacityChange,
   onToggleDailyCapacities,
   onAddResource,
+  onDeleteResource,
 }: SprintResourcesSectionProps) => {
+  const totalTeamDays = Object.values(resourcePresenceDays).reduce((sum, days) => sum + days, 0);
+
   return (
     <div className="space-y-4">
-      <Label>Resources</Label>
+      <div className="flex justify-between items-center">
+        <Label>Resources</Label>
+        <div className="text-sm text-muted-foreground">
+          Total jours/homme : {totalTeamDays.toFixed(1)}
+        </div>
+      </div>
+      
       {resources.map((resource) => (
-        <ResourceInput
-          key={resource.id}
-          resource={resource}
-          onResourceChange={onResourceChange}
-          onDailyCapacityChange={onDailyCapacityChange}
-          showDailyCapacities={showDailyCapacities}
-          onToggleDailyCapacities={onToggleDailyCapacities}
-          totalPresenceDays={resourcePresenceDays[resource.id] || 0}
-        />
+        <div key={resource.id} className="space-y-2 p-4 border rounded-lg">
+          <ResourceInput
+            resource={resource}
+            onResourceChange={onResourceChange}
+            onDailyCapacityChange={onDailyCapacityChange}
+            showDailyCapacities={showDailyCapacities}
+            onToggleDailyCapacities={onToggleDailyCapacities}
+            totalPresenceDays={resourcePresenceDays[resource.id] || 0}
+          />
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={() => onDeleteResource(resource.id)}
+          >
+            Supprimer la ressource
+          </Button>
+        </div>
       ))}
       <Button type="button" variant="outline" onClick={onAddResource}>
         Add Resource

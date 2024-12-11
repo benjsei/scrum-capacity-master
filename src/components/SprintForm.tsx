@@ -8,6 +8,8 @@ import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { SprintDatesInput } from './sprint/SprintDatesInput';
 import { SprintCapacityInfo } from './sprint/SprintCapacityInfo';
 import { SprintResourcesSection } from './sprint/SprintResourcesSection';
+import { Textarea } from './ui/textarea';
+import { Label } from './ui/label';
 
 interface SprintFormProps {
   onComplete: () => void;
@@ -18,6 +20,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [duration, setDuration] = useState('10');
   const [resources, setResources] = useState<Resource[]>([]);
   const [storyPoints, setStoryPoints] = useState('');
+  const [objective, setObjective] = useState('');
   const [showDailyCapacities, setShowDailyCapacities] = useState(false);
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
   const [resourcePresenceDays, setResourcePresenceDays] = useState<{ [key: string]: number }>({});
@@ -116,6 +119,10 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     }));
   };
 
+  const handleDeleteResource = (resourceId: string) => {
+    setResources(resources.filter(resource => resource.id !== resourceId));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -156,6 +163,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
       resources,
       storyPointsCommitted: Number(storyPoints),
       theoreticalCapacity,
+      objective,
     };
 
     addSprint(newSprint);
@@ -173,6 +181,17 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
           onDurationChange={setDuration}
         />
 
+        <div>
+          <Label className="block text-sm font-medium mb-1">Objectif du sprint</Label>
+          <Textarea
+            value={objective}
+            onChange={(e) => setObjective(e.target.value)}
+            maxLength={300}
+            className="h-24"
+            placeholder="Décrivez l'objectif principal du sprint..."
+          />
+        </div>
+
         <SprintResourcesSection
           resources={resources}
           showDailyCapacities={showDailyCapacities}
@@ -181,6 +200,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
           onDailyCapacityChange={handleDailyCapacityChange}
           onToggleDailyCapacities={() => setShowDailyCapacities(!showDailyCapacities)}
           onAddResource={handleAddResource}
+          onDeleteResource={handleDeleteResource}
         />
 
         <SprintCapacityInfo
