@@ -40,6 +40,10 @@ export const ResourceInput = ({
     }
   };
 
+  const filteredResources = resources?.filter(r => 
+    r.name.toLowerCase().includes(inputValue.toLowerCase())
+  ) || [];
+
   return (
     <div className="space-y-2">
       <div className="flex gap-4">
@@ -58,17 +62,15 @@ export const ResourceInput = ({
               <CommandInput placeholder="Rechercher une ressource..." />
               <CommandEmpty>Aucune ressource trouvée.</CommandEmpty>
               <CommandGroup>
-                {resources
-                  .filter(r => r.name.toLowerCase().includes(inputValue.toLowerCase()))
-                  .map(r => (
-                    <CommandItem
-                      key={r.id}
-                      value={r.name}
-                      onSelect={handleSelect}
-                    >
-                      {r.name}
-                    </CommandItem>
-                  ))}
+                {filteredResources.map(r => (
+                  <CommandItem
+                    key={r.id}
+                    value={r.name}
+                    onSelect={handleSelect}
+                  >
+                    {r.name}
+                  </CommandItem>
+                ))}
               </CommandGroup>
             </Command>
           </PopoverContent>

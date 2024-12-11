@@ -11,15 +11,9 @@ import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
 import { cn } from "@/lib/utils";
 
-interface SprintEditFormProps {
-  sprint: Sprint;
-  onCancel: () => void;
-  onSave: () => void;
-}
-
 export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps) => {
   const [editedSprint, setEditedSprint] = useState<Sprint>({ ...sprint });
-  const [showDailyCapacities, setShowDailyCapacities] = useState<{ [key: string]: boolean }>({});
+  const [showDailyCapacities, setShowDailyCapacities] = useState<boolean>(false);
   const { updateSprint } = useSprintStore();
 
   const handleSave = () => {
@@ -70,11 +64,8 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     }));
   };
 
-  const toggleDailyCapacities = (resourceId: string) => {
-    setShowDailyCapacities(prev => ({
-      ...prev,
-      [resourceId]: !prev[resourceId]
-    }));
+  const toggleDailyCapacities = () => {
+    setShowDailyCapacities(!showDailyCapacities);
   };
 
   const calculateTotalPresenceDays = (resource: Resource) => {
