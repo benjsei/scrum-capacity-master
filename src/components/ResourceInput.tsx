@@ -1,6 +1,5 @@
 import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
-import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
 import { useResourceStore } from "../store/resourceStore";
 import { useState, useEffect } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "./ui/command";
@@ -26,15 +25,21 @@ export const ResourceInput = ({
   const { resources } = useResourceStore();
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [selectedValue, setSelectedValue] = useState(resource.name || "");
 
+  // Initialize with empty string if resource.name is undefined
+  const [selectedValue, setSelectedValue] = useState(resource?.name ?? "");
+
+  // Update selected value when resource changes
   useEffect(() => {
-    setSelectedValue(resource.name || "");
-  }, [resource.name]);
+    setSelectedValue(resource?.name ?? "");
+  }, [resource?.name]);
 
-  const filteredResources = (resources || []).filter(r => 
-    r.name.toLowerCase().includes((searchValue || "").toLowerCase())
-  );
+  // Ensure resources is an array and filter it
+  const filteredResources = Array.isArray(resources) 
+    ? resources.filter(r => 
+        r.name.toLowerCase().includes((searchValue || "").toLowerCase())
+      )
+    : [];
 
   const handleSelect = (currentValue: string) => {
     setSelectedValue(currentValue);
