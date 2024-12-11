@@ -18,7 +18,6 @@ export const ResourceDailyCapacityCalendar = ({
   showDailyCapacities,
   onToggleDailyCapacities,
 }: ResourceDailyCapacityCalendarProps) => {
-  // State local pour suivre les capacités
   const [localCapacities, setLocalCapacities] = useState(resource.dailyCapacities || []);
 
   // Mise à jour du state local quand les props changent
@@ -41,14 +40,14 @@ export const ResourceDailyCapacityCalendar = ({
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       
       if (!isWeekend) {
-        console.log(`Mise à jour de la capacité pour ${dc.date} à ${value}`);
+        // On applique d'abord la mise à jour au parent
         onDailyCapacityChange(resource.id, dc.date, value);
         return { ...dc, capacity: value };
       }
       return dc;
     });
     
-    // Mise à jour du state local
+    // Mise à jour du state local après avoir notifié le parent
     setLocalCapacities(updatedCapacities);
     console.log("Capacités après application:", updatedCapacities);
   };
@@ -122,6 +121,18 @@ export const ResourceDailyCapacityCalendar = ({
     return weeks;
   };
 
+  const handleCapacityChange = (date: string, newCapacity: number) => {
+    // On notifie d'abord le parent
+    onDailyCapacityChange(resource.id, date, newCapacity);
+    
+    // Puis on met à jour l'état local
+    setLocalCapacities(prev => 
+      prev.map(cap => 
+        cap.date === date ? { ...cap, capacity: newCapacity } : cap
+      )
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
@@ -156,14 +167,7 @@ export const ResourceDailyCapacityCalendar = ({
                     capacity={dc.capacity}
                     isWeekend={isWeekend}
                     isInSprintRange={isInSprintRange}
-                    onCapacityChange={(newCapacity) => {
-                      onDailyCapacityChange(resource.id, dc.date, newCapacity);
-                      setLocalCapacities(prev => 
-                        prev.map(cap => 
-                          cap.date === dc.date ? { ...cap, capacity: newCapacity } : cap
-                        )
-                      );
-                    }}
+                    onCapacityChange={(newCapacity) => handleCapacityChange(dc.date, newCapacity)}
                   />
                 );
               })}
