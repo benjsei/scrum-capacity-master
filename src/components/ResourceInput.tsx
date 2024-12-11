@@ -2,7 +2,7 @@ import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
 import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
 import { useResourceStore } from "../store/resourceStore";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "./ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
@@ -25,22 +25,22 @@ export const ResourceInput = ({
 }: ResourceInputProps) => {
   const { resources } = useResourceStore();
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(resource.name);
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedValue, setSelectedValue] = useState(resource.name);
 
-  const handleSelect = (value: string) => {
-    onResourceChange(resource.id, 'name', value);
-    setInputValue(value);
-    setOpen(false);
-  };
-
-  const handleInputChange = (value: string) => {
-    setInputValue(value);
-    onResourceChange(resource.id, 'name', value);
-  };
+  useEffect(() => {
+    setSelectedValue(resource.name);
+  }, [resource.name]);
 
   const filteredResources = resources?.filter(r => 
-    r.name.toLowerCase().includes(inputValue.toLowerCase())
+    r.name.toLowerCase().includes(searchValue.toLowerCase())
   ) || [];
+
+  const handleSelect = (currentValue: string) => {
+    setSelectedValue(currentValue);
+    onResourceChange(resource.id, 'name', currentValue);
+    setOpen(false);
+  };
 
   return (
     <div className="space-y-2">
@@ -48,19 +48,25 @@ export const ResourceInput = ({
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Input
-              value={inputValue}
-              onChange={(e) => handleInputChange(e.target.value)}
+              value={selectedValue}
+              onChange={(e) => {
+                setSelectedValue(e.target.value);
+                onResourceChange(resource.id, 'name', e.target.value);
+              }}
               className="w-full"
               placeholder="Nom de la ressource"
-              onClick={() => setOpen(true)}
             />
           </PopoverTrigger>
           <PopoverContent className="p-0" align="start">
             <Command>
-              <CommandInput placeholder="Rechercher une ressource..." />
+              <CommandInput 
+                placeholder="Rechercher une ressource..." 
+                value={searchValue}
+                onValueChange={setSearchValue}
+              />
               <CommandEmpty>Aucune ressource trouvée.</CommandEmpty>
               <CommandGroup>
-                {filteredResources.map(r => (
+                {filteredResources.map((r) => (
                   <CommandItem
                     key={r.id}
                     value={r.name}
