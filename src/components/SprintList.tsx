@@ -4,6 +4,7 @@ import { useSprintStore } from '../store/sprintStore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -23,11 +24,23 @@ export const SprintList = () => {
   const handleCompleteSprint = (sprintId: string) => {
     const storyPoints = completionData[sprintId];
     if (storyPoints === undefined) {
-      toast.error("Please enter the number of completed story points");
+      toast.error("Veuillez saisir le nombre de story points réalisés");
       return;
     }
     completeSprint(sprintId, storyPoints);
-    toast.success("Sprint completed successfully!");
+    toast.success("Sprint terminé avec succès!");
+  };
+
+  const getCommitmentColor = (percentage: number) => {
+    if (percentage >= 90) return "text-green-600";
+    if (percentage >= 70) return "text-orange-500";
+    return "text-red-600";
+  };
+
+  const calculateTotalManDays = (sprint: any) => {
+    return sprint.resources.reduce((total: number, resource: any) => {
+      return total + (resource.dailyCapacities?.reduce((sum: number, dc: any) => sum + dc.capacity, 0) || 0);
+    }, 0);
   };
 
   return (
@@ -35,11 +48,13 @@ export const SprintList = () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Start Date</TableHead>
-            <TableHead>Duration</TableHead>
-            <TableHead>Story Points Committed</TableHead>
-            <TableHead>Theoretical Capacity</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>Date de début</TableHead>
+            <TableHead>Durée</TableHead>
+            <TableHead>Story Points engagés</TableHead>
+            <TableHead>Capacité théorique</TableHead>
+            <TableHead>Jours/homme</TableHead>
+            <TableHead>Respect engagement</TableHead>
+            <TableHead>Statut</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -55,12 +70,22 @@ export const SprintList = () => {
               ) : (
                 <>
                   <TableCell>{new Date(sprint.startDate).toLocaleDateString()}</TableCell>
-                  <TableCell>{sprint.duration} days</TableCell>
+                  <TableCell>{sprint.duration} jours</TableCell>
                   <TableCell>{sprint.storyPointsCommitted}</TableCell>
                   <TableCell>{sprint.theoreticalCapacity.toFixed(1)}</TableCell>
+                  <TableCell>{calculateTotalManDays(sprint).toFixed(1)}</TableCell>
                   <TableCell>
-                    {sprint.isSuccessful === undefined ? 'In Progress' : 
-                     sprint.isSuccessful ? 'Success' : 'Failed'}
+                    {sprint.storyPointsCompleted !== undefined && (
+                      <span className={cn(
+                        getCommitmentColor((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
+                      )}>
+                        {((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100).toFixed(0)}%
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {sprint.isSuccessful === undefined ? 'En cours' : 
+                     sprint.isSuccessful ? 'Succès' : 'Échec'}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-2">
@@ -69,7 +94,7 @@ export const SprintList = () => {
                         variant="outline"
                         size="sm"
                       >
-                        Edit Sprint
+                        Modifier le sprint
                       </Button>
                       
                       {sprint.isSuccessful === undefined && (
@@ -77,7 +102,7 @@ export const SprintList = () => {
                           <Input
                             type="number"
                             min="0"
-                            placeholder="Story points completed"
+                            placeholder="Story points réalisés"
                             value={completionData[sprint.id] || ''}
                             onChange={(e) => setCompletionData({
                               ...completionData,
@@ -90,14 +115,26 @@ export const SprintList = () => {
                             variant="outline"
                             size="sm"
                           >
-                            Complete Sprint
+                            Terminer le sprint
                           </Button>
                         </div>
                       )}
                       {sprint.isSuccessful !== undefined && (
                         <div className="space-y-1">
-                          <div>Completed: {sprint.storyPointsCompleted} SP</div>
-                          <div>Velocity: {sprint.velocityAchieved?.toFixed(2)} SP/day</div>
+                          <div>Réalisé: {sprint.storyPointsCompleted} SP</div>
+                          <div>Vélocité: {sprint.velocityAchieved?.toFixed(2)} SP/jour</div>
+                          {sprint.objective && (
+                            <div className="mt-2">
+                              <div className="font-semibold">Objectif:</div>
+                              <div className="text-sm">{sprint.objective}</div>
+                              <div className={cn(
+                                "text-sm font-medium",
+                                sprint.objectiveAchieved ? "text-green-600" : "text-red-600"
+                              )}>
+                                {sprint.objectiveAchieved ? "Objectif atteint" : "Objectif non atteint"}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

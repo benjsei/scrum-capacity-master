@@ -24,4 +24,6 @@ export interface Sprint {
   theoreticalCapacity: number;
   velocityAchieved?: number;
   commitmentRespected?: number;
+  objective?: string;
+  objectiveAchieved?: boolean;
 }
