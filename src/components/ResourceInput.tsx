@@ -1,10 +1,6 @@
 import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
 import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
-import { useResourceStore } from "../store/resourceStore";
-import { useState, useEffect } from "react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "./ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface ResourceInputProps {
   resource: Resource;
@@ -23,70 +19,18 @@ export const ResourceInput = ({
   onToggleDailyCapacities,
   totalPresenceDays,
 }: ResourceInputProps) => {
-  const { resources } = useResourceStore();
-  const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-
-  // Initialize with empty string if resource.name is undefined
-  const [selectedValue, setSelectedValue] = useState(resource?.name ?? "");
-
-  // Update selected value when resource changes
-  useEffect(() => {
-    setSelectedValue(resource?.name ?? "");
-  }, [resource?.name]);
-
-  // Ensure resources is an array and filter it
-  const filteredResources = Array.isArray(resources) 
-    ? resources.filter(r => 
-        r.name.toLowerCase().includes((searchValue || "").toLowerCase())
-      )
-    : [];
-
-  const handleSelect = (currentValue: string) => {
-    setSelectedValue(currentValue);
-    onResourceChange(resource.id, 'name', currentValue);
-    setOpen(false);
-    setSearchValue("");
-  };
-
   return (
     <div className="space-y-2">
       <div className="flex gap-4">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Input
-              value={selectedValue}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSelectedValue(value);
-                onResourceChange(resource.id, 'name', value);
-              }}
-              className="w-full"
-              placeholder="Nom de la ressource"
-            />
-          </PopoverTrigger>
-          <PopoverContent className="p-0" align="start">
-            <Command>
-              <CommandInput 
-                placeholder="Rechercher une ressource..." 
-                value={searchValue}
-                onValueChange={(value) => setSearchValue(value)}
-              />
-              <CommandEmpty>Aucune ressource trouvée.</CommandEmpty>
-              <CommandGroup>
-                {filteredResources.map((r) => (
-                  <CommandItem
-                    key={r.id}
-                    value={r.name}
-                    onSelect={handleSelect}
-                  >
-                    {r.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <Input
+          value={resource.name}
+          onChange={(e) => {
+            const value = e.target.value;
+            onResourceChange(resource.id, 'name', value);
+          }}
+          className="w-full"
+          placeholder="Nom de la ressource"
+        />
         <Input
           type="number"
           value={totalPresenceDays.toFixed(1)}
