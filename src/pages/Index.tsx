@@ -22,8 +22,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ResourceManagement } from "@/components/ResourceManagement";
 import { useResourceStore } from '../store/resourceStore';
-import { Link } from "react-router-dom";
 
 const Index = () => {
   const { activeTeam, teams, setTeams } = useScrumTeamStore();
@@ -114,17 +114,8 @@ const Index = () => {
                       onChange={handleImport}
                     />
                   </label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    asChild
-                  >
-                    <Link to="/resources">
-                      Gérer les ressources
-                    </Link>
-                  </Button>
                 </div>
+                <ResourceManagement />
               </div>
             </PopoverContent>
           </Popover>
