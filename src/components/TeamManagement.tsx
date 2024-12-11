@@ -12,7 +12,11 @@ export const TeamManagement = () => {
   const [editingName, setEditingName] = useState('');
   const { teams, addTeam, deleteTeam, setActiveTeam, activeTeam, updateTeamName } = useScrumTeamStore();
 
-  const handleCreateTeam = () => {
+  const handleCreateTeam = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
     if (!newTeamName.trim()) {
       toast.error('Please enter a team name');
       return;
@@ -50,15 +54,15 @@ export const TeamManagement = () => {
       <div className="space-y-6">
         <div className="space-y-4">
           <Label htmlFor="teamName">New Team Name</Label>
-          <div className="flex gap-2">
+          <form onSubmit={handleCreateTeam} className="flex gap-2">
             <Input
               id="teamName"
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}
               placeholder="Enter team name"
             />
-            <Button onClick={handleCreateTeam}>Create Team</Button>
-          </div>
+            <Button type="submit">Create Team</Button>
+          </form>
         </div>
 
         <div className="space-y-4">
