@@ -27,13 +27,15 @@ export const ResourceDailyCapacityCalendar = ({
   const applyPresetValue = (value: number) => {
     if (!resource.dailyCapacities) return;
 
+    // Simuler des mises à jour individuelles pour chaque jour
     resource.dailyCapacities.forEach(dc => {
       const date = new Date(dc.date);
       const dayOfWeek = date.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       
       if (!isWeekend) {
-        onDailyCapacityChange(resource.id, dc.date, value);
+        // Appliquer la mise à jour comme si c'était une saisie manuelle
+        handleCapacityChange(dc.date, value);
       }
     });
   };
@@ -95,6 +97,14 @@ export const ResourceDailyCapacityCalendar = ({
   };
 
   const handleCapacityChange = (date: string, newCapacity: number) => {
+    // Mettre à jour l'état local
+    setLocalCapacities(prev => 
+      prev.map(cap => 
+        cap.date === date ? { ...cap, capacity: newCapacity } : cap
+      )
+    );
+    
+    // Propager la mise à jour au parent
     onDailyCapacityChange(resource.id, date, newCapacity);
   };
 
