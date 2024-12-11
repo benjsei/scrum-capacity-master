@@ -24,8 +24,8 @@ import {
 } from "@/components/ui/popover";
 
 const Index = () => {
-  const { activeTeam, teams } = useScrumTeamStore();
-  const { canCreateNewSprint, sprints } = useSprintStore();
+  const { activeTeam, teams, setTeams } = useScrumTeamStore();
+  const { canCreateNewSprint, sprints, setSprints } = useSprintStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
 
   const handleExport = () => {
@@ -44,6 +44,7 @@ const Index = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    toast.success("Export réussi !");
   };
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,9 +62,9 @@ const Index = () => {
 
         switch (data.version) {
           case 1:
-            localStorage.setItem('teams', JSON.stringify(data.teams));
-            localStorage.setItem('sprints', JSON.stringify(data.sprints));
-            window.location.reload();
+            setTeams(data.teams);
+            setSprints(data.sprints);
+            toast.success("Import réussi !");
             break;
           default:
             throw new Error("Version non supportée");

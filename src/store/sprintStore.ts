@@ -6,6 +6,7 @@ import { toast } from "sonner";
 interface SprintStore {
   sprints: Sprint[];
   activeSprint: Sprint | null;
+  setSprints: (sprints: Sprint[]) => void;
   addSprint: (sprint: Sprint) => void;
   updateSprint: (sprintId: string, sprint: Partial<Sprint>) => void;
   deleteSprint: (sprintId: string) => void;
@@ -19,6 +20,7 @@ interface SprintStore {
 export const useSprintStore = create<SprintStore>((set, get) => ({
   sprints: [],
   activeSprint: null,
+  setSprints: (sprints) => set({ sprints }),
 
   addSprint: (sprint) => {
     const activeTeam = useScrumTeamStore.getState().activeTeam;

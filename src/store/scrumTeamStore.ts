@@ -6,6 +6,7 @@ interface ScrumTeamStore {
   teams: ScrumTeam[];
   activeTeam: ScrumTeam | null;
   setActiveTeam: (team: ScrumTeam | null) => void;
+  setTeams: (teams: ScrumTeam[]) => void;
   addTeam: (team: ScrumTeam) => void;
   deleteTeam: (teamId: string) => void;
   updateTeamName: (teamId: string, newName: string) => void;
@@ -18,6 +19,7 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set) => ({
   teams: [],
   activeTeam: null,
   setActiveTeam: (team) => set({ activeTeam: team }),
+  setTeams: (teams) => set({ teams }),
   addTeam: (team) => set((state) => ({ teams: [...state.teams, team] })),
   deleteTeam: (teamId) => set((state) => ({
     teams: state.teams.filter((team) => team.id !== teamId),
