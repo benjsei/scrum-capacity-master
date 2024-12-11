@@ -9,29 +9,43 @@ import { SprintDatesInput } from './sprint/SprintDatesInput';
 import { SprintCapacityInfo } from './sprint/SprintCapacityInfo';
 import { SprintResourcesSection } from './sprint/SprintResourcesSection';
 
-export const SprintForm = () => {
+interface SprintFormProps {
+  onComplete: () => void;
+}
+
+export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [startDate, setStartDate] = useState('');
-  const [duration, setDuration] = useState('');
-  const [resources, setResources] = useState<Resource[]>([
-    { id: '1', name: '', capacityPerDay: 1, dailyCapacities: [] }
-  ]);
+  const [duration, setDuration] = useState('10');
+  const [resources, setResources] = useState<Resource[]>([]);
   const [storyPoints, setStoryPoints] = useState('');
   const [showDailyCapacities, setShowDailyCapacities] = useState<{ [key: string]: boolean }>({});
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
   const [resourcePresenceDays, setResourcePresenceDays] = useState<{ [key: string]: number }>({});
 
   const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, sprints } = useSprintStore();
+  const { activeTeam } = useScrumTeamStore();
   const averageVelocity = getAverageVelocity();
 
+  // Set default start date and duration based on last sprint
   useEffect(() => {
-    if (sprints.length > 0 && !startDate) {
-      const lastSprint = sprints[sprints.length - 1];
-      const nextDay = new Date(lastSprint.endDate);
-      nextDay.setDate(nextDay.getDate() + 1);
-      setStartDate(nextDay.toISOString().split('T')[0]);
+    if (activeTeam) {
+      const teamSprints = sprints.filter(s => s.teamId === activeTeam.id);
+      if (teamSprints.length > 0) {
+        const lastSprint = teamSprints[teamSprints.length - 1];
+        const nextDay = new Date(lastSprint.endDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        setStartDate(nextDay.toISOString().split('T')[0]);
+        setDuration(lastSprint.duration.toString());
+      } else {
+        const today = new Date();
+        today.setDate(today.getDate() + 1);
+        setStartDate(today.toISOString().split('T')[0]);
+        setDuration('10');
+      }
     }
-  }, [sprints]);
+  }, [activeTeam, sprints]);
 
+  // Initialize resources with default capacities
   useEffect(() => {
     if (startDate && duration) {
       const start = new Date(startDate);
@@ -45,12 +59,21 @@ export const SprintForm = () => {
           currentDate.setDate(start.getDate() + i);
           const dateStr = currentDate.toISOString().split('T')[0];
           
+          // Set weekend days to 0 capacity
+          const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+          const defaultCapacity = isWeekend ? 0 : resource.capacityPerDay;
+          
           if (!resource.dailyCapacities.find(dc => dc.date === dateStr)) {
             resource.dailyCapacities.push({
               date: dateStr,
-              capacity: resource.capacityPerDay
+              capacity: defaultCapacity
             });
           }
+        }
+
+        // Remove extra days if duration was decreased
+        if (resource.dailyCapacities.length > parseInt(duration)) {
+          resource.dailyCapacities = resource.dailyCapacities.slice(0, parseInt(duration));
         }
       });
       setResources([...resources]);
@@ -102,18 +125,36 @@ export const SprintForm = () => {
     }));
   };
 
-  const { activeTeam } = useScrumTeamStore();
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!activeTeam) {
-      toast.error("Please select a team first");
+      toast.error("Veuillez sélectionner une équipe");
       return;
     }
 
     const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + Number(duration));
+    endDate.setDate(endDate.getDate() + Number(duration) - 1);
+
+    // Check for overlapping sprints
+    const hasOverlap = sprints.some(s => {
+      if (s.teamId !== activeTeam.id) return false;
+      const sprintStart = new Date(s.startDate);
+      const sprintEnd = new Date(s.endDate);
+      const newStart = new Date(startDate);
+      const newEnd = endDate;
+      
+      return (
+        (newStart >= sprintStart && newStart <= sprintEnd) ||
+        (newEnd >= sprintStart && newEnd <= sprintEnd) ||
+        (newStart <= sprintStart && newEnd >= sprintEnd)
+      );
+    });
+
+    if (hasOverlap) {
+      toast.error("Les dates du sprint se chevauchent avec un sprint existant");
+      return;
+    }
 
     const newSprint = {
       id: Date.now().toString(),
@@ -127,7 +168,8 @@ export const SprintForm = () => {
     };
 
     addSprint(newSprint);
-    toast.success('Sprint created successfully!');
+    toast.success('Sprint créé avec succès!');
+    onComplete();
   };
 
   return (

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSprintStore } from '../store/sprintStore';
-import { Sprint } from "../types/sprint";
+import { Sprint, Resource } from "../types/sprint";
 import { ResourceInput } from "./ResourceInput";
 import { toast } from "sonner";
 import { TableCell } from "./ui/table";

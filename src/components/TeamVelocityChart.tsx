@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSprintStore } from '../store/sprintStore';
@@ -8,7 +8,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 export const TeamVelocityChart = () => {
   const { sprints } = useSprintStore();
   const { teams } = useScrumTeamStore();
-  const [selectedTeams, setSelectedTeams] = useState<string[]>(teams.map(t => t.id));
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+
+  // Initialize with all teams selected
+  useEffect(() => {
+    setSelectedTeams(teams.map(t => t.id));
+  }, [teams]);
 
   const toggleTeam = (teamId: string) => {
     setSelectedTeams(prev =>
