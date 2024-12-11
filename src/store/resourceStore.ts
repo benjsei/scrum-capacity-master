@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 
 interface ResourceStore {
   resources: Resource[];
+  setResources: (resources: Resource[]) => void;
   addResource: (resource: Resource) => void;
   updateResource: (id: string, updates: Partial<Resource>) => void;
   deleteResource: (id: string) => void;
@@ -15,6 +16,10 @@ export const useResourceStore = create<ResourceStore>()(
     (set, get) => ({
       resources: [],
       
+      setResources: (resources) => {
+        set({ resources });
+      },
+
       addResource: (resource) => {
         const exists = get().resources.some(r => r.name.toLowerCase() === resource.name.toLowerCase());
         if (!exists) {
