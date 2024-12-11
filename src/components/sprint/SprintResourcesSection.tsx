@@ -5,11 +5,11 @@ import { ResourceInput } from "../ResourceInput";
 
 interface SprintResourcesSectionProps {
   resources: Resource[];
-  showDailyCapacities: { [key: string]: boolean };
+  showDailyCapacities: boolean;
   resourcePresenceDays: { [key: string]: number };
   onResourceChange: (id: string, field: keyof Resource, value: string | number) => void;
   onDailyCapacityChange: (resourceId: string, date: string, capacity: number) => void;
-  onToggleDailyCapacities: (resourceId: string) => void;
+  onToggleDailyCapacities: () => void;
   onAddResource: () => void;
 }
 

@@ -35,9 +35,7 @@ export const ResourceInput = ({
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
-    if (!resources.some(r => r.name === value)) {
-      onResourceChange(resource.id, 'name', value);
-    }
+    onResourceChange(resource.id, 'name', value);
   };
 
   const filteredResources = resources?.filter(r => 

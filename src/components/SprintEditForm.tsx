@@ -11,6 +11,12 @@ import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
 import { cn } from "@/lib/utils";
 
+interface SprintEditFormProps {
+  sprint: Sprint;
+  onCancel: () => void;
+  onSave: () => void;
+}
+
 export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps) => {
   const [editedSprint, setEditedSprint] = useState<Sprint>({ ...sprint });
   const [showDailyCapacities, setShowDailyCapacities] = useState<boolean>(false);
