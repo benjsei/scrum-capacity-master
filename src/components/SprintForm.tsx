@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useSprintStore } from '../store/sprintStore';
-import { Resource } from '../types/sprint';
 import { toast } from "sonner";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { SprintDatesInput } from './sprint/SprintDatesInput';
 import { SprintCapacityInfo } from './sprint/SprintCapacityInfo';
 import { SprintResourcesSection } from './sprint/SprintResourcesSection';
+import { useSprintResources } from '../hooks/useSprintResources';
+import { useSprintValidation } from '../hooks/useSprintValidation';
 
 interface SprintFormProps {
   onComplete: () => void;
@@ -16,75 +17,26 @@ interface SprintFormProps {
 export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [startDate, setStartDate] = useState('');
   const [duration, setDuration] = useState('10');
-  const [resources, setResources] = useState<Resource[]>([]);
   const [storyPoints, setStoryPoints] = useState('');
   const [showDailyCapacities, setShowDailyCapacities] = useState(false);
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
   const [resourcePresenceDays, setResourcePresenceDays] = useState<{ [key: string]: number }>({});
 
-  const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, sprints } = useSprintStore();
+  const { addSprint, calculateTheoreticalCapacity, getAverageVelocity } = useSprintStore();
   const { activeTeam } = useScrumTeamStore();
+  const { resources, handleAddResource, handleResourceChange, handleDailyCapacityChange } = useSprintResources(startDate, duration);
+  const { validateSprint } = useSprintValidation();
   const averageVelocity = getAverageVelocity();
 
-  // Set default start date, duration and resources based on last sprint
+  // Set default start date and duration
   useEffect(() => {
-    if (activeTeam) {
-      const teamSprints = sprints.filter(s => s.teamId === activeTeam.id);
-      if (teamSprints.length > 0) {
-        const lastSprint = teamSprints[teamSprints.length - 1];
-        const nextDay = new Date(lastSprint.endDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        setStartDate(nextDay.toISOString().split('T')[0]);
-        setDuration(lastSprint.duration.toString());
-        
-        // Initialize resources from last sprint
-        const lastSprintResources = lastSprint.resources.map(r => ({
-          ...r,
-          id: String(Date.now() + Math.random()),
-          dailyCapacities: []
-        }));
-        setResources(lastSprintResources);
-      } else {
-        const today = new Date();
-        today.setDate(today.getDate() + 1);
-        setStartDate(today.toISOString().split('T')[0]);
-        setDuration('14');
-      }
+    if (!startDate) {
+      const today = new Date();
+      today.setDate(today.getDate() + 1);
+      setStartDate(today.toISOString().split('T')[0]);
+      setDuration('14');
     }
-  }, [activeTeam, sprints]);
-
-  // Initialize resources with default capacities
-  useEffect(() => {
-    if (startDate && duration) {
-      const start = new Date(startDate);
-      resources.forEach(resource => {
-        if (!resource.dailyCapacities) {
-          resource.dailyCapacities = [];
-        }
-        
-        for (let i = 0; i < parseInt(duration); i++) {
-          const currentDate = new Date(start);
-          currentDate.setDate(start.getDate() + i);
-          const dateStr = currentDate.toISOString().split('T')[0];
-          
-          const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-          const defaultCapacity = isWeekend ? 0 : resource.capacityPerDay;
-          
-          if (!resource.dailyCapacities.find(dc => dc.date === dateStr)) {
-            resource.dailyCapacities.push({
-              date: dateStr,
-              capacity: defaultCapacity
-            });
-          }
-        }
-
-        if (resource.dailyCapacities.length > parseInt(duration)) {
-          resource.dailyCapacities = resource.dailyCapacities.slice(0, parseInt(duration));
-        }
-      });
-      setResources([...resources]);
-    }
-  }, [startDate, duration, resources.length]);
+  }, []);
 
   useEffect(() => {
     if (duration && resources.length > 0) {
@@ -99,65 +51,19 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     }
   }, [duration, resources, calculateTheoreticalCapacity]);
 
-  const handleAddResource = () => {
-    setResources([
-      ...resources,
-      { id: String(resources.length + 1), name: '', capacityPerDay: 1, dailyCapacities: [] }
-    ]);
-  };
-
-  const handleResourceChange = (id: string, field: keyof Resource, value: string | number) => {
-    setResources(resources.map(resource =>
-      resource.id === id ? { ...resource, [field]: value } : resource
-    ));
-  };
-
-  const handleDailyCapacityChange = (resourceId: string, date: string, capacity: number) => {
-    setResources(resources.map(resource => {
-      if (resource.id === resourceId) {
-        const updatedCapacities = resource.dailyCapacities?.map(dc =>
-          dc.date === date ? { ...dc, capacity } : dc
-        ) || [];
-        return { ...resource, dailyCapacities: updatedCapacities };
-      }
-      return resource;
-    }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!activeTeam) {
-      toast.error("Veuillez sélectionner une équipe");
+    if (!validateSprint(startDate, duration)) {
       return;
     }
 
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + Number(duration) - 1);
 
-    // Check for overlapping sprints
-    const hasOverlap = sprints.some(s => {
-      if (s.teamId !== activeTeam.id) return false;
-      const sprintStart = new Date(s.startDate);
-      const sprintEnd = new Date(s.endDate);
-      const newStart = new Date(startDate);
-      const newEnd = endDate;
-      
-      return (
-        (newStart >= sprintStart && newStart <= sprintEnd) ||
-        (newEnd >= sprintStart && newEnd <= sprintEnd) ||
-        (newStart <= sprintStart && newEnd >= sprintEnd)
-      );
-    });
-
-    if (hasOverlap) {
-      toast.error("Les dates du sprint se chevauchent avec un sprint existant");
-      return;
-    }
-
     const newSprint = {
       id: Date.now().toString(),
-      teamId: activeTeam.id,
+      teamId: activeTeam!.id,
       startDate,
       endDate: endDate.toISOString().split('T')[0],
       duration: Number(duration),
