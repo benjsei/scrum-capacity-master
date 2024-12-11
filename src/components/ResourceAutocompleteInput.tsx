@@ -52,6 +52,7 @@ export const ResourceAutocompleteInput = ({
   };
 
   const handleSuggestionClick = (resource: Resource) => {
+    setInputValue(resource.name);
     onChange(resource);
     setShowSuggestions(false);
   };
@@ -60,14 +61,20 @@ export const ResourceAutocompleteInput = ({
     // Petit délai pour permettre le clic sur une suggestion
     setTimeout(() => {
       if (inputValue.trim() && inputValue !== value) {
-        const newResource: Resource = {
-          id: Date.now().toString(),
-          name: inputValue.trim(),
-          capacityPerDay: 1,
-        };
-        addResource(newResource);
-        onChange(newResource);
+        const existingResource = findResources(inputValue.trim())[0];
+        if (existingResource) {
+          onChange(existingResource);
+        } else {
+          const newResource: Resource = {
+            id: Date.now().toString(),
+            name: inputValue.trim(),
+            capacityPerDay: 1,
+          };
+          addResource(newResource);
+          onChange(newResource);
+        }
       }
+      setShowSuggestions(false);
     }, 200);
   };
 
