@@ -40,7 +40,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
         const today = new Date();
         today.setDate(today.getDate() + 1);
         setStartDate(today.toISOString().split('T')[0]);
-        setDuration('10');
+        setDuration('14'); // Changed from 10 to 14
       }
     }
   }, [activeTeam, sprints]);

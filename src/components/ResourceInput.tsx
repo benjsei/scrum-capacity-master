@@ -1,6 +1,6 @@
 import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
-import { ResourceDailyCapacityInput } from "./ResourceDailyCapacityInput";
+import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
 
 interface ResourceInputProps {
   resource: Resource;
@@ -23,7 +23,7 @@ export const ResourceInput = ({
     <div className="space-y-2">
       <div className="flex gap-4">
         <Input
-          placeholder="Name"
+          placeholder="Nom"
           value={resource.name}
           onChange={(e) => onResourceChange(resource.id, 'name', e.target.value)}
           required
@@ -36,7 +36,7 @@ export const ResourceInput = ({
         />
       </div>
       
-      <ResourceDailyCapacityInput
+      <ResourceDailyCapacityCalendar
         resource={resource}
         onDailyCapacityChange={onDailyCapacityChange}
         showDailyCapacities={showDailyCapacities[resource.id]}

@@ -4,19 +4,92 @@ import { VelocityChart } from "@/components/VelocityChart";
 import { TeamVelocityChart } from "@/components/TeamVelocityChart";
 import { CommitmentChart } from "@/components/CommitmentChart";
 import { TeamManagement } from "@/components/TeamManagement";
+import { TeamPodium } from "@/components/TeamPodium";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
 import { Button } from "@/components/ui/button";
+import { Download, Upload } from "lucide-react";
+import { toast } from "sonner";
 import { useState } from "react";
 
 const Index = () => {
-  const { activeTeam } = useScrumTeamStore();
-  const { canCreateNewSprint } = useSprintStore();
+  const { activeTeam, teams } = useScrumTeamStore();
+  const { canCreateNewSprint, sprints } = useSprintStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
+
+  const handleExport = () => {
+    const data = {
+      version: 1,
+      teams,
+      sprints,
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'scrum-data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        
+        // Version check and data validation
+        if (!data.version || !Array.isArray(data.teams) || !Array.isArray(data.sprints)) {
+          throw new Error("Format de fichier invalide");
+        }
+
+        // Here we can handle different versions if needed
+        switch (data.version) {
+          case 1:
+            // Current version
+            localStorage.setItem('teams', JSON.stringify(data.teams));
+            localStorage.setItem('sprints', JSON.stringify(data.sprints));
+            window.location.reload();
+            break;
+          default:
+            throw new Error("Version non supportée");
+        }
+      } catch (error) {
+        toast.error("Erreur lors de l'import: " + (error as Error).message);
+      }
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <div className="min-h-screen p-6 space-y-6">
-      <header className="text-center mb-8">
+      <header className="text-center mb-8 relative">
+        <div className="absolute right-0 top-0 flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="w-4 h-4 mr-2" />
+            Exporter
+          </Button>
+          <label className="cursor-pointer">
+            <Button variant="outline" size="sm" asChild>
+              <span>
+                <Upload className="w-4 h-4 mr-2" />
+                Importer
+              </span>
+            </Button>
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImport}
+            />
+          </label>
+        </div>
         <h1 className="text-3xl font-bold text-primary">Gestionnaire de Capacité Scrum</h1>
         <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
       </header>
@@ -25,6 +98,11 @@ const Index = () => {
         <div>
           <h2 className="text-xl font-semibold mb-4">Gestion des équipes</h2>
           <TeamManagement />
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Podium des équipes</h2>
+          <TeamPodium />
         </div>
 
         <div>
