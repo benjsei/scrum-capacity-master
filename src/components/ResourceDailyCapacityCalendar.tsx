@@ -1,8 +1,9 @@
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { Button } from "./ui/button";
-import { ResourceDailyCapacity, Resource } from "../types/sprint";
-import { cn } from "@/lib/utils";
+import { Resource } from "../types/sprint";
+import { DayCell } from "./calendar/DayCell";
+import { WeekHeader } from "./calendar/WeekHeader";
+import { PresetButtons, PRESET_VALUES } from "./calendar/PresetButtons";
+import { useState, useEffect } from "react";
 
 interface ResourceDailyCapacityCalendarProps {
   resource: Resource;
@@ -11,53 +12,54 @@ interface ResourceDailyCapacityCalendarProps {
   onToggleDailyCapacities: () => void;
 }
 
-const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-const PRESET_VALUES = [
-  { label: "Vide (0)", value: 0 },
-  { label: "Mi-temps (0.5)", value: 0.5 },
-  { label: "4/5 (0.8)", value: 0.8 },
-  { label: "Plein (1)", value: 1 },
-];
-
 export const ResourceDailyCapacityCalendar = ({
   resource,
   onDailyCapacityChange,
   showDailyCapacities,
   onToggleDailyCapacities,
 }: ResourceDailyCapacityCalendarProps) => {
+  // State local pour suivre les capacités
+  const [localCapacities, setLocalCapacities] = useState(resource.dailyCapacities || []);
+
+  // Mise à jour du state local quand les props changent
+  useEffect(() => {
+    setLocalCapacities(resource.dailyCapacities || []);
+  }, [resource.dailyCapacities]);
+
   const applyPresetValue = (value: number) => {
-    if (!resource.dailyCapacities) {
+    if (!localCapacities) {
       console.log("Pas de dailyCapacities trouvé");
       return;
     }
 
-    console.log("Capacités avant application:", resource.dailyCapacities);
+    console.log("Capacités avant application:", localCapacities);
     
-    // On applique les modifications une par une
-    resource.dailyCapacities.forEach((dc) => {
+    // On crée une copie des capacités pour les modifications
+    const updatedCapacities = localCapacities.map(dc => {
       const date = new Date(dc.date);
       const dayOfWeek = date.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       
-      console.log(`Date: ${dc.date}, Jour: ${dayOfWeek}, Weekend: ${isWeekend}`);
-      
       if (!isWeekend) {
         console.log(`Mise à jour de la capacité pour ${dc.date} à ${value}`);
         onDailyCapacityChange(resource.id, dc.date, value);
+        return { ...dc, capacity: value };
       }
+      return dc;
     });
     
-    // On log après les mises à jour pour vérifier
-    console.log("Capacités après application:", resource.dailyCapacities);
+    // Mise à jour du state local
+    setLocalCapacities(updatedCapacities);
+    console.log("Capacités après application:", updatedCapacities);
   };
 
   const groupCapacitiesByWeek = () => {
-    if (!resource.dailyCapacities) return [];
+    if (!localCapacities) return [];
     
-    const weeks: ResourceDailyCapacity[][] = [];
-    let currentWeek: ResourceDailyCapacity[] = [];
+    const weeks: typeof localCapacities[] = [];
+    let currentWeek: typeof localCapacities = [];
     
-    const sortedCapacities = [...resource.dailyCapacities].sort((a, b) => 
+    const sortedCapacities = [...localCapacities].sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
     
@@ -67,6 +69,7 @@ export const ResourceDailyCapacityCalendar = ({
       const mondayBasedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       
       if (currentWeek.length === 0) {
+        // Fill empty days at start of week
         for (let i = 0; i < mondayBasedDay; i++) {
           const emptyDate = new Date(date);
           emptyDate.setDate(date.getDate() - (mondayBasedDay - i));
@@ -77,6 +80,7 @@ export const ResourceDailyCapacityCalendar = ({
         }
         currentWeek.push(dc);
       } else if (mondayBasedDay === 0 || currentWeek.length >= 7) {
+        // Complete current week and start new one
         while (currentWeek.length < 7) {
           const lastDate = new Date(currentWeek[currentWeek.length - 1].date);
           lastDate.setDate(lastDate.getDate() + 1);
@@ -88,6 +92,7 @@ export const ResourceDailyCapacityCalendar = ({
         weeks.push(currentWeek);
         currentWeek = [dc];
       } else {
+        // Fill gaps in current week
         const lastDate = new Date(currentWeek[currentWeek.length - 1].date);
         const daysToAdd = Math.floor((date.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)) - 1;
         for (let i = 0; i < daysToAdd; i++) {
@@ -128,70 +133,38 @@ export const ResourceDailyCapacityCalendar = ({
           {showDailyCapacities ? 'Masquer le détail' : 'Afficher le détail'}
         </Button>
 
-        {showDailyCapacities && (
-          <div className="flex gap-2">
-            {PRESET_VALUES.map((preset) => (
-              <Button
-                key={preset.value}
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  console.log(`Clic sur le bouton ${preset.label}`);
-                  applyPresetValue(preset.value);
-                }}
-              >
-                {preset.label}
-              </Button>
-            ))}
-          </div>
-        )}
+        {showDailyCapacities && <PresetButtons onPresetClick={applyPresetValue} />}
       </div>
       
-      {showDailyCapacities && resource.dailyCapacities && resource.dailyCapacities.length > 0 && (
+      {showDailyCapacities && localCapacities && localCapacities.length > 0 && (
         <div className="space-y-4">
-          <div className="grid grid-cols-7 gap-1">
-            {DAYS_OF_WEEK.map((day) => (
-              <div key={day} className="text-center font-semibold text-sm p-2">
-                {day}
-              </div>
-            ))}
-          </div>
+          <WeekHeader />
           
           {groupCapacitiesByWeek().map((week, weekIndex) => (
             <div key={weekIndex} className="grid grid-cols-7 gap-1">
               {week.map((dc) => {
                 const date = new Date(dc.date);
                 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                const isInSprintRange = resource.dailyCapacities?.some(
+                const isInSprintRange = localCapacities.some(
                   (originalDc) => originalDc.date === dc.date
                 );
                 
                 return (
-                  <div 
-                    key={dc.date} 
-                    className={cn(
-                      "p-2 rounded border",
-                      isWeekend ? "bg-gray-100" : "bg-white",
-                      !isInSprintRange && "opacity-50"
-                    )}
-                  >
-                    <Label className="text-xs block mb-1">
-                      {date.getDate()}/{date.getMonth() + 1}
-                    </Label>
-                    {isInSprintRange ? (
-                      <Input
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        value={dc.capacity}
-                        onChange={(e) => onDailyCapacityChange(resource.id, dc.date, Number(e.target.value))}
-                        className="h-8 text-sm"
-                      />
-                    ) : (
-                      <div className="h-8" />
-                    )}
-                  </div>
+                  <DayCell
+                    key={dc.date}
+                    date={date}
+                    capacity={dc.capacity}
+                    isWeekend={isWeekend}
+                    isInSprintRange={isInSprintRange}
+                    onCapacityChange={(newCapacity) => {
+                      onDailyCapacityChange(resource.id, dc.date, newCapacity);
+                      setLocalCapacities(prev => 
+                        prev.map(cap => 
+                          cap.date === dc.date ? { ...cap, capacity: newCapacity } : cap
+                        )
+                      );
+                    }}
+                  />
                 );
               })}
             </div>
