@@ -1,5 +1,6 @@
 import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
+import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
 import { useResourceStore } from "../store/resourceStore";
 import { useState, useEffect } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "./ui/command";
