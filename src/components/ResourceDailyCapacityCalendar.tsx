@@ -3,6 +3,8 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { ResourceDailyCapacity, Resource } from "../types/sprint";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useState } from "react";
 
 interface ResourceDailyCapacityCalendarProps {
   resource: Resource;
@@ -20,17 +22,18 @@ export const ResourceDailyCapacityCalendar = ({
   showDailyCapacities,
   onToggleDailyCapacities,
 }: ResourceDailyCapacityCalendarProps) => {
+  const [selectedCapacity, setSelectedCapacity] = useState<string>("1");
+
   const initializeCapacities = () => {
-    if (!resource.dailyCapacities || resource.dailyCapacities.length === 0) {
-      const defaultCapacityIndex = Math.floor(Math.random() * DEFAULT_CAPACITIES.length);
-      resource.dailyCapacities?.forEach((dc) => {
-        const date = new Date(dc.date);
-        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        if (!isWeekend) {
-          onDailyCapacityChange(resource.id, dc.date, DEFAULT_CAPACITIES[defaultCapacityIndex]);
-        }
-      });
-    }
+    if (!resource.dailyCapacities || resource.dailyCapacities.length === 0) return;
+    
+    resource.dailyCapacities.forEach((dc) => {
+      const date = new Date(dc.date);
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      if (!isWeekend) {
+        onDailyCapacityChange(resource.id, dc.date, Number(selectedCapacity));
+      }
+    });
   };
 
   const groupCapacitiesByWeek = () => {
@@ -102,20 +105,45 @@ export const ResourceDailyCapacityCalendar = ({
     return weeks;
   };
 
-  // Initialize capacities when the calendar is first shown
-  if (showDailyCapacities) {
-    initializeCapacities();
-  }
-
   return (
     <div className="space-y-4">
-      <Button 
-        type="button" 
-        variant="outline" 
-        onClick={onToggleDailyCapacities}
-      >
-        {showDailyCapacities ? 'Masquer le détail' : 'Afficher le détail'}
-      </Button>
+      <div className="flex gap-4 items-center">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onToggleDailyCapacities}
+        >
+          {showDailyCapacities ? 'Masquer le détail' : 'Afficher le détail'}
+        </Button>
+
+        {showDailyCapacities && (
+          <div className="flex items-center gap-2">
+            <Label>Capacité par défaut:</Label>
+            <Select
+              value={selectedCapacity}
+              onValueChange={(value) => setSelectedCapacity(value)}
+            >
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DEFAULT_CAPACITIES.map((capacity) => (
+                  <SelectItem key={capacity} value={capacity.toString()}>
+                    {capacity}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={initializeCapacities}
+            >
+              Appliquer
+            </Button>
+          </div>
+        )}
+      </div>
       
       {showDailyCapacities && resource.dailyCapacities && (
         <div className="space-y-4">
