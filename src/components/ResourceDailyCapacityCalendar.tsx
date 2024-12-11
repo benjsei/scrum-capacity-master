@@ -11,7 +11,8 @@ interface ResourceDailyCapacityCalendarProps {
   onToggleDailyCapacities: () => void;
 }
 
-const DAYS_OF_WEEK = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+// Days of week starting from Monday
+const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 export const ResourceDailyCapacityCalendar = ({
   resource,
@@ -27,7 +28,10 @@ export const ResourceDailyCapacityCalendar = ({
     
     resource.dailyCapacities.forEach((dc) => {
       const date = new Date(dc.date);
-      if (currentWeek.length === 0 || new Date(currentWeek[0].date).getDay() > date.getDay()) {
+      // Convert Sunday (0) to 6, and other days to 0-5
+      const adjustedDayOfWeek = (date.getDay() + 6) % 7;
+      
+      if (currentWeek.length === 0 || adjustedDayOfWeek < new Date(currentWeek[0].date).getDay()) {
         if (currentWeek.length > 0) weeks.push(currentWeek);
         currentWeek = [dc];
       } else {
@@ -37,6 +41,11 @@ export const ResourceDailyCapacityCalendar = ({
     
     if (currentWeek.length > 0) weeks.push(currentWeek);
     return weeks;
+  };
+
+  const getDayOfWeek = (date: Date) => {
+    // Convert Sunday (0) to 6, and other days to 0-5
+    return (date.getDay() + 6) % 7;
   };
 
   return (
@@ -63,7 +72,7 @@ export const ResourceDailyCapacityCalendar = ({
             <div key={weekIndex} className="grid grid-cols-7 gap-1">
               {week.map((dc) => {
                 const date = new Date(dc.date);
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                const isWeekend = getDayOfWeek(date) === 6 || getDayOfWeek(date) === 5;
                 
                 return (
                   <div 
