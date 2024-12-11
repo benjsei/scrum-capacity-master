@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useResourceStore } from '../store/resourceStore';
 import { toast } from 'sonner';
 
 export const ResourceManagement = () => {
   const [editingResourceId, setEditingResourceId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const { resources, addResource } = useResourceStore();
+  const { resources, addResource, deleteResource } = useResourceStore();
 
   const handleStartEditing = (resourceId: string, currentName: string) => {
     setEditingResourceId(resourceId);
@@ -22,17 +21,14 @@ export const ResourceManagement = () => {
       return;
     }
     
-    // Mettre à jour le nom de la ressource
-    const updatedResources = resources.map(resource => 
-      resource.id === resourceId 
-        ? { ...resource, name: editingName.trim() }
-        : resource
-    );
-    
-    // Mettre à jour le store avec la nouvelle liste
     addResource({ id: resourceId, name: editingName.trim(), capacityPerDay: 1 });
     setEditingResourceId(null);
     toast.success('Ressource mise à jour avec succès !');
+  };
+
+  const handleDelete = (resourceId: string) => {
+    deleteResource(resourceId);
+    toast.success('Ressource supprimée avec succès !');
   };
 
   return (
@@ -62,6 +58,12 @@ export const ResourceManagement = () => {
                         onClick={() => handleStartEditing(resource.id, resource.name)}
                       >
                         Modifier
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDelete(resource.id)}
+                      >
+                        Supprimer
                       </Button>
                     </div>
                   </>

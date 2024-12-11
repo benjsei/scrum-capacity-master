@@ -8,6 +8,7 @@ import { TeamPodium } from "@/components/TeamPodium";
 import { ResourceManagement } from "@/components/ResourceManagement";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
+import { useResourceStore } from '../store/resourceStore';
 import { Button } from "@/components/ui/button";
 import { Download, Upload, Settings } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ import {
 const Index = () => {
   const { activeTeam, teams, setTeams } = useScrumTeamStore();
   const { canCreateNewSprint, sprints, setSprints } = useSprintStore();
+  const { resources, setResources } = useResourceStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -41,6 +43,7 @@ const Index = () => {
       version: 1,
       teams,
       sprints,
+      resources,
     };
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -72,6 +75,9 @@ const Index = () => {
           case 1:
             setTeams(data.teams);
             setSprints(data.sprints);
+            if (Array.isArray(data.resources)) {
+              setResources(data.resources);
+            }
             toast.success("Import réussi !");
             break;
           default:
