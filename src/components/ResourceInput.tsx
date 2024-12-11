@@ -25,12 +25,13 @@ export const ResourceInput = ({
   // Calcul local du total des jours de présence
   const calculateLocalTotal = (capacities: Resource['dailyCapacities']) => {
     if (!capacities) return 0;
-    return capacities.reduce((sum, dc) => sum + dc.capacity, 0);
+    return capacities.reduce((sum, dc) => sum + (dc.capacity || 0), 0);
   };
 
   // Mise à jour du total local quand les capacités changent
   useEffect(() => {
     const newTotal = calculateLocalTotal(resource.dailyCapacities);
+    console.log("Nouveau total calculé:", newTotal, "pour les capacités:", resource.dailyCapacities);
     setLocalTotal(newTotal);
   }, [resource.dailyCapacities]);
 
@@ -39,10 +40,12 @@ export const ResourceInput = ({
     
     // Mise à jour immédiate du total local
     const updatedCapacities = resource.dailyCapacities?.map(dc => 
-      dc.date === date ? { ...dc, capacity } : dc
+      dc.date === date ? { ...dc, capacity: capacity || 0 } : dc
     ) || [];
     
-    setLocalTotal(calculateLocalTotal(updatedCapacities));
+    const newTotal = calculateLocalTotal(updatedCapacities);
+    console.log("Total mis à jour après changement:", newTotal);
+    setLocalTotal(newTotal);
   };
 
   return (
