@@ -5,6 +5,8 @@ import { persist } from 'zustand/middleware';
 interface ResourceStore {
   resources: Resource[];
   addResource: (resource: Resource) => void;
+  updateResource: (id: string, updates: Partial<Resource>) => void;
+  deleteResource: (id: string) => void;
   findResources: (query: string) => Resource[];
 }
 
@@ -20,6 +22,20 @@ export const useResourceStore = create<ResourceStore>()(
             resources: [...state.resources, resource]
           }));
         }
+      },
+      
+      updateResource: (id, updates) => {
+        set((state) => ({
+          resources: state.resources.map(resource =>
+            resource.id === id ? { ...resource, ...updates } : resource
+          )
+        }));
+      },
+
+      deleteResource: (id) => {
+        set((state) => ({
+          resources: state.resources.filter(resource => resource.id !== id)
+        }));
       },
       
       findResources: (query) => {

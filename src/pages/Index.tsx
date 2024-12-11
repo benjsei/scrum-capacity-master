@@ -22,10 +22,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ResourceManagement } from "@/components/ResourceManagement";
+import { useResourceStore } from '../store/resourceStore';
 
 const Index = () => {
   const { activeTeam, teams, setTeams } = useScrumTeamStore();
   const { canCreateNewSprint, sprints, setSprints } = useSprintStore();
+  const { resources, setResources } = useResourceStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
 
   const handleExport = () => {
@@ -33,6 +36,7 @@ const Index = () => {
       version: 1,
       teams,
       sprints,
+      resources,
     };
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -64,6 +68,9 @@ const Index = () => {
           case 1:
             setTeams(data.teams);
             setSprints(data.sprints);
+            if (Array.isArray(data.resources)) {
+              setResources(data.resources);
+            }
             toast.success("Import réussi !");
             break;
           default:
@@ -86,26 +93,29 @@ const Index = () => {
                 Paramètres
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-56" align="end">
-              <div className="space-y-2">
-                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleExport}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Exporter
-                </Button>
-                <label className="w-full">
-                  <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
-                    <span>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Importer
-                    </span>
+            <PopoverContent className="w-80" align="end">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleExport}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Exporter
                   </Button>
-                  <input
-                    type="file"
-                    accept=".json"
-                    className="hidden"
-                    onChange={handleImport}
-                  />
-                </label>
+                  <label className="w-full">
+                    <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                      <span>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Importer
+                      </span>
+                    </Button>
+                    <input
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={handleImport}
+                    />
+                  </label>
+                </div>
+                <ResourceManagement />
               </div>
             </PopoverContent>
           </Popover>
