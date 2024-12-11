@@ -21,6 +21,7 @@ export const ResourceAutocompleteInput = ({
   const { findResources, addResource } = useResourceStore();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  // Synchroniser l'état local avec la prop value
   useEffect(() => {
     setInputValue(value);
   }, [value]);
@@ -51,7 +52,6 @@ export const ResourceAutocompleteInput = ({
   };
 
   const handleSuggestionClick = (resource: Resource) => {
-    setInputValue(resource.name);
     onChange(resource);
     setShowSuggestions(false);
   };
@@ -59,7 +59,7 @@ export const ResourceAutocompleteInput = ({
   const handleInputBlur = () => {
     // Petit délai pour permettre le clic sur une suggestion
     setTimeout(() => {
-      if (inputValue.trim()) {
+      if (inputValue.trim() && inputValue !== value) {
         const newResource: Resource = {
           id: Date.now().toString(),
           name: inputValue.trim(),
