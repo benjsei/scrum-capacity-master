@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Resource } from "@/types/sprint";
 import { ResourceInput } from "../ResourceInput";
 
 interface SprintResourcesSectionProps {
   resources: Resource[];
   showDailyCapacities: boolean;
   resourcePresenceDays: { [key: string]: number };
-  onResourceChange: (resourceId: string, updates: Partial<Resource>) => void;
+  onResourceChange: (id: string, field: keyof Resource, value: string | number) => void;
   onDailyCapacityChange: (resourceId: string, date: string, capacity: number) => void;
   onToggleDailyCapacities: () => void;
   onAddResource: () => void;
