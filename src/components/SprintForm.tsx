@@ -24,11 +24,10 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
 
   const { addSprint, calculateTheoreticalCapacity, getAverageVelocity } = useSprintStore();
   const { activeTeam } = useScrumTeamStore();
-  const { resources, handleAddResource, handleResourceChange, handleDailyCapacityChange } = useSprintResources(startDate, duration);
+  const { resources, handleAddResource, handleResourceChange, handleDailyCapacityChange, updateResourceDates } = useSprintResources(startDate, duration);
   const { validateSprint } = useSprintValidation();
   const averageVelocity = getAverageVelocity();
 
-  // Set default start date and duration
   useEffect(() => {
     if (!startDate) {
       const today = new Date();
@@ -37,6 +36,12 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
       setDuration('14');
     }
   }, []);
+
+  useEffect(() => {
+    if (startDate && duration) {
+      updateResourceDates(startDate, Number(duration));
+    }
+  }, [startDate, duration]);
 
   useEffect(() => {
     if (duration && resources.length > 0) {

@@ -28,11 +28,7 @@ export const ResourceDailyCapacityCalendar = ({
   const applyPresetValue = (value: number) => {
     if (!resource.dailyCapacities) return;
     
-    const sortedCapacities = [...resource.dailyCapacities].sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-
-    sortedCapacities.forEach((dc) => {
+    resource.dailyCapacities.forEach((dc) => {
       const date = new Date(dc.date);
       const dayOfWeek = date.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;

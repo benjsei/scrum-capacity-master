@@ -23,37 +23,33 @@ export const useSprintResources = (startDate: string, duration: string) => {
     }
   }, [activeTeam, sprints]);
 
-  useEffect(() => {
-    if (startDate && duration) {
-      const start = new Date(startDate);
-      resources.forEach(resource => {
-        if (!resource.dailyCapacities) {
-          resource.dailyCapacities = [];
-        }
+  const updateResourceDates = (newStartDate: string, newDuration: number) => {
+    const start = new Date(newStartDate);
+    const updatedResources = resources.map(resource => {
+      const dailyCapacities = [];
+      
+      for (let i = 0; i < newDuration; i++) {
+        const currentDate = new Date(start);
+        currentDate.setDate(start.getDate() + i);
+        const dateStr = currentDate.toISOString().split('T')[0];
         
-        for (let i = 0; i < parseInt(duration); i++) {
-          const currentDate = new Date(start);
-          currentDate.setDate(start.getDate() + i);
-          const dateStr = currentDate.toISOString().split('T')[0];
-          
-          const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-          const defaultCapacity = isWeekend ? 0 : resource.capacityPerDay;
-          
-          if (!resource.dailyCapacities.find(dc => dc.date === dateStr)) {
-            resource.dailyCapacities.push({
-              date: dateStr,
-              capacity: defaultCapacity
-            });
-          }
-        }
+        const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+        const defaultCapacity = isWeekend ? 0 : resource.capacityPerDay;
+        
+        dailyCapacities.push({
+          date: dateStr,
+          capacity: defaultCapacity
+        });
+      }
 
-        if (resource.dailyCapacities.length > parseInt(duration)) {
-          resource.dailyCapacities = resource.dailyCapacities.slice(0, parseInt(duration));
-        }
-      });
-      setResources([...resources]);
-    }
-  }, [startDate, duration, resources.length]);
+      return {
+        ...resource,
+        dailyCapacities
+      };
+    });
+
+    setResources(updatedResources);
+  };
 
   const handleAddResource = () => {
     setResources([
@@ -84,6 +80,7 @@ export const useSprintResources = (startDate: string, duration: string) => {
     resources,
     handleAddResource,
     handleResourceChange,
-    handleDailyCapacityChange
+    handleDailyCapacityChange,
+    updateResourceDates
   };
 };
