@@ -45,3 +45,4 @@ export const ResourceManagement = () => {
       </div>
     </div>
   );
+};
