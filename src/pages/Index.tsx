@@ -5,12 +5,10 @@ import { TeamVelocityChart } from "@/components/TeamVelocityChart";
 import { CommitmentChart } from "@/components/CommitmentChart";
 import { TeamManagement } from "@/components/TeamManagement";
 import { TeamPodium } from "@/components/TeamPodium";
-import { ResourceManagement } from "@/components/ResourceManagement";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
-import { useResourceStore } from '../store/resourceStore';
 import { Button } from "@/components/ui/button";
-import { Download, Upload, Settings } from "lucide-react";
+import { Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { 
@@ -24,26 +22,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 
 const Index = () => {
   const { activeTeam, teams, setTeams } = useScrumTeamStore();
   const { canCreateNewSprint, sprints, setSprints } = useSprintStore();
-  const { resources, setResources } = useResourceStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
 
   const handleExport = () => {
     const data = {
       version: 1,
       teams,
       sprints,
-      resources,
     };
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -75,9 +64,6 @@ const Index = () => {
           case 1:
             setTeams(data.teams);
             setSprints(data.sprints);
-            if (Array.isArray(data.resources)) {
-              setResources(data.resources);
-            }
             toast.success("Import réussi !");
             break;
           default:
@@ -94,14 +80,10 @@ const Index = () => {
     <div className="min-h-screen p-6 space-y-6">
       <header className="text-center mb-8 relative">
         <div className="absolute right-0 top-0 flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-            <Settings className="w-4 h-4 mr-2" />
-            Paramètres
-          </Button>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm">
-                Import/Export
+                Paramètres
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56" align="end">
@@ -132,27 +114,12 @@ const Index = () => {
         <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
       </header>
 
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Paramètres</DialogTitle>
-          </DialogHeader>
-          <Tabs defaultValue="teams">
-            <TabsList>
-              <TabsTrigger value="teams">Équipes</TabsTrigger>
-              <TabsTrigger value="resources">Ressources</TabsTrigger>
-            </TabsList>
-            <TabsContent value="teams">
-              <TeamManagement />
-            </TabsContent>
-            <TabsContent value="resources">
-              <ResourceManagement />
-            </TabsContent>
-          </Tabs>
-        </DialogContent>
-      </Dialog>
-
       <div className="space-y-6">
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Gestion des équipes</h2>
+          <TeamManagement />
+        </div>
+
         <div>
           <h2 className="text-xl font-semibold mb-4">Podium des équipes</h2>
           <TeamPodium />

@@ -6,8 +6,6 @@ interface ResourceStore {
   resources: Resource[];
   addResource: (resource: Resource) => void;
   findResources: (query: string) => Resource[];
-  deleteResource: (resourceId: string) => void;
-  setResources: (resources: Resource[]) => void;
 }
 
 export const useResourceStore = create<ResourceStore>()(
@@ -30,16 +28,6 @@ export const useResourceStore = create<ResourceStore>()(
         return get().resources.filter(r => 
           r.name.toLowerCase().includes(lowerQuery)
         );
-      },
-
-      deleteResource: (resourceId) => {
-        set((state) => ({
-          resources: state.resources.filter(r => r.id !== resourceId)
-        }));
-      },
-
-      setResources: (resources) => {
-        set({ resources });
       }
     }),
     {
