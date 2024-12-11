@@ -26,20 +26,21 @@ export const ResourceInput = ({
   const { resources } = useResourceStore();
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [selectedValue, setSelectedValue] = useState(resource.name);
+  const [selectedValue, setSelectedValue] = useState(resource.name || "");
 
   useEffect(() => {
-    setSelectedValue(resource.name);
+    setSelectedValue(resource.name || "");
   }, [resource.name]);
 
-  const filteredResources = resources?.filter(r => 
-    r.name.toLowerCase().includes(searchValue.toLowerCase())
-  ) || [];
+  const filteredResources = (resources || []).filter(r => 
+    r.name.toLowerCase().includes((searchValue || "").toLowerCase())
+  );
 
   const handleSelect = (currentValue: string) => {
     setSelectedValue(currentValue);
     onResourceChange(resource.id, 'name', currentValue);
     setOpen(false);
+    setSearchValue("");
   };
 
   return (
@@ -50,8 +51,9 @@ export const ResourceInput = ({
             <Input
               value={selectedValue}
               onChange={(e) => {
-                setSelectedValue(e.target.value);
-                onResourceChange(resource.id, 'name', e.target.value);
+                const value = e.target.value;
+                setSelectedValue(value);
+                onResourceChange(resource.id, 'name', value);
               }}
               className="w-full"
               placeholder="Nom de la ressource"
@@ -62,7 +64,7 @@ export const ResourceInput = ({
               <CommandInput 
                 placeholder="Rechercher une ressource..." 
                 value={searchValue}
-                onValueChange={setSearchValue}
+                onValueChange={(value) => setSearchValue(value)}
               />
               <CommandEmpty>Aucune ressource trouvée.</CommandEmpty>
               <CommandGroup>
