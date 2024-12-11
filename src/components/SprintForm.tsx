@@ -26,7 +26,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const { activeTeam } = useScrumTeamStore();
   const averageVelocity = getAverageVelocity();
 
-  // Set default start date and duration based on last sprint
+  // Set default start date, duration and resources based on last sprint
   useEffect(() => {
     if (activeTeam) {
       const teamSprints = sprints.filter(s => s.teamId === activeTeam.id);
@@ -36,6 +36,14 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
         nextDay.setDate(nextDay.getDate() + 1);
         setStartDate(nextDay.toISOString().split('T')[0]);
         setDuration(lastSprint.duration.toString());
+        
+        // Initialize resources from last sprint
+        const lastSprintResources = lastSprint.resources.map(r => ({
+          ...r,
+          id: String(Date.now() + Math.random()),
+          dailyCapacities: []
+        }));
+        setResources(lastSprintResources);
       } else {
         const today = new Date();
         today.setDate(today.getDate() + 1);

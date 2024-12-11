@@ -12,6 +12,12 @@ interface ResourceDailyCapacityCalendarProps {
 }
 
 const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const PRESET_VALUES = [
+  { label: "Vide (0)", value: 0 },
+  { label: "Mi-temps (0.5)", value: 0.5 },
+  { label: "4/5 (0.8)", value: 0.8 },
+  { label: "Plein (1)", value: 1 },
+];
 
 export const ResourceDailyCapacityCalendar = ({
   resource,
@@ -19,6 +25,18 @@ export const ResourceDailyCapacityCalendar = ({
   showDailyCapacities,
   onToggleDailyCapacities,
 }: ResourceDailyCapacityCalendarProps) => {
+  const applyPresetValue = (value: number) => {
+    if (!resource.dailyCapacities) return;
+    
+    resource.dailyCapacities.forEach((dc) => {
+      const date = new Date(dc.date);
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      if (!isWeekend) {
+        onDailyCapacityChange(resource.id, dc.date, value);
+      }
+    });
+  };
+
   const groupCapacitiesByWeek = () => {
     if (!resource.dailyCapacities) return [];
     
@@ -35,7 +53,6 @@ export const ResourceDailyCapacityCalendar = ({
       const mondayBasedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       
       if (currentWeek.length === 0) {
-        // Start a new week with empty slots before this day
         for (let i = 0; i < mondayBasedDay; i++) {
           const emptyDate = new Date(date);
           emptyDate.setDate(date.getDate() - (mondayBasedDay - i));
@@ -46,7 +63,6 @@ export const ResourceDailyCapacityCalendar = ({
         }
         currentWeek.push(dc);
       } else if (mondayBasedDay === 0 || currentWeek.length >= 7) {
-        // Complete the current week with empty slots if needed
         while (currentWeek.length < 7) {
           const lastDate = new Date(currentWeek[currentWeek.length - 1].date);
           lastDate.setDate(lastDate.getDate() + 1);
@@ -58,7 +74,6 @@ export const ResourceDailyCapacityCalendar = ({
         weeks.push(currentWeek);
         currentWeek = [dc];
       } else {
-        // Fill any gaps between the last date and this one
         const lastDate = new Date(currentWeek[currentWeek.length - 1].date);
         const daysToAdd = Math.floor((date.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)) - 1;
         for (let i = 0; i < daysToAdd; i++) {
@@ -90,13 +105,31 @@ export const ResourceDailyCapacityCalendar = ({
 
   return (
     <div className="space-y-4">
-      <Button 
-        type="button" 
-        variant="outline" 
-        onClick={onToggleDailyCapacities}
-      >
-        {showDailyCapacities ? 'Masquer le détail' : 'Afficher le détail'}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onToggleDailyCapacities}
+        >
+          {showDailyCapacities ? 'Masquer le détail' : 'Afficher le détail'}
+        </Button>
+
+        {showDailyCapacities && (
+          <div className="flex gap-2">
+            {PRESET_VALUES.map((preset) => (
+              <Button
+                key={preset.value}
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => applyPresetValue(preset.value)}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+        )}
+      </div>
       
       {showDailyCapacities && resource.dailyCapacities && (
         <div className="space-y-4">
