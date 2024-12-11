@@ -26,12 +26,19 @@ export const ResourceDailyCapacityCalendar = ({
   onToggleDailyCapacities,
 }: ResourceDailyCapacityCalendarProps) => {
   const applyPresetValue = (value: number) => {
-    if (!resource.dailyCapacities) return;
+    if (!resource.dailyCapacities) {
+      console.log("Pas de dailyCapacities trouvé");
+      return;
+    }
 
+    console.log("Capacités avant tri:", resource.dailyCapacities);
+    
     // On trie d'abord les capacités par date pour s'assurer de l'ordre
     const sortedCapacities = [...resource.dailyCapacities].sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
+
+    console.log("Capacités après tri:", sortedCapacities);
 
     // On applique la valeur à chaque jour qui n'est pas un weekend
     sortedCapacities.forEach((dc) => {
@@ -39,7 +46,10 @@ export const ResourceDailyCapacityCalendar = ({
       const dayOfWeek = date.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       
+      console.log(`Date: ${dc.date}, Jour: ${dayOfWeek}, Weekend: ${isWeekend}`);
+      
       if (!isWeekend) {
+        console.log(`Mise à jour de la capacité pour ${dc.date} à ${value}`);
         onDailyCapacityChange(resource.id, dc.date, value);
       }
     });
@@ -130,7 +140,10 @@ export const ResourceDailyCapacityCalendar = ({
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => applyPresetValue(preset.value)}
+                onClick={() => {
+                  console.log(`Clic sur le bouton ${preset.label}`);
+                  applyPresetValue(preset.value);
+                }}
               >
                 {preset.label}
               </Button>
