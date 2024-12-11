@@ -33,7 +33,9 @@ export const ResourceDailyCapacityCalendar = ({
 
     console.log("Capacités avant application:", resource.dailyCapacities);
     
-    // On applique directement la valeur sur les capacités originales
+    // On crée une copie locale des modifications à appliquer
+    const updates: { date: string; capacity: number }[] = [];
+    
     resource.dailyCapacities.forEach((dc) => {
       const date = new Date(dc.date);
       const dayOfWeek = date.getDay();
@@ -43,8 +45,13 @@ export const ResourceDailyCapacityCalendar = ({
       
       if (!isWeekend) {
         console.log(`Mise à jour de la capacité pour ${dc.date} à ${value}`);
-        onDailyCapacityChange(resource.id, dc.date, value);
+        updates.push({ date: dc.date, capacity: value });
       }
+    });
+    
+    // On applique toutes les modifications d'un coup
+    updates.forEach(update => {
+      onDailyCapacityChange(resource.id, update.date, update.capacity);
     });
   };
 
@@ -145,7 +152,7 @@ export const ResourceDailyCapacityCalendar = ({
         )}
       </div>
       
-      {showDailyCapacities && resource.dailyCapacities && (
+      {showDailyCapacities && resource.dailyCapacities && resource.dailyCapacities.length > 0 && (
         <div className="space-y-4">
           <div className="grid grid-cols-7 gap-1">
             {DAYS_OF_WEEK.map((day) => (
