@@ -11,11 +11,24 @@ import { Button } from "@/components/ui/button";
 import { Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { ResourceManagement } from "@/components/ResourceManagement";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Index = () => {
   const { activeTeam, teams } = useScrumTeamStore();
   const { canCreateNewSprint, sprints } = useSprintStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
+  const [showResourceManagement, setShowResourceManagement] = useState(false);
 
   const handleExport = () => {
     const data = {
@@ -71,28 +84,53 @@ const Index = () => {
     <div className="min-h-screen p-6 space-y-6">
       <header className="text-center mb-8 relative">
         <div className="absolute right-0 top-0 flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-2" />
-            Exporter
-          </Button>
-          <label className="cursor-pointer">
-            <Button variant="outline" size="sm" asChild>
-              <span>
-                <Upload className="w-4 h-4 mr-2" />
-                Importer
-              </span>
-            </Button>
-            <input
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={handleImport}
-            />
-          </label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                Paramètres
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56" align="end">
+              <div className="space-y-2">
+                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setShowResourceManagement(true)}>
+                  Gestion des ressources
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleExport}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Exporter
+                </Button>
+                <label className="w-full">
+                  <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                    <span>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Importer
+                    </span>
+                  </Button>
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleImport}
+                  />
+                </label>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
         <h1 className="text-3xl font-bold text-primary">Gestionnaire de Capacité Scrum</h1>
         <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
       </header>
+
+      {showResourceManagement && (
+        <Dialog open={showResourceManagement} onOpenChange={setShowResourceManagement}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Gestion des ressources</DialogTitle>
+            </DialogHeader>
+            <ResourceManagement />
+          </DialogContent>
+        </Dialog>
+      )}
 
       <div className="space-y-6">
         <div>

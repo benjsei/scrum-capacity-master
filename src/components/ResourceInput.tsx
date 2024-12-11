@@ -2,14 +2,16 @@ import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
 import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
 import { useResourceStore } from "../store/resourceStore";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useState } from "react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "./ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface ResourceInputProps {
   resource: Resource;
   onResourceChange: (id: string, field: keyof Resource, value: string | number) => void;
   onDailyCapacityChange: (resourceId: string, date: string, capacity: number) => void;
-  showDailyCapacities: { [key: string]: boolean };
-  onToggleDailyCapacities: (resourceId: string) => void;
+  showDailyCapacities: boolean;
+  onToggleDailyCapacities: () => void;
   totalPresenceDays: number;
 }
 
@@ -22,25 +24,55 @@ export const ResourceInput = ({
   totalPresenceDays,
 }: ResourceInputProps) => {
   const { resources } = useResourceStore();
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(resource.name);
+
+  const handleSelect = (value: string) => {
+    onResourceChange(resource.id, 'name', value);
+    setInputValue(value);
+    setOpen(false);
+  };
+
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (!resources.some(r => r.name === value)) {
+      onResourceChange(resource.id, 'name', value);
+    }
+  };
 
   return (
     <div className="space-y-2">
       <div className="flex gap-4">
-        <Select
-          value={resource.name}
-          onValueChange={(value) => onResourceChange(resource.id, 'name', value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Sélectionner une ressource" />
-          </SelectTrigger>
-          <SelectContent>
-            {resources.map((r) => (
-              <SelectItem key={r.id} value={r.name}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Input
+              value={inputValue}
+              onChange={(e) => handleInputChange(e.target.value)}
+              className="w-full"
+              placeholder="Nom de la ressource"
+              onClick={() => setOpen(true)}
+            />
+          </PopoverTrigger>
+          <PopoverContent className="p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Rechercher une ressource..." />
+              <CommandEmpty>Aucune ressource trouvée.</CommandEmpty>
+              <CommandGroup>
+                {resources
+                  .filter(r => r.name.toLowerCase().includes(inputValue.toLowerCase()))
+                  .map(r => (
+                    <CommandItem
+                      key={r.id}
+                      value={r.name}
+                      onSelect={handleSelect}
+                    >
+                      {r.name}
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
         <Input
           type="number"
           value={totalPresenceDays.toFixed(1)}

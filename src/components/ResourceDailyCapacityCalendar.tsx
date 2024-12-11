@@ -25,26 +25,67 @@ export const ResourceDailyCapacityCalendar = ({
     const weeks: ResourceDailyCapacity[][] = [];
     let currentWeek: ResourceDailyCapacity[] = [];
     
-    resource.dailyCapacities.forEach((dc) => {
+    const sortedCapacities = [...resource.dailyCapacities].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    
+    sortedCapacities.forEach((dc) => {
       const date = new Date(dc.date);
       const dayOfWeek = date.getDay();
       const mondayBasedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       
-      if (currentWeek.length === 0 || mondayBasedDay === 0) {
-        if (currentWeek.length > 0) weeks.push(currentWeek);
+      if (currentWeek.length === 0) {
+        // Start a new week with empty slots before this day
+        for (let i = 0; i < mondayBasedDay; i++) {
+          const emptyDate = new Date(date);
+          emptyDate.setDate(date.getDate() - (mondayBasedDay - i));
+          currentWeek.push({
+            date: emptyDate.toISOString().split('T')[0],
+            capacity: 0
+          });
+        }
+        currentWeek.push(dc);
+      } else if (mondayBasedDay === 0 || currentWeek.length >= 7) {
+        // Complete the current week with empty slots if needed
+        while (currentWeek.length < 7) {
+          const lastDate = new Date(currentWeek[currentWeek.length - 1].date);
+          lastDate.setDate(lastDate.getDate() + 1);
+          currentWeek.push({
+            date: lastDate.toISOString().split('T')[0],
+            capacity: 0
+          });
+        }
+        weeks.push(currentWeek);
         currentWeek = [dc];
       } else {
+        // Fill any gaps between the last date and this one
+        const lastDate = new Date(currentWeek[currentWeek.length - 1].date);
+        const daysToAdd = Math.floor((date.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)) - 1;
+        for (let i = 0; i < daysToAdd; i++) {
+          const emptyDate = new Date(lastDate);
+          emptyDate.setDate(lastDate.getDate() + i + 1);
+          currentWeek.push({
+            date: emptyDate.toISOString().split('T')[0],
+            capacity: 0
+          });
+        }
         currentWeek.push(dc);
       }
     });
     
-    if (currentWeek.length > 0) weeks.push(currentWeek);
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) {
+        const lastDate = new Date(currentWeek[currentWeek.length - 1].date);
+        lastDate.setDate(lastDate.getDate() + 1);
+        currentWeek.push({
+          date: lastDate.toISOString().split('T')[0],
+          capacity: 0
+        });
+      }
+      weeks.push(currentWeek);
+    }
+    
     return weeks;
-  };
-
-  const getDayOfWeek = (date: Date) => {
-    const day = date.getDay();
-    return day === 0 ? 6 : day - 1;
   };
 
   return (
@@ -71,27 +112,35 @@ export const ResourceDailyCapacityCalendar = ({
             <div key={weekIndex} className="grid grid-cols-7 gap-1">
               {week.map((dc) => {
                 const date = new Date(dc.date);
-                const isWeekend = getDayOfWeek(date) >= 5;
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                const isInSprintRange = resource.dailyCapacities?.some(
+                  (originalDc) => originalDc.date === dc.date
+                );
                 
                 return (
                   <div 
                     key={dc.date} 
                     className={cn(
                       "p-2 rounded border",
-                      isWeekend ? "bg-gray-100" : "bg-white"
+                      isWeekend ? "bg-gray-100" : "bg-white",
+                      !isInSprintRange && "opacity-50"
                     )}
                   >
                     <Label className="text-xs block mb-1">
                       {date.getDate()}/{date.getMonth() + 1}
                     </Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      value={dc.capacity}
-                      onChange={(e) => onDailyCapacityChange(resource.id, dc.date, Number(e.target.value))}
-                      className="h-8 text-sm"
-                    />
+                    {isInSprintRange ? (
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={dc.capacity}
+                        onChange={(e) => onDailyCapacityChange(resource.id, dc.date, Number(e.target.value))}
+                        className="h-8 text-sm"
+                      />
+                    ) : (
+                      <div className="h-8" />
+                    )}
                   </div>
                 );
               })}
