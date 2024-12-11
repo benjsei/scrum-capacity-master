@@ -21,7 +21,6 @@ export const ResourceInput = ({
   totalPresenceDays,
 }: ResourceInputProps) => {
   const [localTotal, setLocalTotal] = useState(totalPresenceDays);
-  const [localCapacities, setLocalCapacities] = useState(resource.dailyCapacities || []);
 
   // Calcul local du total des jours de présence
   const calculateLocalTotal = (capacities: Resource['dailyCapacities']) => {
@@ -31,28 +30,9 @@ export const ResourceInput = ({
 
   // Mise à jour du total local quand les capacités changent
   useEffect(() => {
-    setLocalCapacities(resource.dailyCapacities || []);
+    const newTotal = calculateLocalTotal(resource.dailyCapacities);
+    setLocalTotal(newTotal);
   }, [resource.dailyCapacities]);
-
-  useEffect(() => {
-    const newTotal = calculateLocalTotal(localCapacities);
-    console.log("Nouveau total calculé:", newTotal, "pour les capacités:", localCapacities);
-    setLocalTotal(newTotal);
-  }, [localCapacities]);
-
-  const handleDailyCapacityChange = (resourceId: string, date: string, capacity: number) => {
-    onDailyCapacityChange(resourceId, date, capacity);
-    
-    // Mise à jour immédiate du state local
-    const updatedCapacities = localCapacities.map(dc => 
-      dc.date === date ? { ...dc, capacity: capacity || 0 } : dc
-    );
-    
-    setLocalCapacities(updatedCapacities);
-    const newTotal = calculateLocalTotal(updatedCapacities);
-    console.log("Total mis à jour après changement:", newTotal);
-    setLocalTotal(newTotal);
-  };
 
   return (
     <div className="space-y-2">
@@ -76,7 +56,7 @@ export const ResourceInput = ({
       
       <ResourceDailyCapacityCalendar
         resource={resource}
-        onDailyCapacityChange={handleDailyCapacityChange}
+        onDailyCapacityChange={onDailyCapacityChange}
         showDailyCapacities={showDailyCapacities}
         onToggleDailyCapacities={onToggleDailyCapacities}
       />
