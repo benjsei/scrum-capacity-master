@@ -1,7 +1,6 @@
 import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
 import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
-import { useMemo } from "react";
 
 interface ResourceInputProps {
   resource: Resource;
@@ -20,23 +19,21 @@ export const ResourceInput = ({
   onToggleDailyCapacities,
   totalPresenceDays,
 }: ResourceInputProps) => {
-  const total = useMemo(() => {
-    if (!resource.dailyCapacities) return 0;
-    return resource.dailyCapacities.reduce((sum, dc) => sum + dc.capacity, 0);
-  }, [resource.dailyCapacities]);
-
   return (
     <div className="space-y-2">
       <div className="flex gap-4">
         <Input
           value={resource.name}
-          onChange={(e) => onResourceChange(resource.id, 'name', e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+            onResourceChange(resource.id, 'name', value);
+          }}
           className="w-full"
           placeholder="Nom de la ressource"
         />
         <Input
           type="number"
-          value={total.toFixed(1)}
+          value={totalPresenceDays.toFixed(1)}
           readOnly
           className="bg-muted w-32"
         />

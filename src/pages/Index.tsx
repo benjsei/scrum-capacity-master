@@ -46,29 +46,6 @@ const Index = () => {
     URL.revokeObjectURL(url);
   };
 
-  const validateImportData = (data: any) => {
-    if (!data) throw new Error("Le fichier est vide ou mal formaté");
-    if (typeof data !== 'object') throw new Error("Le fichier doit contenir un objet JSON");
-    if (!data.version) throw new Error("La version du fichier est manquante");
-    if (!Array.isArray(data.teams)) throw new Error("Le format des équipes est invalide");
-    if (!Array.isArray(data.sprints)) throw new Error("Le format des sprints est invalide");
-    
-    // Validation plus détaillée des équipes
-    data.teams.forEach((team: any, index: number) => {
-      if (!team.id) throw new Error(`L'équipe à l'index ${index} n'a pas d'ID`);
-      if (!team.name) throw new Error(`L'équipe à l'index ${index} n'a pas de nom`);
-    });
-
-    // Validation plus détaillée des sprints
-    data.sprints.forEach((sprint: any, index: number) => {
-      if (!sprint.id) throw new Error(`Le sprint à l'index ${index} n'a pas d'ID`);
-      if (!sprint.teamId) throw new Error(`Le sprint à l'index ${index} n'a pas d'ID d'équipe`);
-      if (!sprint.startDate) throw new Error(`Le sprint à l'index ${index} n'a pas de date de début`);
-      if (!sprint.endDate) throw new Error(`Le sprint à l'index ${index} n'a pas de date de fin`);
-      if (!Array.isArray(sprint.resources)) throw new Error(`Le sprint à l'index ${index} n'a pas de ressources valides`);
-    });
-  };
-
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -76,13 +53,12 @@ const Index = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        if (!e.target?.result) {
-          throw new Error("Impossible de lire le fichier");
+        const data = JSON.parse(e.target?.result as string);
+        
+        if (!data.version || !Array.isArray(data.teams) || !Array.isArray(data.sprints)) {
+          throw new Error("Format de fichier invalide");
         }
 
-        const data = JSON.parse(e.target.result as string);
-        validateImportData(data);
-        
         switch (data.version) {
           case 1:
             localStorage.setItem('teams', JSON.stringify(data.teams));
@@ -90,19 +66,12 @@ const Index = () => {
             window.location.reload();
             break;
           default:
-            throw new Error(`Version ${data.version} non supportée (seule la version 1 est supportée)`);
+            throw new Error("Version non supportée");
         }
       } catch (error) {
-        console.error("Erreur détaillée:", error);
         toast.error("Erreur lors de l'import: " + (error as Error).message);
       }
     };
-
-    reader.onerror = (error) => {
-      console.error("Erreur de lecture du fichier:", error);
-      toast.error("Erreur lors de la lecture du fichier");
-    };
-
     reader.readAsText(file);
   };
 
