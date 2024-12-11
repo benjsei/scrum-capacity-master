@@ -12,6 +12,7 @@ interface ResourceDailyCapacityCalendarProps {
 }
 
 const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const DEFAULT_CAPACITIES = [0, 0.5, 0.8, 1];
 
 export const ResourceDailyCapacityCalendar = ({
   resource,
@@ -19,6 +20,19 @@ export const ResourceDailyCapacityCalendar = ({
   showDailyCapacities,
   onToggleDailyCapacities,
 }: ResourceDailyCapacityCalendarProps) => {
+  const initializeCapacities = () => {
+    if (!resource.dailyCapacities || resource.dailyCapacities.length === 0) {
+      const defaultCapacityIndex = Math.floor(Math.random() * DEFAULT_CAPACITIES.length);
+      resource.dailyCapacities?.forEach((dc) => {
+        const date = new Date(dc.date);
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        if (!isWeekend) {
+          onDailyCapacityChange(resource.id, dc.date, DEFAULT_CAPACITIES[defaultCapacityIndex]);
+        }
+      });
+    }
+  };
+
   const groupCapacitiesByWeek = () => {
     if (!resource.dailyCapacities) return [];
     
@@ -87,6 +101,11 @@ export const ResourceDailyCapacityCalendar = ({
     
     return weeks;
   };
+
+  // Initialize capacities when the calendar is first shown
+  if (showDailyCapacities) {
+    initializeCapacities();
+  }
 
   return (
     <div className="space-y-4">
