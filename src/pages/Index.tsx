@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { ResourceManagement } from "@/components/ResourceManagement";
 import { 
   Dialog,
   DialogContent,
@@ -28,7 +27,6 @@ const Index = () => {
   const { activeTeam, teams } = useScrumTeamStore();
   const { canCreateNewSprint, sprints } = useSprintStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
-  const [showResourceManagement, setShowResourceManagement] = useState(false);
 
   const handleExport = () => {
     const data = {
@@ -57,15 +55,12 @@ const Index = () => {
       try {
         const data = JSON.parse(e.target?.result as string);
         
-        // Version check and data validation
         if (!data.version || !Array.isArray(data.teams) || !Array.isArray(data.sprints)) {
           throw new Error("Format de fichier invalide");
         }
 
-        // Here we can handle different versions if needed
         switch (data.version) {
           case 1:
-            // Current version
             localStorage.setItem('teams', JSON.stringify(data.teams));
             localStorage.setItem('sprints', JSON.stringify(data.sprints));
             window.location.reload();
@@ -92,9 +87,6 @@ const Index = () => {
             </PopoverTrigger>
             <PopoverContent className="w-56" align="end">
               <div className="space-y-2">
-                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setShowResourceManagement(true)}>
-                  Gestion des ressources
-                </Button>
                 <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleExport}>
                   <Download className="w-4 h-4 mr-2" />
                   Exporter
@@ -120,17 +112,6 @@ const Index = () => {
         <h1 className="text-3xl font-bold text-primary">Gestionnaire de Capacité Scrum</h1>
         <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
       </header>
-
-      {showResourceManagement && (
-        <Dialog open={showResourceManagement} onOpenChange={setShowResourceManagement}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Gestion des ressources</DialogTitle>
-            </DialogHeader>
-            <ResourceManagement />
-          </DialogContent>
-        </Dialog>
-      )}
 
       <div className="space-y-6">
         <div>
