@@ -1,7 +1,7 @@
 import { Input } from "./ui/input";
 import { Resource } from "../types/sprint";
 import { ResourceDailyCapacityCalendar } from "./ResourceDailyCapacityCalendar";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 interface ResourceInputProps {
   resource: Resource;
@@ -20,18 +20,10 @@ export const ResourceInput = ({
   onToggleDailyCapacities,
   totalPresenceDays,
 }: ResourceInputProps) => {
-  const [localTotal, setLocalTotal] = useState(totalPresenceDays);
-
-  // Calcul local du total des jours de présence
-  const calculateLocalTotal = (capacities: Resource['dailyCapacities']) => {
-    if (!capacities) return 0;
-    return capacities.reduce((sum, dc) => sum + (dc.capacity || 0), 0);
-  };
-
-  // Mise à jour du total local quand les capacités changent
-  useEffect(() => {
-    const newTotal = calculateLocalTotal(resource.dailyCapacities);
-    setLocalTotal(newTotal);
+  // Calcul du total directement à partir des props
+  const total = useMemo(() => {
+    if (!resource.dailyCapacities) return 0;
+    return resource.dailyCapacities.reduce((sum, dc) => sum + (dc.capacity || 0), 0);
   }, [resource.dailyCapacities]);
 
   return (
@@ -48,7 +40,7 @@ export const ResourceInput = ({
         />
         <Input
           type="number"
-          value={localTotal.toFixed(1)}
+          value={total.toFixed(1)}
           readOnly
           className="bg-muted w-32"
         />
