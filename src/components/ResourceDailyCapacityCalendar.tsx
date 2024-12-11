@@ -28,9 +28,15 @@ export const ResourceDailyCapacityCalendar = ({
   const applyPresetValue = (value: number) => {
     if (!resource.dailyCapacities) return;
     
-    resource.dailyCapacities.forEach((dc) => {
+    const sortedCapacities = [...resource.dailyCapacities].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    sortedCapacities.forEach((dc) => {
       const date = new Date(dc.date);
-      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      const dayOfWeek = date.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      
       if (!isWeekend) {
         onDailyCapacityChange(resource.id, dc.date, value);
       }
