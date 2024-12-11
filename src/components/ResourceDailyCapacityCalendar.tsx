@@ -3,8 +3,6 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { ResourceDailyCapacity, Resource } from "../types/sprint";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useState, useEffect } from "react";
 
 interface ResourceDailyCapacityCalendarProps {
   resource: Resource;
@@ -14,7 +12,6 @@ interface ResourceDailyCapacityCalendarProps {
 }
 
 const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-const DEFAULT_CAPACITIES = [0, 0.5, 0.8, 1];
 
 export const ResourceDailyCapacityCalendar = ({
   resource,
@@ -22,45 +19,13 @@ export const ResourceDailyCapacityCalendar = ({
   showDailyCapacities,
   onToggleDailyCapacities,
 }: ResourceDailyCapacityCalendarProps) => {
-  const [selectedCapacity, setSelectedCapacity] = useState<string>("1");
-  const [localCapacities, setLocalCapacities] = useState<ResourceDailyCapacity[]>(resource.dailyCapacities || []);
-
-  useEffect(() => {
-    setLocalCapacities(resource.dailyCapacities || []);
-  }, [resource.dailyCapacities]);
-
-  const initializeCapacities = () => {
-    if (!localCapacities || localCapacities.length === 0) return;
-    
-    const updatedCapacities = [...localCapacities];
-    const selectedValue = Number(selectedCapacity);
-
-    updatedCapacities.forEach((dc) => {
-      const date = new Date(dc.date);
-      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-      if (!isWeekend) {
-        onDailyCapacityChange(resource.id, dc.date, selectedValue);
-      }
-    });
-
-    setLocalCapacities(updatedCapacities);
-  };
-
-  const handleCapacityChange = (date: string, capacity: number) => {
-    const updatedCapacities = localCapacities.map(dc =>
-      dc.date === date ? { ...dc, capacity } : dc
-    );
-    setLocalCapacities(updatedCapacities);
-    onDailyCapacityChange(resource.id, date, capacity);
-  };
-
   const groupCapacitiesByWeek = () => {
-    if (!localCapacities) return [];
+    if (!resource.dailyCapacities) return [];
     
     const weeks: ResourceDailyCapacity[][] = [];
     let currentWeek: ResourceDailyCapacity[] = [];
     
-    const sortedCapacities = [...localCapacities].sort((a, b) => 
+    const sortedCapacities = [...resource.dailyCapacities].sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
     
@@ -125,45 +90,15 @@ export const ResourceDailyCapacityCalendar = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 items-center">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onToggleDailyCapacities}
-        >
-          {showDailyCapacities ? 'Masquer le détail' : 'Afficher le détail'}
-        </Button>
-
-        {showDailyCapacities && (
-          <div className="flex items-center gap-2">
-            <Label>Capacité par défaut:</Label>
-            <Select
-              value={selectedCapacity}
-              onValueChange={(value) => setSelectedCapacity(value)}
-            >
-              <SelectTrigger className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DEFAULT_CAPACITIES.map((capacity) => (
-                  <SelectItem key={capacity} value={capacity.toString()}>
-                    {capacity}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              type="button" 
-              variant="secondary"
-              onClick={initializeCapacities}
-            >
-              Appliquer
-            </Button>
-          </div>
-        )}
-      </div>
+      <Button 
+        type="button" 
+        variant="outline" 
+        onClick={onToggleDailyCapacities}
+      >
+        {showDailyCapacities ? 'Masquer le détail' : 'Afficher le détail'}
+      </Button>
       
-      {showDailyCapacities && localCapacities && (
+      {showDailyCapacities && resource.dailyCapacities && (
         <div className="space-y-4">
           <div className="grid grid-cols-7 gap-1">
             {DAYS_OF_WEEK.map((day) => (
@@ -178,7 +113,7 @@ export const ResourceDailyCapacityCalendar = ({
               {week.map((dc) => {
                 const date = new Date(dc.date);
                 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                const isInSprintRange = localCapacities?.some(
+                const isInSprintRange = resource.dailyCapacities?.some(
                   (originalDc) => originalDc.date === dc.date
                 );
                 
@@ -200,7 +135,7 @@ export const ResourceDailyCapacityCalendar = ({
                         step="0.1"
                         min="0"
                         value={dc.capacity}
-                        onChange={(e) => handleCapacityChange(dc.date, Number(e.target.value))}
+                        onChange={(e) => onDailyCapacityChange(resource.id, dc.date, Number(e.target.value))}
                         className="h-8 text-sm"
                       />
                     ) : (
