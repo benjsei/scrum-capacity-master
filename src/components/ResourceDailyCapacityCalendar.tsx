@@ -28,19 +28,13 @@ export const ResourceDailyCapacityCalendar = ({
   const applyPresetValue = (value: number) => {
     if (!resource.dailyCapacities) return;
     
-    // Sort capacities by date to ensure consistent order
-    const sortedCapacities = [...resource.dailyCapacities].sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-
-    // Apply the value to each non-weekend day
-    sortedCapacities.forEach((dc) => {
+    // Parcourir toutes les capacités et appliquer la valeur aux jours de semaine
+    resource.dailyCapacities.forEach((dc) => {
       const date = new Date(dc.date);
       const dayOfWeek = date.getDay();
-      // 0 is Sunday, 6 is Saturday
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       
-      // Only update if it's not a weekend
+      // Si ce n'est pas un weekend, on applique la nouvelle valeur
       if (!isWeekend) {
         onDailyCapacityChange(resource.id, dc.date, value);
       }
