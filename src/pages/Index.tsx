@@ -32,7 +32,7 @@ const Index = () => {
           <TeamVelocityChart />
         </div>
 
-        {activeTeam && (
+        {activeTeam ? (
           <>
             <div className="space-y-4">
               {canCreateNewSprint() && !showSprintForm && (
