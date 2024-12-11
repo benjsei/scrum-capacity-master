@@ -31,17 +31,10 @@ export const ResourceDailyCapacityCalendar = ({
       return;
     }
 
-    console.log("Capacités avant tri:", resource.dailyCapacities);
+    console.log("Capacités avant application:", resource.dailyCapacities);
     
-    // On trie d'abord les capacités par date pour s'assurer de l'ordre
-    const sortedCapacities = [...resource.dailyCapacities].sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-
-    console.log("Capacités après tri:", sortedCapacities);
-
-    // On applique la valeur à chaque jour qui n'est pas un weekend
-    sortedCapacities.forEach((dc) => {
+    // On applique directement la valeur sur les capacités originales
+    resource.dailyCapacities.forEach((dc) => {
       const date = new Date(dc.date);
       const dayOfWeek = date.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
