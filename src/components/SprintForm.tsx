@@ -18,7 +18,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [duration, setDuration] = useState('10');
   const [resources, setResources] = useState<Resource[]>([]);
   const [storyPoints, setStoryPoints] = useState('');
-  const [showDailyCapacities, setShowDailyCapacities] = useState<{ [key: string]: boolean }>({});
+  const [showDailyCapacities, setShowDailyCapacities] = useState(false);
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
   const [resourcePresenceDays, setResourcePresenceDays] = useState<{ [key: string]: number }>({});
 
@@ -40,7 +40,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
         const today = new Date();
         today.setDate(today.getDate() + 1);
         setStartDate(today.toISOString().split('T')[0]);
-        setDuration('14'); // Changed from 10 to 14
+        setDuration('14');
       }
     }
   }, [activeTeam, sprints]);
@@ -59,7 +59,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
           currentDate.setDate(start.getDate() + i);
           const dateStr = currentDate.toISOString().split('T')[0];
           
-          // Set weekend days to 0 capacity
           const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
           const defaultCapacity = isWeekend ? 0 : resource.capacityPerDay;
           
@@ -71,7 +70,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
           }
         }
 
-        // Remove extra days if duration was decreased
         if (resource.dailyCapacities.length > parseInt(duration)) {
           resource.dailyCapacities = resource.dailyCapacities.slice(0, parseInt(duration));
         }
@@ -115,13 +113,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
         return { ...resource, dailyCapacities: updatedCapacities };
       }
       return resource;
-    }));
-  };
-
-  const toggleDailyCapacities = (resourceId: string) => {
-    setShowDailyCapacities(prev => ({
-      ...prev,
-      [resourceId]: !prev[resourceId]
     }));
   };
 
@@ -188,7 +179,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
           resourcePresenceDays={resourcePresenceDays}
           onResourceChange={handleResourceChange}
           onDailyCapacityChange={handleDailyCapacityChange}
-          onToggleDailyCapacities={toggleDailyCapacities}
+          onToggleDailyCapacities={() => setShowDailyCapacities(!showDailyCapacities)}
           onAddResource={handleAddResource}
         />
 
