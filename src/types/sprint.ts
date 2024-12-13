@@ -9,6 +9,7 @@ export interface Resource {
   id: string;
   name: string;
   capacityPerDay: number;
+  teamId?: string;
   dailyCapacities?: ResourceDailyCapacity[];
 }
 
