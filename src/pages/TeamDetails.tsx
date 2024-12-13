@@ -3,27 +3,18 @@ import { SprintList } from "@/components/SprintList";
 import { VelocityChart } from "@/components/VelocityChart";
 import { TeamVelocityChart } from "@/components/TeamVelocityChart";
 import { CommitmentChart } from "@/components/CommitmentChart";
-import { AgilePractices } from "@/components/AgilePractices";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
-import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 const TeamDetails = () => {
   const { activeTeam } = useScrumTeamStore();
   const { canCreateNewSprint } = useSprintStore();
-  const { initializePractices } = useAgilePracticesStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (activeTeam) {
-      initializePractices(activeTeam.id);
-    }
-  }, [activeTeam, initializePractices]);
 
   if (!activeTeam) {
     navigate('/');
@@ -60,8 +51,6 @@ const TeamDetails = () => {
             <SprintForm onComplete={() => setShowSprintForm(false)} />
           </div>
         )}
-
-        <AgilePractices teamId={activeTeam.id} />
 
         <div>
           <h2 className="text-xl font-semibold mb-4">Historique des sprints</h2>
