@@ -28,7 +28,7 @@ const Index = () => {
   const { teams, setTeams } = useScrumTeamStore();
   const { sprints, setSprints } = useSprintStore();
   const { resources, setResources } = useResourceStore();
-  const { initializePractices } = useAgilePracticesStore();
+  const { initializePractices, teamPractices } = useAgilePracticesStore();
   const [showResourceManagement, setShowResourceManagement] = useState(false);
 
   const handleExport = () => {
@@ -90,13 +90,14 @@ const Index = () => {
     try {
       const practices = await parsePracticesCSV(file);
       
-      // Mettre à jour les pratiques pour toutes les équipes
+      // Réinitialiser les pratiques pour toutes les équipes
       teams.forEach(team => {
         console.log(`Initializing practices for team ${team.id}`, practices);
+        // Écraser les pratiques existantes avec les nouvelles pratiques
         initializePractices(team.id, practices);
       });
       
-      toast.success(`${practices.length} pratiques importées avec succès !`);
+      toast.success(`${practices.length} pratiques importées avec succès pour ${teams.length} équipe(s) !`);
     } catch (error) {
       console.error("Error importing practices:", error);
       toast.error("Erreur lors de l'import des pratiques : " + (error as Error).message);
