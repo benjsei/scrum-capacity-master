@@ -1,69 +1,76 @@
+import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
+import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Percent } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { User, Users, UserCheck, UserPlus, UsersRound } from "lucide-react";
-
-const getWhoIcon = (who: string) => {
-  switch (who.toUpperCase()) {
-    case 'COLLECTIF':
-      return <Users className="h-4 w-4" />;
-    case 'SCRUM MASTER':
-      return <UserCheck className="h-4 w-4" />;
-    case 'PRODUCT OWNER':
-      return <UserPlus className="h-4 w-4" />;
-    case 'EQUIPE':
-      return <UsersRound className="h-4 w-4" />;
-    default:
-      return <User className="h-4 w-4" />;
-  }
-};
-
-const sortPractices = (practices: any[]) => {
-  const typeOrder = {
-    "ETAT D'ESPRIT": 1,
-    "ACTIONS": 2
-  };
-
-  return practices.sort((a, b) => {
-    const typeA = typeOrder[a.type] || 999;
-    const typeB = typeOrder[b.type] || 999;
-    return typeA - typeB;
-  });
-};
-
-const sortDays = (days: string[]) => {
-  return days.sort((a, b) => {
-    const numA = parseInt(a.replace('N', '0').replace('+', '')) || 0;
-    const numB = parseInt(b.replace('N', '0').replace('+', '')) || 0;
-    return numA - numB;
-  });
-};
+import AgilePractices from "@/components/AgilePractices";
 
 const TeamPractices = () => {
-  const { teamPractices } = useAgilePracticesStore();
-  const practicesByDay = teamPractices.reduce((acc: any, practice: any) => {
-    const day = practice.day;
-    if (!acc[day]) acc[day] = [];
-    acc[day].push(practice);
+  const { activeTeam } = useScrumTeamStore();
+  const { initializePractices, getPracticesForTeam } = useAgilePracticesStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (activeTeam) {
+      initializePractices(activeTeam.id);
+    }
+  }, [activeTeam, initializePractices]);
+
+  if (!activeTeam) {
+    navigate('/');
+    return null;
+  }
+
+  const practices = getPracticesForTeam(activeTeam.id);
+  const totalProgress = Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100);
+
+  const practicesByDay = practices.reduce((acc, practice) => {
+    if (!acc[practice.day]) {
+      acc[practice.day] = [];
+    }
+    acc[practice.day].push(practice);
     return acc;
   }, {});
 
+  const getDayProgress = (dayPractices) => {
+    return Math.round(dayPractices.filter(p => p.isCompleted).length / dayPractices.length * 100);
+  };
+
   return (
     <div className="min-h-screen p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Pratiques de l'équipe</h1>
-      <div className="space-y-8">
-        {sortDays(Object.keys(practicesByDay)).map((day) => (
-          <div key={day} className="space-y-4">
-            <h2 className="text-xl font-semibold">{day}</h2>
-            {sortPractices(practicesByDay[day]).map((practice: any) => (
-              <Card key={practice.id} className="p-4">
-                <div className="flex items-center">
-                  {getWhoIcon(practice.who)}
-                  <span className="ml-2">{practice.action}</span>
-                </div>
-              </Card>
-            ))}
+      <header className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="icon" onClick={() => navigate('/')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-primary">{activeTeam.name}</h1>
+            <p className="text-muted-foreground">Suivi des pratiques agiles</p>
           </div>
-        ))}
+        </div>
+        <Card className="p-4 flex items-center gap-2">
+          <Percent className="h-5 w-5 text-primary" />
+          <span className="text-lg font-semibold">{totalProgress}% complété</span>
+        </Card>
+      </header>
+
+      <div className="space-y-8">
+        {Object.entries(practicesByDay)
+          .sort()
+          .map(([day, dayPractices]) => (
+            <div key={day} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Jour {day}</h2>
+                <Card className="p-2 flex items-center gap-2">
+                  <Percent className="h-4 w-4 text-primary" />
+                  <span className="font-medium">{getDayProgress(dayPractices)}%</span>
+                </Card>
+              </div>
+              <AgilePractices teamId={activeTeam.id} dayFilter={day} />
+            </div>
+          ))}
       </div>
     </div>
   );
