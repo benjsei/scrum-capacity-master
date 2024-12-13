@@ -227,7 +227,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
         const sprintResourcesData = updatedFields.resources.map(resource => ({
           sprint_id: sprintId,
           resource_id: resource.id,
-          daily_capacities: resource.dailyCapacities
+          daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
         }));
 
         const { error: resourcesError } = await supabase

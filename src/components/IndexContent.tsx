@@ -9,12 +9,12 @@ import { useAgilePracticesStore } from "../store/agilePracticesStore";
 const IndexContent = () => {
   const navigate = useNavigate();
   const { teams } = useScrumTeamStore();
-  const { practices } = useAgilePracticesStore();
+  const { teamPractices, getPracticesForTeam } = useAgilePracticesStore();
 
   const getPracticesProgress = (teamId: string) => {
-    const teamPractices = practices.filter(p => p.teamId === teamId);
-    if (teamPractices.length === 0) return 0;
-    return Math.round((teamPractices.filter(p => p.isCompleted).length / teamPractices.length) * 100);
+    const practices = getPracticesForTeam(teamId);
+    if (practices.length === 0) return 0;
+    return Math.round((practices.filter(p => p.isCompleted).length / practices.length) * 100);
   };
 
   useEffect(() => {
