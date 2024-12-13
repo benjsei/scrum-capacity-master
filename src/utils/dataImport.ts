@@ -4,33 +4,10 @@ import { toast } from "sonner";
 export const importData = async (data: any) => {
   try {
     // First, delete all existing data in reverse order of dependencies
-    const { error: deleteSprintResourcesError } = await supabase
-      .from('sprint_resources')
-      .delete()
-      .not('sprint_id', 'is', null);
-    
-    if (deleteSprintResourcesError) throw deleteSprintResourcesError;
-
-    const { error: deleteSprintsError } = await supabase
-      .from('sprints')
-      .delete()
-      .not('id', 'is', null);
-    
-    if (deleteSprintsError) throw deleteSprintsError;
-
-    const { error: deleteResourcesError } = await supabase
-      .from('resources')
-      .delete()
-      .not('id', 'is', null);
-    
-    if (deleteResourcesError) throw deleteResourcesError;
-
-    const { error: deleteTeamsError } = await supabase
-      .from('teams')
-      .delete()
-      .not('id', 'is', null);
-    
-    if (deleteTeamsError) throw deleteTeamsError;
+    await supabase.from('sprint_resources').delete().neq('sprint_id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('sprints').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('resources').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('teams').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
     // Import teams first
     const { data: insertedTeams, error: teamsError } = await supabase
@@ -94,34 +71,28 @@ export const importData = async (data: any) => {
       [oldSprint.id, insertedSprints[index].id]
     ));
 
-    // Prepare sprint resources data with proper mappings
-    const sprintResourcesData = [];
-    
+    // Prepare sprint resources data
     for (const sprint of data.sprints) {
       const newSprintId = sprintIdMap.get(sprint.id);
       if (!newSprintId) continue;
 
-      for (const resource of sprint.resources) {
-        const newResourceId = resourceIdMap.get(resource.id);
-        if (!newResourceId) continue;
-
-        sprintResourcesData.push({
+      const sprintResources = sprint.resources
+        .filter((resource: any) => resourceIdMap.has(resource.id))
+        .map((resource: any) => ({
           sprint_id: newSprintId,
-          resource_id: newResourceId,
+          resource_id: resourceIdMap.get(resource.id),
           daily_capacities: resource.dailyCapacities || []
-        });
-      }
-    }
+        }));
 
-    // Only attempt to insert sprint resources if we have valid data
-    if (sprintResourcesData.length > 0) {
-      const { error: sprintResourcesError } = await supabase
-        .from('sprint_resources')
-        .insert(sprintResourcesData);
+      if (sprintResources.length > 0) {
+        const { error: sprintResourcesError } = await supabase
+          .from('sprint_resources')
+          .insert(sprintResources);
 
-      if (sprintResourcesError) {
-        console.error('Error inserting sprint resources:', sprintResourcesError);
-        throw sprintResourcesError;
+        if (sprintResourcesError) {
+          console.error('Error inserting sprint resources:', sprintResourcesError);
+          throw sprintResourcesError;
+        }
       }
     }
 
@@ -136,12 +107,10 @@ export const importData = async (data: any) => {
 export const importPractices = async (teamId: string, practices: any[]) => {
   try {
     // Delete existing practices for the team
-    const { error: deleteError } = await supabase
+    await supabase
       .from('agile_practices')
       .delete()
       .eq('team_id', teamId);
-
-    if (deleteError) throw deleteError;
 
     // Insert new practices
     const { error: insertError } = await supabase

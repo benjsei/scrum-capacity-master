@@ -1,12 +1,14 @@
 import { create } from 'zustand';
 import { ScrumTeam } from '../types/scrumTeam';
 import { Resource } from '../types/sprint';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ScrumTeamStore {
   teams: ScrumTeam[];
   activeTeam: ScrumTeam | null;
   setActiveTeam: (team: ScrumTeam | null) => void;
   setTeams: (teams: ScrumTeam[]) => void;
+  loadTeams: () => Promise<void>;
   addTeam: (team: ScrumTeam) => void;
   deleteTeam: (teamId: string) => void;
   updateTeamName: (teamId: string, newName: string) => void;
@@ -15,53 +17,172 @@ interface ScrumTeamStore {
   deleteResource: (teamId: string, resourceId: string) => void;
 }
 
-export const useScrumTeamStore = create<ScrumTeamStore>((set) => ({
+export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
   teams: [],
   activeTeam: null,
   setActiveTeam: (team) => set({ activeTeam: team }),
   setTeams: (teams) => set({ teams }),
-  addTeam: (team) => set((state) => ({ teams: [...state.teams, team] })),
-  deleteTeam: (teamId) => set((state) => ({
-    teams: state.teams.filter((team) => team.id !== teamId),
-    activeTeam: state.activeTeam?.id === teamId ? null : state.activeTeam,
-  })),
-  updateTeamName: (teamId, newName) => set((state) => ({
-    teams: state.teams.map((team) =>
-      team.id === teamId ? { ...team, name: newName } : team
-    ),
-    activeTeam: state.activeTeam?.id === teamId 
-      ? { ...state.activeTeam, name: newName }
-      : state.activeTeam,
-  })),
-  addResource: (teamId, resource) => set((state) => ({
-    teams: state.teams.map((team) =>
-      team.id === teamId
-        ? { ...team, resources: [...team.resources, resource] }
-        : team
-    ),
-  })),
-  updateResource: (teamId, resourceId, updates) => set((state) => ({
-    teams: state.teams.map((team) =>
-      team.id === teamId
-        ? {
-            ...team,
-            resources: team.resources.map((resource) =>
-              resource.id === resourceId
-                ? { ...resource, ...updates }
-                : resource
-            ),
-          }
-        : team
-    ),
-  })),
-  deleteResource: (teamId, resourceId) => set((state) => ({
-    teams: state.teams.map((team) =>
-      team.id === teamId
-        ? {
-            ...team,
-            resources: team.resources.filter((r) => r.id !== resourceId),
-          }
-        : team
-    ),
-  })),
+  
+  loadTeams: async () => {
+    try {
+      const { data: teams, error } = await supabase
+        .from('teams')
+        .select(`
+          *,
+          resources (*)
+        `);
+
+      if (error) throw error;
+
+      set({ teams: teams.map(team => ({
+        id: team.id,
+        name: team.name,
+        resources: team.resources || [],
+        createdAt: team.created_at
+      })) });
+    } catch (error) {
+      console.error('Error loading teams:', error);
+    }
+  },
+
+  addTeam: async (team) => {
+    try {
+      const { data, error } = await supabase
+        .from('teams')
+        .insert([{ name: team.name }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('No data returned from insert');
+
+      set((state) => ({ 
+        teams: [...state.teams, { ...team, id: data.id }] 
+      }));
+    } catch (error) {
+      console.error('Error adding team:', error);
+    }
+  },
+
+  deleteTeam: async (teamId) => {
+    try {
+      const { error } = await supabase
+        .from('teams')
+        .delete()
+        .eq('id', teamId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        teams: state.teams.filter((team) => team.id !== teamId),
+        activeTeam: state.activeTeam?.id === teamId ? null : state.activeTeam,
+      }));
+    } catch (error) {
+      console.error('Error deleting team:', error);
+    }
+  },
+
+  updateTeamName: async (teamId, newName) => {
+    try {
+      const { error } = await supabase
+        .from('teams')
+        .update({ name: newName })
+        .eq('id', teamId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        teams: state.teams.map((team) =>
+          team.id === teamId ? { ...team, name: newName } : team
+        ),
+        activeTeam: state.activeTeam?.id === teamId 
+          ? { ...state.activeTeam, name: newName }
+          : state.activeTeam,
+      }));
+    } catch (error) {
+      console.error('Error updating team name:', error);
+    }
+  },
+
+  addResource: async (teamId, resource) => {
+    try {
+      const { data, error } = await supabase
+        .from('resources')
+        .insert([{
+          name: resource.name,
+          capacity_per_day: resource.capacityPerDay,
+          team_id: teamId
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('No data returned from insert');
+
+      set((state) => ({
+        teams: state.teams.map((team) =>
+          team.id === teamId
+            ? { ...team, resources: [...team.resources, { ...resource, id: data.id }] }
+            : team
+        ),
+      }));
+    } catch (error) {
+      console.error('Error adding resource:', error);
+    }
+  },
+
+  updateResource: async (teamId, resourceId, updates) => {
+    try {
+      const { error } = await supabase
+        .from('resources')
+        .update({
+          name: updates.name,
+          capacity_per_day: updates.capacityPerDay
+        })
+        .eq('id', resourceId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        teams: state.teams.map((team) =>
+          team.id === teamId
+            ? {
+                ...team,
+                resources: team.resources.map((resource) =>
+                  resource.id === resourceId
+                    ? { ...resource, ...updates }
+                    : resource
+                ),
+              }
+            : team
+        ),
+      }));
+    } catch (error) {
+      console.error('Error updating resource:', error);
+    }
+  },
+
+  deleteResource: async (teamId, resourceId) => {
+    try {
+      const { error } = await supabase
+        .from('resources')
+        .delete()
+        .eq('id', resourceId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        teams: state.teams.map((team) =>
+          team.id === teamId
+            ? {
+                ...team,
+                resources: team.resources.filter((r) => r.id !== resourceId),
+              }
+            : team
+        ),
+      }));
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+    }
+  },
 }));
