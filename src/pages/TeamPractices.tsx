@@ -35,6 +35,24 @@ const TeamPractices = () => {
     }
   }, [activeTeam, initializePractices]);
 
+  useEffect(() => {
+    if (activeTeam) {
+      const practices = getPracticesForTeam(activeTeam.id);
+      const dayOrder = ["N", "N + 1", "N + 5", "N + 14"];
+      
+      // Find the first day with an incomplete action
+      const firstDayWithIncomplete = dayOrder.find(day => 
+        practices.some(practice => 
+          practice.day === day && !practice.isCompleted
+        )
+      );
+
+      if (firstDayWithIncomplete) {
+        setExpandedDays([firstDayWithIncomplete]);
+      }
+    }
+  }, [activeTeam, getPracticesForTeam]);
+
   if (!activeTeam) {
     navigate('/');
     return null;
@@ -66,21 +84,13 @@ const TeamPractices = () => {
     }
     acc[practice.day].push(practice);
     return acc;
-  }, {});
+  }, {} as Record<string, typeof filteredPractices>);
 
   const getDayProgress = (dayPractices) => {
     return Math.round(dayPractices.filter(p => p.isCompleted).length / dayPractices.length * 100);
   };
 
   const totalProgress = Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100);
-
-  const toggleDay = (day: string) => {
-    setExpandedDays(prev => 
-      prev.includes(day) 
-        ? prev.filter(d => d !== day)
-        : [...prev, day]
-    );
-  };
 
   return (
     <div className="min-h-screen p-6 space-y-6">
@@ -137,7 +147,12 @@ const TeamPractices = () => {
         </Select>
       </div>
 
-      <Accordion type="multiple" className="space-y-8">
+      <Accordion 
+        type="multiple" 
+        className="space-y-8"
+        value={expandedDays}
+        onValueChange={setExpandedDays}
+      >
         {dayOrder.map(day => {
           const dayPractices = practicesByDay[day] || [];
           if (dayPractices.length === 0 && selectedDay !== "all") return null;
