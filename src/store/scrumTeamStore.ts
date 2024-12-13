@@ -37,7 +37,12 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
       set({ teams: teams.map(team => ({
         id: team.id,
         name: team.name,
-        resources: team.resources || [],
+        resources: team.resources.map(resource => ({
+          id: resource.id,
+          name: resource.name,
+          capacityPerDay: resource.capacity_per_day || 1,
+          teamId: resource.team_id
+        })) || [],
         createdAt: team.created_at
       })) });
     } catch (error) {

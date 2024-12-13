@@ -39,11 +39,22 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (sprintsError) throw sprintsError;
 
       if (sprintsData) {
-        const formattedSprints = sprintsData.map(sprint => ({
-          ...sprint,
+        const formattedSprints: Sprint[] = sprintsData.map(sprint => ({
+          id: sprint.id,
+          teamId: sprint.team_id || '',
+          startDate: sprint.start_date,
+          endDate: sprint.end_date,
+          duration: sprint.duration,
+          storyPointsCommitted: sprint.story_points_committed,
+          storyPointsCompleted: sprint.story_points_completed,
+          theoreticalCapacity: sprint.theoretical_capacity,
+          velocityAchieved: sprint.velocity_achieved,
+          commitmentRespected: sprint.commitment_respected,
+          objective: sprint.objective || '',
+          objectiveAchieved: sprint.objective_achieved,
           resources: sprint.sprint_resources.map((sr: any) => ({
             id: sr.resource_id,
-            dailyCapacities: sr.daily_capacities
+            dailyCapacities: sr.daily_capacities || []
           }))
         }));
         set({ sprints: formattedSprints });
@@ -58,14 +69,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     const activeTeam = useScrumTeamStore.getState().activeTeam;
     if (!activeTeam) {
       toast.error("No active team selected");
-      return;
-    }
-
-    const teamSprints = get().getActiveTeamSprints();
-    const hasActiveSprint = teamSprints.some(s => s.isSuccessful === undefined);
-    
-    if (hasActiveSprint) {
-      toast.error("Un sprint est déjà en cours pour cette équipe");
       return;
     }
 
@@ -92,7 +95,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       const sprintResourcesData = sprint.resources.map(resource => ({
         sprint_id: sprintData.id,
         resource_id: resource.id,
-        daily_capacities: resource.dailyCapacities
+        daily_capacities: JSON.stringify(resource.dailyCapacities || [])
       }));
 
       const { error: resourcesError } = await supabase
@@ -103,8 +106,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       // Update local state
       const newSprint = {
-        ...sprintData,
-        resources: sprint.resources
+        ...sprint,
+        id: sprintData.id,
       };
 
       set((state) => ({
@@ -245,6 +248,18 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }, 0);
 
     return averageVelocity * totalResourceCapacity;
+  },
+
+  getAverageVelocity: () => {
+    const sprints = get().sprints;
+    const completedSprints = sprints.filter(s => s.velocityAchieved !== undefined);
+    
+    if (completedSprints.length === 0) return 1; // Default velocity
+
+    const totalVelocity = completedSprints.reduce((sum, sprint) => 
+      sum + (sprint.velocityAchieved || 0), 0);
+    
+    return totalVelocity / completedSprints.length;
   },
 
   getActiveTeamSprints: () => {
