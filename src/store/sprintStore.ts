@@ -167,7 +167,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
                 storyPointsCompleted,
                 velocityAchieved,
                 commitmentRespected,
-                isSuccessful: storyPointsCompleted >= s.storyPointsCommitted
               }
             : s
         ),
@@ -290,6 +289,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     if (!activeTeam) return false;
     
     const teamSprints = get().getActiveTeamSprints();
-    return !teamSprints.some(s => s.isSuccessful === undefined);
+    return !teamSprints.some(s => s.storyPointsCompleted === undefined);
   },
 }));

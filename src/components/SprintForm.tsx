@@ -28,6 +28,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, loadSprints, getActiveTeamSprints } = useSprintStore();
   const { activeTeam } = useScrumTeamStore();
   const averageVelocity = getAverageVelocity();
+  const teamSprints = getActiveTeamSprints();
 
   useEffect(() => {
     loadSprints();
@@ -36,7 +37,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   // Set default start date, duration and resources based on last sprint
   useEffect(() => {
     if (activeTeam) {
-      const teamSprints = getActiveTeamSprints();
       if (teamSprints.length > 0) {
         const lastSprint = teamSprints[teamSprints.length - 1];
         const nextDay = new Date(lastSprint.endDate);
@@ -57,7 +57,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
         setDuration('14');
       }
     }
-  }, [activeTeam, getActiveTeamSprints]);
+  }, [activeTeam, teamSprints]);
 
   useEffect(() => {
     if (startDate && duration) {
@@ -145,8 +145,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     endDate.setDate(endDate.getDate() + Number(duration) - 1);
 
     // Check for overlapping sprints
-    const hasOverlap = sprints.some(s => {
-      if (s.teamId !== activeTeam.id) return false;
+    const hasOverlap = teamSprints.some(s => {
       const sprintStart = new Date(s.startDate);
       const sprintEnd = new Date(s.endDate);
       const newStart = new Date(startDate);
