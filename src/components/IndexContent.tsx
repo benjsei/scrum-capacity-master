@@ -1,61 +1,33 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TeamProgressChart } from "@/components/TeamProgressChart";
-import { useScrumTeamStore } from "../store/scrumTeamStore";
-import { useAgilePracticesStore } from "../store/agilePracticesStore";
+import { Card } from "@/components/ui/card";
+import { useAgilePracticesStore } from '../store/agilePracticesStore';
+import { TeamProgressChart } from './TeamProgressChart';
+import { useScrumTeamStore } from '../store/scrumTeamStore';
+
+interface TeamProgressChartProps {
+  teamId: string;
+}
 
 const IndexContent = () => {
-  const navigate = useNavigate();
-  const { teams } = useScrumTeamStore();
-  const { getPracticesForTeam } = useAgilePracticesStore();
+  const { activeTeam } = useScrumTeamStore();
+  const { teamPractices, getPracticesForTeam } = useAgilePracticesStore();
 
   const getPracticesProgress = (teamId: string) => {
     const practices = getPracticesForTeam(teamId);
-    if (!practices || practices.length === 0) return 0;
-    return Math.round((practices.filter(p => p.isCompleted).length / practices.length) * 100);
+    if (!practices) return 0;
+    
+    const completedPractices = practices.filter(p => p.isCompleted).length;
+    return practices.length > 0 ? (completedPractices / practices.length) * 100 : 0;
   };
 
-  useEffect(() => {
-    // Fetch teams or any necessary data here
-  }, []);
-
   return (
-    <div className="container mx-auto p-8">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {teams.map((team) => (
-          <Card key={team.id} className="relative">
-            <CardHeader>
-              <CardTitle>{team.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="h-[200px]">
-                <TeamProgressChart teamId={team.id} />
-              </div>
-              <div className="flex gap-4">
-                <Button
-                  variant="outline"
-                  className="flex-1 relative overflow-hidden group"
-                  onClick={() => navigate(`/team/${team.id}/practices`)}
-                >
-                  <div 
-                    className="absolute inset-0 bg-primary/10 origin-left transition-transform duration-300" 
-                    style={{ transform: `scaleX(${getPracticesProgress(team.id) / 100})` }} 
-                  />
-                  <span className="relative z-10">Pratiques</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => navigate(`/team/${team.id}`)}
-                >
-                  Sprints
-                </Button>
-              </div>
-            </CardContent>
+    <div className="container mx-auto p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {activeTeam && (
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Progression des pratiques</h3>
+            <TeamProgressChart teamId={activeTeam.id} />
           </Card>
-        ))}
+        )}
       </div>
     </div>
   );
