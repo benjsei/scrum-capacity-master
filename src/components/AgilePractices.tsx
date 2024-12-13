@@ -1,6 +1,12 @@
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { Card } from "@/components/ui/card";
 import { User, Users, UserCheck, UserPlus, UsersRound } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+
+interface AgilePracticesProps {
+  teamId: string;
+  dayFilter?: string;
+}
 
 const getWhoIcon = (who: string) => {
   switch (who.toUpperCase()) {
@@ -30,24 +36,42 @@ const sortPractices = (practices: any[]) => {
   });
 };
 
-const AgilePractices = () => {
-  const { teamPractices } = useAgilePracticesStore();
+const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
+  const { teamPractices, togglePracticeCompletion } = useAgilePracticesStore();
+  const teamPractice = teamPractices.find(tp => tp.teamId === teamId);
+  
+  if (!teamPractice) return null;
+
+  const filteredPractices = dayFilter 
+    ? teamPractice.practices.filter(p => p.day === dayFilter)
+    : teamPractice.practices;
 
   return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Pratiques Agile</h3>
-      {teamPractices.map((teamPractice) => (
-        <div key={teamPractice.teamId} className="mb-4">
-          <h4 className="font-semibold">{teamPractice.teamId}</h4>
-          {sortPractices(teamPractice.practices).map((practice) => (
-            <div key={practice.id} className="flex items-center space-x-2">
-              {getWhoIcon(practice.who)}
-              <span>{practice.action}</span>
+    <div className="space-y-4">
+      {sortPractices(filteredPractices).map((practice) => (
+        <Card key={practice.id} className="p-4">
+          <div className="flex items-center gap-4">
+            <Checkbox
+              id={`practice-${practice.id}`}
+              checked={practice.isCompleted}
+              onCheckedChange={() => togglePracticeCompletion(teamId, practice.id)}
+            />
+            {getWhoIcon(practice.who)}
+            <div className="flex flex-col">
+              <span className="font-medium">{practice.action}</span>
+              {practice.subActions && (
+                <span className="text-sm text-muted-foreground">{practice.subActions}</span>
+              )}
+              {practice.format && practice.duration && (
+                <span className="text-sm text-muted-foreground">
+                  {practice.format} • {practice.duration}
+                </span>
+              )}
             </div>
-          ))}
-        </div>
+          </div>
+        </Card>
       ))}
-    </Card>
+    </div>
   );
 };
 
