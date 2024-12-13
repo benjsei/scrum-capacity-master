@@ -3,18 +3,37 @@ import { AgilePractice, TeamPractices } from '../types/agilePractice';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 
+const STORAGE_KEY = 'team-practices';
+
+const getStoredPractices = (): TeamPractices[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Error reading from localStorage:', error);
+    return [];
+  }
+};
+
+const savePractices = (practices: TeamPractices[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(practices));
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+  }
+};
+
 interface AgilePracticesStore {
   teamPractices: TeamPractices[];
   initializePractices: (teamId: string, practices?: AgilePractice[]) => Promise<void>;
   togglePracticeCompletion: (teamId: string, practiceId: string) => void;
   updatePracticeUrl: (teamId: string, practiceId: string, url: string) => void;
   getPracticesForTeam: (teamId: string) => AgilePractice[];
-  getPracticesProgress: (teamId: string) => number;
 }
 
 export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => ({
-  teamPractices: [],
-
+  teamPractices: getStoredPractices(),
+  
   initializePractices: async (teamId: string, practices?: AgilePractice[]) => {
     try {
       // First, check if team already has practices
@@ -178,11 +197,5 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
   getPracticesForTeam: (teamId: string) => {
     const teamPractice = get().teamPractices.find(tp => tp.teamId === teamId);
     return teamPractice?.practices || [];
-  },
-
-  getPracticesProgress: (teamId: string) => {
-    const practices = get().getPracticesForTeam(teamId);
-    if (practices.length === 0) return 0;
-    return Math.round((practices.filter(p => p.isCompleted).length / practices.length) * 100);
   },
 }));
