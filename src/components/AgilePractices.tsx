@@ -40,6 +40,9 @@ const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
   const { teamPractices, togglePracticeCompletion } = useAgilePracticesStore();
   const teamPractice = teamPractices.find(tp => tp.teamId === teamId);
   
+  console.log('Team Practices:', teamPractices);
+  console.log('Current Team Practice:', teamPractice);
+  
   if (!teamPractice || !teamPractice.practices || teamPractice.practices.length === 0) {
     return <div className="text-center text-muted-foreground">Aucune pratique trouvée</div>;
   }
@@ -47,6 +50,8 @@ const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
   const filteredPractices = dayFilter 
     ? teamPractice.practices.filter(p => p.day === dayFilter)
     : teamPractice.practices;
+
+  console.log('Filtered Practices:', filteredPractices);
 
   if (filteredPractices.length === 0) {
     return <div className="text-center text-muted-foreground">Aucune pratique pour ce jour</div>;
