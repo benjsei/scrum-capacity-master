@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export const TeamManagement = () => {
   const [newTeamName, setNewTeamName] = useState('');
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const { teams, addTeam, deleteTeam, setActiveTeam, activeTeam, updateTeamName } = useScrumTeamStore();
+  const navigate = useNavigate();
 
   const handleCreateTeam = (e?: React.FormEvent) => {
     if (e) {
@@ -47,6 +49,11 @@ export const TeamManagement = () => {
     updateTeamName(teamId, editingName.trim());
     setEditingTeamId(null);
     toast.success('Team name updated successfully!');
+  };
+
+  const handleSelectTeam = (team: any) => {
+    setActiveTeam(team);
+    navigate(`/team/${team.id}`);
   };
 
   return (
@@ -86,7 +93,7 @@ export const TeamManagement = () => {
                     <div className="space-x-2">
                       <Button
                         variant={activeTeam?.id === team.id ? "default" : "outline"}
-                        onClick={() => setActiveTeam(team)}
+                        onClick={() => handleSelectTeam(team)}
                       >
                         {activeTeam?.id === team.id ? 'Selected' : 'Select'}
                       </Button>

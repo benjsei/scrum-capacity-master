@@ -1,16 +1,6 @@
-import { SprintForm } from "@/components/SprintForm";
-import { SprintList } from "@/components/SprintList";
-import { VelocityChart } from "@/components/VelocityChart";
-import { TeamVelocityChart } from "@/components/TeamVelocityChart";
-import { CommitmentChart } from "@/components/CommitmentChart";
 import { TeamManagement } from "@/components/TeamManagement";
 import { TeamPodium } from "@/components/TeamPodium";
-import { useScrumTeamStore } from '../store/scrumTeamStore';
-import { useSprintStore } from '../store/sprintStore';
-import { Button } from "@/components/ui/button";
-import { Download, Upload, Users } from "lucide-react";
-import { toast } from "sonner";
-import { useState } from "react";
+import { TeamVelocityChart } from "@/components/TeamVelocityChart";
 import { 
   Dialog,
   DialogContent,
@@ -22,14 +12,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ResourceManagement } from "@/components/ResourceManagement";
+import { Button } from "@/components/ui/button";
+import { Download, Upload, Users } from "lucide-react";
+import { toast } from "sonner";
+import { useState } from "react";
+import { useScrumTeamStore } from '../store/scrumTeamStore';
+import { useSprintStore } from '../store/sprintStore';
 import { useResourceStore } from '../store/resourceStore';
+import { ResourceManagement } from "@/components/ResourceManagement";
 
 const Index = () => {
-  const { activeTeam, teams, setTeams } = useScrumTeamStore();
-  const { canCreateNewSprint, sprints, setSprints } = useSprintStore();
+  const { teams, setTeams } = useScrumTeamStore();
+  const { sprints, setSprints } = useSprintStore();
   const { resources, setResources } = useResourceStore();
-  const [showSprintForm, setShowSprintForm] = useState(false);
   const [showResourceManagement, setShowResourceManagement] = useState(false);
 
   const handleExport = () => {
@@ -157,42 +152,6 @@ const Index = () => {
           <h2 className="text-xl font-semibold mb-4">Comparaison des équipes</h2>
           <TeamVelocityChart />
         </div>
-
-        {activeTeam ? (
-          <>
-            <div className="space-y-4">
-              {canCreateNewSprint() && !showSprintForm && (
-                <Button 
-                  onClick={() => setShowSprintForm(true)}
-                  className="w-full"
-                >
-                  Créer un nouveau sprint
-                </Button>
-              )}
-              
-              {showSprintForm && canCreateNewSprint() && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Créer un nouveau sprint pour {activeTeam.name}</h2>
-                  <SprintForm onComplete={() => setShowSprintForm(false)} />
-                </div>
-              )}
-
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Historique des sprints</h2>
-                <SprintList />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <VelocityChart />
-              <CommitmentChart />
-            </div>
-          </>
-        ) : (
-          <div className="text-center p-8 bg-muted rounded-lg">
-            <p>Veuillez sélectionner ou créer une équipe pour gérer les sprints</p>
-          </div>
-        )}
       </div>
     </div>
   );
