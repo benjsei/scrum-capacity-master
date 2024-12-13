@@ -89,7 +89,7 @@ export const SprintList = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {sprint.isSuccessful === undefined ? 'En cours' : 
+                    {sprint.storyPointsCompleted === undefined ? 'En cours' : 
                      sprint.isSuccessful ? 'Succès' : 'Échec'}
                   </TableCell>
                   <TableCell>
@@ -102,7 +102,7 @@ export const SprintList = () => {
                         Modifier le sprint
                       </Button>
                       
-                      {sprint.isSuccessful === undefined && (
+                      {sprint.storyPointsCompleted === undefined && (
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
@@ -124,7 +124,7 @@ export const SprintList = () => {
                           </Button>
                         </div>
                       )}
-                      {sprint.isSuccessful !== undefined && (
+                      {sprint.storyPointsCompleted !== undefined && (
                         <div className="space-y-1">
                           <div>Réalisé: {sprint.storyPointsCompleted} SP</div>
                           <div>Vélocité: {sprint.velocityAchieved?.toFixed(2)} SP/jour</div>

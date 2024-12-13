@@ -171,7 +171,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
         .update({
           story_points_completed: storyPointsCompleted,
           velocity_achieved: velocityAchieved,
-          commitment_respected: commitmentRespected
+          commitment_respected: commitmentRespected,
+          is_successful: true // Add this to the database update
         })
         .eq('id', sprintId);
 
@@ -185,7 +186,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
                 storyPointsCompleted,
                 velocityAchieved,
                 commitmentRespected,
-                isSuccessful: true // Add this line to mark the sprint as completed
+                isSuccessful: true
               }
             : s
         ),
