@@ -96,7 +96,7 @@ const Index = () => {
         initializePractices(team.id, practices);
       });
       
-      toast.success("Pratiques importées avec succès !");
+      toast.success(`${practices.length} pratiques importées avec succès !`);
     } catch (error) {
       console.error("Error importing practices:", error);
       toast.error("Erreur lors de l'import des pratiques : " + (error as Error).message);
