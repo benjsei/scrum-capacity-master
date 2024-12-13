@@ -90,13 +90,15 @@ const Index = () => {
     try {
       const practices = await parsePracticesCSV(file);
       
-      // Update practices for all teams
+      // Mettre à jour les pratiques pour toutes les équipes
       teams.forEach(team => {
+        console.log(`Initializing practices for team ${team.id}`, practices);
         initializePractices(team.id, practices);
       });
       
       toast.success("Pratiques importées avec succès !");
     } catch (error) {
+      console.error("Error importing practices:", error);
       toast.error("Erreur lors de l'import des pratiques : " + (error as Error).message);
     }
     

@@ -106,16 +106,31 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
   
   initializePractices: (teamId: string, practices?: AgilePractice[]) => {
     set((state) => {
+      // Si des pratiques sont fournies, on les utilise, sinon on utilise les pratiques initiales
+      const practicesToUse = practices ? practices.map(p => ({
+        ...p,
+        isCompleted: false // Réinitialise l'état de complétion
+      })) : initialPractices;
+
+      // Trouve l'index de l'équipe si elle existe déjà
       const existingTeamIndex = state.teamPractices.findIndex(tp => tp.teamId === teamId);
-      const practicesToUse = practices || initialPractices;
       
       if (existingTeamIndex >= 0) {
+        // Met à jour les pratiques de l'équipe existante
         const newTeamPractices = [...state.teamPractices];
-        newTeamPractices[existingTeamIndex] = { teamId, practices: practicesToUse };
+        newTeamPractices[existingTeamIndex] = { 
+          teamId, 
+          practices: practicesToUse
+        };
         return { teamPractices: newTeamPractices };
       }
+
+      // Ajoute une nouvelle équipe avec ses pratiques
       return {
-        teamPractices: [...state.teamPractices, { teamId, practices: practicesToUse }]
+        teamPractices: [...state.teamPractices, { 
+          teamId, 
+          practices: practicesToUse 
+        }]
       };
     });
   },
