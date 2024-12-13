@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { ScrumTeam } from '../types/scrumTeam';
 import { Resource } from '../types/sprint';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from "sonner";
 
 interface ScrumTeamStore {
   teams: ScrumTeam[];
@@ -169,6 +170,15 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
 
   deleteResource: async (teamId, resourceId) => {
     try {
+      // First, delete any sprint_resources entries that reference this resource
+      const { error: sprintResourcesError } = await supabase
+        .from('sprint_resources')
+        .delete()
+        .eq('resource_id', resourceId);
+
+      if (sprintResourcesError) throw sprintResourcesError;
+
+      // Then delete the resource itself
       const { error } = await supabase
         .from('resources')
         .delete()
@@ -176,6 +186,7 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
 
       if (error) throw error;
 
+      // Update local state
       set((state) => ({
         teams: state.teams.map((team) =>
           team.id === teamId
@@ -186,8 +197,11 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
             : team
         ),
       }));
+
+      toast.success("Ressource supprimée avec succès");
     } catch (error) {
       console.error('Error deleting resource:', error);
+      toast.error("Erreur lors de la suppression de la ressource");
     }
   },
 }));
