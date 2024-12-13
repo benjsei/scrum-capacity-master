@@ -4,15 +4,18 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
+import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { ListTodo, SparklesIcon } from 'lucide-react';
+import { ListTodo, SparklesIcon, Percent } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const TeamManagement = () => {
   const [newTeamName, setNewTeamName] = useState('');
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const { teams, addTeam, deleteTeam, setActiveTeam, activeTeam, updateTeamName } = useScrumTeamStore();
+  const { getPracticesForTeam } = useAgilePracticesStore();
   const navigate = useNavigate();
 
   const handleCreateTeam = (e?: React.FormEvent) => {
@@ -62,6 +65,17 @@ export const TeamManagement = () => {
     navigate(`/team/${team.id}/practices`);
   };
 
+  const getTeamProgress = (teamId: string) => {
+    const practices = getPracticesForTeam(teamId);
+    if (practices.length === 0) return 0;
+    return Math.round((practices.filter(p => p.isCompleted).length / practices.length) * 100);
+  };
+
+  const chartData = teams.map(team => ({
+    name: team.name,
+    progress: getTeamProgress(team.id)
+  }));
+
   return (
     <Card className="p-6">
       <div className="space-y-6">
@@ -77,6 +91,21 @@ export const TeamManagement = () => {
             <Button type="submit">Create Team</Button>
           </form>
         </div>
+
+        {teams.length > 0 && (
+          <div className="h-[300px] w-full">
+            <h3 className="font-semibold mb-4">Progression des pratiques par équipe</h3>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="progress" fill="#3b82f6" name="Progression (%)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         <div className="space-y-4">
           <h3 className="font-semibold">Teams</h3>
@@ -95,7 +124,13 @@ export const TeamManagement = () => {
                   </div>
                 ) : (
                   <>
-                    <span>{team.name}</span>
+                    <div className="flex items-center gap-4">
+                      <span>{team.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        <Percent className="h-4 w-4 inline mr-1" />
+                        {getTeamProgress(team.id)}%
+                      </span>
+                    </div>
                     <div className="space-x-2">
                       <Button
                         variant="outline"

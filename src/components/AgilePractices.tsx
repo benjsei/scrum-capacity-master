@@ -10,12 +10,13 @@ import { toast } from 'sonner';
 
 interface AgilePracticesProps {
   teamId: string;
+  dayFilter?: string;
 }
 
-export const AgilePractices = ({ teamId }: AgilePracticesProps) => {
+export const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
   const { getPracticesForTeam, togglePracticeCompletion, updatePracticeUrl } = useAgilePracticesStore();
   const [expandedTypes, setExpandedTypes] = useState<string[]>([]);
-  const practices = getPracticesForTeam(teamId);
+  const practices = getPracticesForTeam(teamId).filter(p => !dayFilter || p.day === dayFilter);
 
   const toggleExpanded = (type: string) => {
     setExpandedTypes(current =>
@@ -40,7 +41,6 @@ export const AgilePractices = ({ teamId }: AgilePracticesProps) => {
 
   return (
     <Card className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Pratiques Agiles</h2>
       <div className="space-y-4">
         {Object.entries(practicesByType).map(([type, practices]) => (
           <Collapsible
