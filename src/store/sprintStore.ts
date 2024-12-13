@@ -13,11 +13,11 @@ interface SprintStore {
   updateSprint: (sprintId: string, updates: Partial<Sprint>) => Promise<void>;
   deleteSprint: (sprintId: string) => Promise<void>;
   getSprintsForTeam: (teamId: string) => Sprint[];
-  getActiveTeamSprints: (teamId: string) => Sprint[];
+  getActiveTeamSprints: () => Sprint[];
   completeSprint: (sprintId: string, updates: Partial<Sprint>) => Promise<void>;
   calculateTheoreticalCapacity: (resources: Resource[], duration: number) => number;
-  getAverageVelocity: (teamId: string) => number;
-  canCreateNewSprint: (teamId: string) => boolean;
+  getAverageVelocity: () => number;
+  canCreateNewSprint: () => boolean;
 }
 
 export const useSprintStore = create<SprintStore>((set, get) => ({
@@ -57,7 +57,9 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
         createdAt: sprint.created_at,
         resources: sprint.sprint_resources?.map(resource => ({
           id: resource.resource_id,
-          dailyCapacities: resource.daily_capacities as ResourceDailyCapacity[]
+          name: '',  // We'll need to fetch this from resources table
+          capacityPerDay: 1,  // Default value
+          dailyCapacities: JSON.parse(resource.daily_capacities as string) as ResourceDailyCapacity[]
         })) || []
       }));
 
@@ -165,8 +167,10 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     return get().sprints.filter(sprint => sprint.teamId === teamId);
   },
 
-  getActiveTeamSprints: (teamId) => {
-    return get().sprints.filter(sprint => sprint.teamId === teamId);
+  getActiveTeamSprints: () => {
+    const { activeSprint } = get();
+    if (!activeSprint) return [];
+    return get().sprints.filter(sprint => sprint.teamId === activeSprint.teamId);
   },
 
   completeSprint: async (sprintId, updates) => {
@@ -179,8 +183,11 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }, 0);
   },
 
-  getAverageVelocity: (teamId) => {
-    const teamSprints = get().getSprintsForTeam(teamId);
+  getAverageVelocity: () => {
+    const { activeSprint, sprints } = get();
+    if (!activeSprint) return 0;
+    
+    const teamSprints = sprints.filter(sprint => sprint.teamId === activeSprint.teamId);
     const completedSprints = teamSprints.filter(sprint => sprint.velocityAchieved);
     if (completedSprints.length === 0) return 0;
     
@@ -189,8 +196,11 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     return totalVelocity / completedSprints.length;
   },
 
-  canCreateNewSprint: (teamId) => {
-    const teamSprints = get().getSprintsForTeam(teamId);
+  canCreateNewSprint: () => {
+    const { activeSprint, sprints } = get();
+    if (!activeSprint) return false;
+    
+    const teamSprints = sprints.filter(sprint => sprint.teamId === activeSprint.teamId);
     return !teamSprints.some(sprint => !sprint.isSuccessful);
   }
 }));

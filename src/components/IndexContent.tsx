@@ -7,7 +7,7 @@ import { useScrumTeamStore } from "../store/scrumTeamStore";
 import { useAgilePracticesStore } from "../store/agilePracticesStore";
 import { Progress } from "@/components/ui/progress";
 
-export const IndexContent = () => {
+const IndexContent = () => {
   const navigate = useNavigate();
   const { teams } = useScrumTeamStore();
   const { getPracticesProgress } = useAgilePracticesStore();
