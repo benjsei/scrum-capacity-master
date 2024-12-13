@@ -62,8 +62,8 @@ const TeamPractices = () => {
   const practices = getPracticesForTeam(activeTeam.id);
   
   // Get unique types and actions for filters
-  const uniqueTypes = Array.from(new Set(practices.map(p => p.type))).sort();
-  const uniqueActions = Array.from(new Set(practices.map(p => p.action))).sort();
+  const uniqueTypes = Array.from(new Set(practices.map(p => p.type)));
+  const uniqueActions = Array.from(new Set(practices.map(p => p.action)));
 
   // Filter practices based on selected filters
   const filteredPractices = practices.filter(practice => {
@@ -78,7 +78,6 @@ const TeamPractices = () => {
     return dayMatch && typeMatch && actionMatch && completionMatch;
   });
 
-  // Group practices by day
   const practicesByDay = filteredPractices.reduce((acc, practice) => {
     if (!acc[practice.day]) {
       acc[practice.day] = [];
@@ -88,13 +87,10 @@ const TeamPractices = () => {
   }, {} as Record<string, typeof filteredPractices>);
 
   const getDayProgress = (dayPractices) => {
-    if (!dayPractices || dayPractices.length === 0) return 0;
     return Math.round(dayPractices.filter(p => p.isCompleted).length / dayPractices.length * 100);
   };
 
-  const totalProgress = practices.length > 0 
-    ? Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100)
-    : 0;
+  const totalProgress = Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100);
 
   // Order days according to specification
   const dayOrder = ["N", "N + 1", "N + 5", "N + 14"];
@@ -174,7 +170,7 @@ const TeamPractices = () => {
       >
         {dayOrder.map(day => {
           const dayPractices = practicesByDay[day] || [];
-          if (dayPractices.length === 0) return null;
+          if (dayPractices.length === 0 && selectedDay !== "all") return null;
 
           return (
             <AccordionItem key={day} value={day} className="border-none">
