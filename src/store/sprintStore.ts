@@ -91,9 +91,29 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }
 
     try {
+      // First, create resources in the resources table
+      const resourcePromises = sprint.resources.map(async (resource) => {
+        const { data: resourceData, error: resourceError } = await supabase
+          .from('resources')
+          .insert({
+            id: resource.id,
+            name: resource.name,
+            capacity_per_day: resource.capacityPerDay,
+            team_id: activeTeam.id
+          })
+          .select()
+          .single();
+
+        if (resourceError) throw resourceError;
+        return resourceData;
+      });
+
+      await Promise.all(resourcePromises);
+
+      // Then create the sprint
       const { data: sprintData, error: sprintError } = await supabase
         .from('sprints')
-        .insert([{
+        .insert({
           team_id: activeTeam.id,
           start_date: sprint.startDate,
           end_date: sprint.endDate,
@@ -101,13 +121,14 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           story_points_committed: sprint.storyPointsCommitted,
           theoretical_capacity: sprint.theoreticalCapacity,
           objective: sprint.objective
-        }])
+        })
         .select()
         .single();
 
       if (sprintError) throw sprintError;
       if (!sprintData) throw new Error('No data returned from sprint insert');
 
+      // Finally, create sprint_resources with properly serialized daily capacities
       const sprintResourcesData = sprint.resources.map(resource => ({
         sprint_id: sprintData.id,
         resource_id: resource.id,
