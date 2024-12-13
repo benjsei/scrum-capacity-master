@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { ListTodo, SparklesIcon } from 'lucide-react';
 
 export const TeamManagement = () => {
   const [newTeamName, setNewTeamName] = useState('');
@@ -51,9 +52,14 @@ export const TeamManagement = () => {
     toast.success('Team name updated successfully!');
   };
 
-  const handleSelectTeam = (team: any) => {
+  const handleNavigateToSprints = (team: any) => {
     setActiveTeam(team);
     navigate(`/team/${team.id}`);
+  };
+
+  const handleNavigateToPractices = (team: any) => {
+    setActiveTeam(team);
+    navigate(`/team/${team.id}/practices`);
   };
 
   return (
@@ -92,10 +98,18 @@ export const TeamManagement = () => {
                     <span>{team.name}</span>
                     <div className="space-x-2">
                       <Button
-                        variant={activeTeam?.id === team.id ? "default" : "outline"}
-                        onClick={() => handleSelectTeam(team)}
+                        variant="outline"
+                        onClick={() => handleNavigateToSprints(team)}
                       >
-                        {activeTeam?.id === team.id ? 'Selected' : 'Select'}
+                        <SparklesIcon className="w-4 h-4 mr-2" />
+                        Sprints
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleNavigateToPractices(team)}
+                      >
+                        <ListTodo className="w-4 h-4 mr-2" />
+                        Pratiques
                       </Button>
                       <Button
                         variant="outline"
