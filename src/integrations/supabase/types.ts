@@ -9,7 +9,195 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      agile_practices: {
+        Row: {
+          action: string
+          completed_at: string | null
+          day: string
+          duration: string | null
+          format: string | null
+          id: string
+          is_completed: boolean | null
+          sub_actions: string | null
+          team_id: string | null
+          type: string
+          url: string | null
+          who: string
+        }
+        Insert: {
+          action: string
+          completed_at?: string | null
+          day: string
+          duration?: string | null
+          format?: string | null
+          id?: string
+          is_completed?: boolean | null
+          sub_actions?: string | null
+          team_id?: string | null
+          type: string
+          url?: string | null
+          who: string
+        }
+        Update: {
+          action?: string
+          completed_at?: string | null
+          day?: string
+          duration?: string | null
+          format?: string | null
+          id?: string
+          is_completed?: boolean | null
+          sub_actions?: string | null
+          team_id?: string | null
+          type?: string
+          url?: string | null
+          who?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agile_practices_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          capacity_per_day: number | null
+          id: string
+          name: string
+          team_id: string | null
+        }
+        Insert: {
+          capacity_per_day?: number | null
+          id?: string
+          name: string
+          team_id?: string | null
+        }
+        Update: {
+          capacity_per_day?: number | null
+          id?: string
+          name?: string
+          team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sprint_resources: {
+        Row: {
+          daily_capacities: Json | null
+          resource_id: string
+          sprint_id: string
+        }
+        Insert: {
+          daily_capacities?: Json | null
+          resource_id: string
+          sprint_id: string
+        }
+        Update: {
+          daily_capacities?: Json | null
+          resource_id?: string
+          sprint_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sprint_resources_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sprint_resources_sprint_id_fkey"
+            columns: ["sprint_id"]
+            isOneToOne: false
+            referencedRelation: "sprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sprints: {
+        Row: {
+          commitment_respected: number | null
+          created_at: string | null
+          duration: number
+          end_date: string
+          id: string
+          objective: string | null
+          objective_achieved: boolean | null
+          start_date: string
+          story_points_committed: number
+          story_points_completed: number | null
+          team_id: string | null
+          theoretical_capacity: number
+          velocity_achieved: number | null
+        }
+        Insert: {
+          commitment_respected?: number | null
+          created_at?: string | null
+          duration: number
+          end_date: string
+          id?: string
+          objective?: string | null
+          objective_achieved?: boolean | null
+          start_date: string
+          story_points_committed: number
+          story_points_completed?: number | null
+          team_id?: string | null
+          theoretical_capacity: number
+          velocity_achieved?: number | null
+        }
+        Update: {
+          commitment_respected?: number | null
+          created_at?: string | null
+          duration?: number
+          end_date?: string
+          id?: string
+          objective?: string | null
+          objective_achieved?: boolean | null
+          start_date?: string
+          story_points_committed?: number
+          story_points_completed?: number | null
+          team_id?: string | null
+          theoretical_capacity?: number
+          velocity_achieved?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sprints_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

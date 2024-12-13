@@ -23,6 +23,7 @@ import { useResourceStore } from '../store/resourceStore';
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { ResourceManagement } from "@/components/ResourceManagement";
 import { parsePracticesCSV } from "../utils/practicesImport";
+import { importData, importPractices } from "@/utils/dataImport";
 
 const Index = () => {
   const { teams, setTeams } = useScrumTeamStore();
@@ -51,12 +52,12 @@ const Index = () => {
     toast.success("Export réussi !");
   };
 
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
         
@@ -66,11 +67,7 @@ const Index = () => {
 
         switch (data.version) {
           case 1:
-            setTeams(data.teams);
-            setSprints(data.sprints);
-            if (Array.isArray(data.resources)) {
-              setResources(data.resources);
-            }
+            await importData(data);
             toast.success("Import réussi !");
             break;
           default:
@@ -90,12 +87,10 @@ const Index = () => {
     try {
       const practices = await parsePracticesCSV(file);
       
-      // Réinitialiser les pratiques pour toutes les équipes
-      teams.forEach(team => {
-        console.log(`Initializing practices for team ${team.id}`, practices);
-        // Écraser les pratiques existantes avec les nouvelles pratiques
-        initializePractices(team.id, practices);
-      });
+      // Pour chaque équipe, on écrase les pratiques existantes
+      for (const team of teams) {
+        await importPractices(team.id, practices);
+      }
       
       toast.success(`${practices.length} pratiques importées avec succès pour ${teams.length} équipe(s) !`);
     } catch (error) {
