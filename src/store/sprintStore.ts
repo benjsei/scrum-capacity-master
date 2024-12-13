@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Sprint, Resource, ResourceDailyCapacity } from '../types/sprint';
+import { Sprint, Resource, ResourceDailyCapacity, SprintResourceData } from '../types/sprint';
 import { useScrumTeamStore } from './scrumTeamStore';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
@@ -129,7 +129,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (!sprintData) throw new Error('No data returned from sprint insert');
 
       // Create sprint_resources with properly serialized daily capacities
-      const sprintResourcesData = sprint.resources.map(resource => ({
+      const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
         sprint_id: sprintData.id,
         resource_id: resource.id,
         daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])

@@ -1,3 +1,5 @@
+import { Json } from "@/integrations/supabase/types";
+
 export interface ResourceDailyCapacity {
   date: string;
   capacity: number;
@@ -26,4 +28,10 @@ export interface Sprint {
   commitmentRespected?: number;
   objective?: string;
   objectiveAchieved?: boolean;
+}
+
+export interface SprintResourceData {
+  sprint_id: string;
+  resource_id: string;
+  daily_capacities: Json;
 }
