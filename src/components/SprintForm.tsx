@@ -25,9 +25,13 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
   const [resourcePresenceDays, setResourcePresenceDays] = useState<{ [key: string]: number }>({});
 
-  const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, sprints } = useSprintStore();
+  const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, loadSprints } = useSprintStore();
   const { activeTeam } = useScrumTeamStore();
   const averageVelocity = getAverageVelocity();
+
+  useEffect(() => {
+    loadSprints();
+  }, [loadSprints]);
 
   // Set default start date, duration and resources based on last sprint
   useEffect(() => {
@@ -223,3 +227,4 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     </Card>
   );
 };
+

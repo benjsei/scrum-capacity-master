@@ -62,6 +62,42 @@ export type Database = {
           },
         ]
       }
+      default_practices: {
+        Row: {
+          action: string
+          created_at: string | null
+          day: string
+          duration: string | null
+          format: string | null
+          id: string
+          sub_actions: string | null
+          type: string
+          who: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          day: string
+          duration?: string | null
+          format?: string | null
+          id?: string
+          sub_actions?: string | null
+          type: string
+          who: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          day?: string
+          duration?: string | null
+          format?: string | null
+          id?: string
+          sub_actions?: string | null
+          type?: string
+          who?: string
+        }
+        Relationships: []
+      }
       resources: {
         Row: {
           capacity_per_day: number | null

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useSprintStore } from '../store/sprintStore';
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,14 @@ import {
 import { SprintEditForm } from "./SprintEditForm";
 
 export const SprintList = () => {
-  const { getActiveTeamSprints, completeSprint } = useSprintStore();
+  const { getActiveTeamSprints, completeSprint, loadSprints } = useSprintStore();
   const [completionData, setCompletionData] = useState<{ [key: string]: number }>({});
   const [editingSprint, setEditingSprint] = useState<string | null>(null);
+  
+  useEffect(() => {
+    loadSprints();
+  }, [loadSprints]);
+
   const sprints = getActiveTeamSprints();
 
   const handleCompleteSprint = (sprintId: string) => {
