@@ -13,6 +13,11 @@ interface SprintStore {
   updateSprint: (sprintId: string, updates: Partial<Sprint>) => Promise<void>;
   deleteSprint: (sprintId: string) => Promise<void>;
   getSprintsForTeam: (teamId: string) => Sprint[];
+  getActiveTeamSprints: (teamId: string) => Sprint[];
+  completeSprint: (sprintId: string, updates: Partial<Sprint>) => Promise<void>;
+  calculateTheoreticalCapacity: (resources: Resource[], duration: number) => number;
+  getAverageVelocity: (teamId: string) => number;
+  canCreateNewSprint: (teamId: string) => boolean;
 }
 
 export const useSprintStore = create<SprintStore>((set, get) => ({
@@ -35,7 +40,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       if (error) throw error;
 
-      set({ sprints: sprints.map(sprint => ({
+      const formattedSprints: Sprint[] = sprints.map(sprint => ({
         id: sprint.id,
         teamId: sprint.team_id,
         startDate: sprint.start_date,
@@ -50,8 +55,13 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
         objectiveAchieved: sprint.objective_achieved,
         isSuccessful: sprint.is_successful,
         createdAt: sprint.created_at,
-        resources: sprint.sprint_resources || []
-      })) });
+        resources: sprint.sprint_resources?.map(resource => ({
+          id: resource.resource_id,
+          dailyCapacities: resource.daily_capacities as ResourceDailyCapacity[]
+        })) || []
+      }));
+
+      set({ sprints: formattedSprints });
     } catch (error) {
       console.error('Error loading sprints:', error);
       toast.error("Erreur lors du chargement des sprints");
@@ -77,12 +87,11 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (error) throw error;
       if (!data) throw new Error('No data returned from insert');
 
-      // Insert sprint resources
       if (sprint.resources && sprint.resources.length > 0) {
         const sprintResources = sprint.resources.map(resource => ({
           sprint_id: data.id,
           resource_id: resource.id,
-          daily_capacities: resource.dailyCapacities || []
+          daily_capacities: JSON.stringify(resource.dailyCapacities || [])
         }));
 
         const { error: resourcesError } = await supabase
@@ -155,4 +164,33 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
   getSprintsForTeam: (teamId) => {
     return get().sprints.filter(sprint => sprint.teamId === teamId);
   },
+
+  getActiveTeamSprints: (teamId) => {
+    return get().sprints.filter(sprint => sprint.teamId === teamId);
+  },
+
+  completeSprint: async (sprintId, updates) => {
+    return get().updateSprint(sprintId, updates);
+  },
+
+  calculateTheoreticalCapacity: (resources, duration) => {
+    return resources.reduce((total, resource) => {
+      return total + (resource.capacityPerDay || 1) * duration;
+    }, 0);
+  },
+
+  getAverageVelocity: (teamId) => {
+    const teamSprints = get().getSprintsForTeam(teamId);
+    const completedSprints = teamSprints.filter(sprint => sprint.velocityAchieved);
+    if (completedSprints.length === 0) return 0;
+    
+    const totalVelocity = completedSprints.reduce((sum, sprint) => 
+      sum + (sprint.velocityAchieved || 0), 0);
+    return totalVelocity / completedSprints.length;
+  },
+
+  canCreateNewSprint: (teamId) => {
+    const teamSprints = get().getSprintsForTeam(teamId);
+    return !teamSprints.some(sprint => !sprint.isSuccessful);
+  }
 }));
