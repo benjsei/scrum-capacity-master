@@ -5,13 +5,44 @@ import { useScrumTeamStore } from "../store/scrumTeamStore";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ResourceManagement = () => {
-  const { resources, updateResource, deleteResource } = useResourceStore();
+  const { resources, setResources, updateResource, deleteResource } = useResourceStore();
   const { activeTeam, loadTeams } = useScrumTeamStore();
 
+  // Charger les ressources au montage du composant
   useEffect(() => {
-    // Recharger les équipes après chaque modification pour avoir les données à jour
+    const loadResources = async () => {
+      if (!activeTeam) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('resources')
+          .select('*')
+          .eq('team_id', activeTeam.id);
+
+        if (error) throw error;
+
+        const formattedResources = data.map(resource => ({
+          id: resource.id,
+          name: resource.name,
+          capacityPerDay: resource.capacity_per_day || 1,
+          teamId: resource.team_id
+        }));
+
+        setResources(formattedResources);
+      } catch (error) {
+        console.error('Error loading resources:', error);
+        toast.error("Erreur lors du chargement des ressources");
+      }
+    };
+
+    loadResources();
+  }, [activeTeam, setResources]);
+
+  // Recharger les équipes après chaque modification
+  useEffect(() => {
     loadTeams();
   }, [loadTeams]);
 
@@ -23,7 +54,7 @@ export const ResourceManagement = () => {
 
     if (name.trim()) {
       await updateResource(id, { name: name.trim() });
-      await loadTeams(); // Recharger les données après la mise à jour
+      await loadTeams();
       toast.success("Ressource mise à jour");
     }
   };
@@ -35,7 +66,7 @@ export const ResourceManagement = () => {
     }
 
     await deleteResource(id);
-    await loadTeams(); // Recharger les données après la suppression
+    await loadTeams();
   };
 
   // Filtrer les ressources pour n'afficher que celles de l'équipe active
