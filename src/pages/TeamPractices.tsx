@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Percent } from "lucide-react";
-import { Card } from "./ui/card";
+import { Card } from "@/components/ui/card";
 
 const TeamPractices = () => {
   const { activeTeam } = useScrumTeamStore();
