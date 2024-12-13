@@ -29,16 +29,12 @@ const IndexContent = () => {
               <div className="flex gap-4">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 relative overflow-hidden group"
                   onClick={() => navigate(`/team/${team.id}/practices`)}
                 >
-                  <div className="w-full">
-                    <span className="block mb-1">Pratiques</span>
-                    <Progress 
-                      value={getPracticesProgress(team.id)} 
-                      className="h-2"
-                    />
-                  </div>
+                  <div className="absolute inset-0 bg-primary/10 origin-left transition-transform duration-300" 
+                       style={{ transform: `scaleX(${getPracticesProgress(team.id) / 100})` }} />
+                  <span className="relative z-10">Pratiques</span>
                 </Button>
                 <Button
                   variant="outline"
