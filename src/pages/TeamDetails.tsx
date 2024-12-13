@@ -3,6 +3,7 @@ import { SprintList } from "@/components/SprintList";
 import { VelocityChart } from "@/components/VelocityChart";
 import { TeamVelocityChart } from "@/components/TeamVelocityChart";
 import { CommitmentChart } from "@/components/CommitmentChart";
+import { AgilePractices } from "@/components/AgilePractices";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,8 @@ const TeamDetails = () => {
             <SprintForm onComplete={() => setShowSprintForm(false)} />
           </div>
         )}
+
+        <AgilePractices teamId={activeTeam.id} />
 
         <div>
           <h2 className="text-xl font-semibold mb-4">Historique des sprints</h2>
