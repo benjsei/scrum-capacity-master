@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { Sprint, Resource } from '../types/sprint';
+import { Sprint, Resource, ResourceDailyCapacity } from '../types/sprint';
 import { useScrumTeamStore } from './scrumTeamStore';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 interface SprintStore {
   sprints: Sprint[];
@@ -18,6 +19,21 @@ interface SprintStore {
   getActiveTeamSprints: () => Sprint[];
   canCreateNewSprint: () => boolean;
 }
+
+const mapDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapacity[]): Json => {
+  return dailyCapacities.map(dc => ({
+    date: dc.date,
+    capacity: dc.capacity
+  }));
+};
+
+const mapJsonToDailyCapacities = (json: any): ResourceDailyCapacity[] => {
+  if (!json) return [];
+  return json.map((dc: any) => ({
+    date: dc.date,
+    capacity: dc.capacity
+  }));
+};
 
 export const useSprintStore = create<SprintStore>((set, get) => ({
   sprints: [],
@@ -54,7 +70,9 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           objectiveAchieved: sprint.objective_achieved,
           resources: sprint.sprint_resources.map((sr: any) => ({
             id: sr.resource_id,
-            dailyCapacities: sr.daily_capacities || []
+            name: '', // Will be populated from the resources store when needed
+            capacityPerDay: 1,
+            dailyCapacities: mapJsonToDailyCapacities(sr.daily_capacities)
           }))
         }));
         set({ sprints: formattedSprints });
@@ -95,7 +113,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       const sprintResourcesData = sprint.resources.map(resource => ({
         sprint_id: sprintData.id,
         resource_id: resource.id,
-        daily_capacities: JSON.stringify(resource.dailyCapacities || [])
+        daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
       }));
 
       const { error: resourcesError } = await supabase
@@ -119,6 +137,47 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     } catch (error) {
       console.error('Error adding sprint:', error);
       toast.error("Erreur lors de la création du sprint");
+    }
+  },
+
+  completeSprint: async (sprintId, storyPointsCompleted) => {
+    try {
+      const sprint = get().sprints.find(s => s.id === sprintId);
+      if (!sprint) throw new Error('Sprint not found');
+
+      const velocityAchieved = storyPointsCompleted / sprint.duration;
+      const commitmentRespected = (storyPointsCompleted / sprint.storyPointsCommitted) * 100;
+
+      const { error } = await supabase
+        .from('sprints')
+        .update({
+          story_points_completed: storyPointsCompleted,
+          velocity_achieved: velocityAchieved,
+          commitment_respected: commitmentRespected
+        })
+        .eq('id', sprintId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        sprints: state.sprints.map((s) =>
+          s.id === sprintId
+            ? {
+                ...s,
+                storyPointsCompleted,
+                velocityAchieved,
+                commitmentRespected,
+                isSuccessful: storyPointsCompleted >= s.storyPointsCommitted
+              }
+            : s
+        ),
+        activeSprint: null,
+      }));
+
+      toast.success("Sprint terminé avec succès!");
+    } catch (error) {
+      console.error('Error completing sprint:', error);
+      toast.error("Erreur lors de la complétion du sprint");
     }
   },
 
@@ -192,48 +251,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     } catch (error) {
       console.error('Error deleting sprint:', error);
       toast.error("Erreur lors de la suppression du sprint");
-    }
-  },
-
-  completeSprint: async (sprintId, storyPointsCompleted) => {
-    try {
-      const sprint = get().sprints.find(s => s.id === sprintId);
-      if (!sprint) throw new Error('Sprint not found');
-
-      const velocityAchieved = storyPointsCompleted / sprint.duration;
-      const commitmentRespected = (storyPointsCompleted / sprint.storyPointsCommitted) * 100;
-      const isSuccessful = storyPointsCompleted >= sprint.storyPointsCommitted;
-
-      const { error } = await supabase
-        .from('sprints')
-        .update({
-          story_points_completed: storyPointsCompleted,
-          velocity_achieved: velocityAchieved,
-          commitment_respected: commitmentRespected
-        })
-        .eq('id', sprintId);
-
-      if (error) throw error;
-
-      set((state) => ({
-        sprints: state.sprints.map((sprint) =>
-          sprint.id === sprintId
-            ? {
-                ...sprint,
-                storyPointsCompleted,
-                velocityAchieved,
-                commitmentRespected,
-                isSuccessful
-              }
-            : sprint
-        ),
-        activeSprint: null,
-      }));
-
-      toast.success("Sprint terminé avec succès!");
-    } catch (error) {
-      console.error('Error completing sprint:', error);
-      toast.error("Erreur lors de la complétion du sprint");
     }
   },
 
