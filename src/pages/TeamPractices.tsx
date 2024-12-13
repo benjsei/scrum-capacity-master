@@ -1,16 +1,33 @@
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Percent } from "lucide-react";
+import { ArrowLeft, Percent, ChevronDown, ChevronUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import AgilePractices from "@/components/AgilePractices";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const TeamPractices = () => {
   const { activeTeam } = useScrumTeamStore();
   const { initializePractices, getPracticesForTeam } = useAgilePracticesStore();
   const navigate = useNavigate();
+  const [selectedDay, setSelectedDay] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [completionFilter, setCompletionFilter] = useState<string>("all");
+  const [expandedDays, setExpandedDays] = useState<string[]>([]);
 
   useEffect(() => {
     if (activeTeam) {
@@ -24,9 +41,26 @@ const TeamPractices = () => {
   }
 
   const practices = getPracticesForTeam(activeTeam.id);
-  const totalProgress = Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100);
+  
+  // Get unique types for filter
+  const uniqueTypes = Array.from(new Set(practices.map(p => p.type)));
 
-  const practicesByDay = practices.reduce((acc, practice) => {
+  // Order days according to specification
+  const dayOrder = ["N", "N + 1", "N + 5", "N + 14"];
+  
+  // Filter practices based on selected filters
+  const filteredPractices = practices.filter(practice => {
+    const dayMatch = selectedDay === "all" || practice.day === selectedDay;
+    const typeMatch = selectedType === "all" || practice.type === selectedType;
+    const completionMatch = 
+      completionFilter === "all" || 
+      (completionFilter === "completed" && practice.isCompleted) ||
+      (completionFilter === "pending" && !practice.isCompleted);
+    
+    return dayMatch && typeMatch && completionMatch;
+  });
+
+  const practicesByDay = filteredPractices.reduce((acc, practice) => {
     if (!acc[practice.day]) {
       acc[practice.day] = [];
     }
@@ -36,6 +70,16 @@ const TeamPractices = () => {
 
   const getDayProgress = (dayPractices) => {
     return Math.round(dayPractices.filter(p => p.isCompleted).length / dayPractices.length * 100);
+  };
+
+  const totalProgress = Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100);
+
+  const toggleDay = (day: string) => {
+    setExpandedDays(prev => 
+      prev.includes(day) 
+        ? prev.filter(d => d !== day)
+        : [...prev, day]
+    );
   };
 
   return (
@@ -56,22 +100,66 @@ const TeamPractices = () => {
         </Card>
       </header>
 
-      <div className="space-y-8">
-        {Object.entries(practicesByDay)
-          .sort()
-          .map(([day, dayPractices]) => (
-            <div key={day} className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Jour {day}</h2>
+      <div className="flex flex-wrap gap-4 mb-6">
+        <Select value={selectedDay} onValueChange={setSelectedDay}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrer par jour" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les jours</SelectItem>
+            {dayOrder.map(day => (
+              <SelectItem key={day} value={day}>Jour {day}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedType} onValueChange={setSelectedType}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrer par type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les types</SelectItem>
+            {uniqueTypes.map(type => (
+              <SelectItem key={type} value={type}>{type}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={completionFilter} onValueChange={setCompletionFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrer par statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les pratiques</SelectItem>
+            <SelectItem value="completed">Terminées</SelectItem>
+            <SelectItem value="pending">Non terminées</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Accordion type="multiple" className="space-y-8">
+        {dayOrder.map(day => {
+          const dayPractices = practicesByDay[day] || [];
+          if (dayPractices.length === 0 && selectedDay !== "all") return null;
+
+          return (
+            <AccordionItem key={day} value={day} className="border-none">
+              <div className="flex items-center justify-between mb-4">
+                <AccordionTrigger className="hover:no-underline">
+                  <h2 className="text-2xl font-bold">Jour {day}</h2>
+                </AccordionTrigger>
                 <Card className="p-2 flex items-center gap-2">
                   <Percent className="h-4 w-4 text-primary" />
                   <span className="font-medium">{getDayProgress(dayPractices)}%</span>
                 </Card>
               </div>
-              <AgilePractices teamId={activeTeam.id} dayFilter={day} />
-            </div>
-          ))}
-      </div>
+              <AccordionContent>
+                <AgilePractices teamId={activeTeam.id} dayFilter={day} />
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
     </div>
   );
 };
