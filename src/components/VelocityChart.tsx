@@ -3,13 +3,16 @@ import { useSprintStore } from '../store/sprintStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export const VelocityChart = () => {
-  const { sprints } = useSprintStore();
+  const { getActiveTeamSprints } = useSprintStore();
+  const sprints = getActiveTeamSprints();
 
-  const data = sprints.map((sprint) => ({
-    name: new Date(sprint.startDate).toLocaleDateString(),
-    velocity: sprint.velocityAchieved || 0,
-    theoretical: sprint.theoreticalCapacity,
-  }));
+  const data = sprints
+    .filter(sprint => sprint.velocityAchieved !== undefined)
+    .map((sprint) => ({
+      name: new Date(sprint.startDate).toLocaleDateString(),
+      velocity: sprint.velocityAchieved || 0,
+      theoretical: sprint.theoreticalCapacity,
+    }));
 
   return (
     <Card className="p-6">

@@ -185,10 +185,10 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
                 storyPointsCompleted,
                 velocityAchieved,
                 commitmentRespected,
+                isSuccessful: true // Add this line to mark the sprint as completed
               }
             : s
         ),
-        activeSprint: null,
       }));
 
       toast.success("Sprint terminé avec succès!");
