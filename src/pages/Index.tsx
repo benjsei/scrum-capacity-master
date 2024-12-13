@@ -1,6 +1,7 @@
 import { TeamManagement } from "@/components/TeamManagement";
 import { TeamPodium } from "@/components/TeamPodium";
 import { TeamVelocityChart } from "@/components/TeamVelocityChart";
+import { TeamProgressChart } from '@/components/TeamProgressChart';
 import { 
   Dialog,
   DialogContent,
@@ -124,7 +125,7 @@ const Index = () => {
             </PopoverContent>
           </Popover>
         </div>
-        <h1 className="text-3xl font-bold text-primary">Gestionnaire de Capacité Scrum</h1>
+        <h1 className="text-3xl font-bold text-primary">Pratiques et Capacité Scrum</h1>
         <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
       </header>
 
@@ -146,6 +147,11 @@ const Index = () => {
         <div>
           <h2 className="text-xl font-semibold mb-4">Podium des équipes</h2>
           <TeamPodium />
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Progression des pratiques</h2>
+          <TeamProgressChart />
         </div>
 
         <div>
