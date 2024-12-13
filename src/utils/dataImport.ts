@@ -94,21 +94,35 @@ export const importData = async (data: any) => {
       [oldSprint.id, insertedSprints[index].id]
     ));
 
-    // Import sprint resources with mapped IDs
-    const sprintResources = data.sprints.flatMap((sprint: any) => 
-      sprint.resources.map((resource: any) => ({
-        sprint_id: sprintIdMap.get(sprint.id),
-        resource_id: resourceIdMap.get(resource.id),
-        daily_capacities: resource.dailyCapacities || []
-      }))
-    ).filter(sr => sr.sprint_id && sr.resource_id); // Filter out any invalid mappings
+    // Prepare sprint resources data with proper mappings
+    const sprintResourcesData = [];
+    
+    for (const sprint of data.sprints) {
+      const newSprintId = sprintIdMap.get(sprint.id);
+      if (!newSprintId) continue;
 
-    if (sprintResources.length > 0) {
+      for (const resource of sprint.resources) {
+        const newResourceId = resourceIdMap.get(resource.id);
+        if (!newResourceId) continue;
+
+        sprintResourcesData.push({
+          sprint_id: newSprintId,
+          resource_id: newResourceId,
+          daily_capacities: resource.dailyCapacities || []
+        });
+      }
+    }
+
+    // Only attempt to insert sprint resources if we have valid data
+    if (sprintResourcesData.length > 0) {
       const { error: sprintResourcesError } = await supabase
         .from('sprint_resources')
-        .insert(sprintResources);
+        .insert(sprintResourcesData);
 
-      if (sprintResourcesError) throw sprintResourcesError;
+      if (sprintResourcesError) {
+        console.error('Error inserting sprint resources:', sprintResourcesError);
+        throw sprintResourcesError;
+      }
     }
 
     toast.success("Import réussi avec écrasement des données existantes !");
