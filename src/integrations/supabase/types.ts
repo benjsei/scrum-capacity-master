@@ -167,6 +167,7 @@ export type Database = {
           duration: number
           end_date: string
           id: string
+          is_successful: boolean | null
           objective: string | null
           objective_achieved: boolean | null
           start_date: string
@@ -182,6 +183,7 @@ export type Database = {
           duration: number
           end_date: string
           id?: string
+          is_successful?: boolean | null
           objective?: string | null
           objective_achieved?: boolean | null
           start_date: string
@@ -197,6 +199,7 @@ export type Database = {
           duration?: number
           end_date?: string
           id?: string
+          is_successful?: boolean | null
           objective?: string | null
           objective_achieved?: boolean | null
           start_date?: string

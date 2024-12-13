@@ -9,7 +9,7 @@ const mapDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapacity[]): Jso
   return dailyCapacities.map(dc => ({
     date: dc.date,
     capacity: dc.capacity
-  }));
+  })) as Json;
 };
 
 const mapJsonToDailyCapacities = (json: any): ResourceDailyCapacity[] => {
@@ -128,7 +128,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (sprintError) throw sprintError;
       if (!sprintData) throw new Error('No data returned from sprint insert');
 
-      // Finally, create sprint_resources with properly serialized daily capacities
+      // Create sprint_resources with properly serialized daily capacities
       const sprintResourcesData = sprint.resources.map(resource => ({
         sprint_id: sprintData.id,
         resource_id: resource.id,
@@ -172,7 +172,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           story_points_completed: storyPointsCompleted,
           velocity_achieved: velocityAchieved,
           commitment_respected: commitmentRespected,
-          is_successful: true // Add this to the database update
+          is_successful: true
         })
         .eq('id', sprintId);
 
