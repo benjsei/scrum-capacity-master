@@ -8,7 +8,6 @@ import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { ListTodo, SparklesIcon, Percent } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const TeamManagement = () => {
   const [newTeamName, setNewTeamName] = useState('');
@@ -71,11 +70,6 @@ export const TeamManagement = () => {
     return Math.round((practices.filter(p => p.isCompleted).length / practices.length) * 100);
   };
 
-  const chartData = teams.map(team => ({
-    name: team.name,
-    progress: getTeamProgress(team.id)
-  }));
-
   return (
     <Card className="p-6">
       <div className="space-y-6">
@@ -91,21 +85,6 @@ export const TeamManagement = () => {
             <Button type="submit">Create Team</Button>
           </form>
         </div>
-
-        {teams.length > 0 && (
-          <div className="h-[300px] w-full">
-            <h3 className="font-semibold mb-4">Progression des pratiques par équipe</h3>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="progress" fill="#3b82f6" name="Progression (%)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
 
         <div className="space-y-4">
           <h3 className="font-semibold">Teams</h3>
