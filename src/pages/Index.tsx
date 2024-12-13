@@ -14,18 +14,21 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Download, Upload, Users } from "lucide-react";
+import { Download, Upload, Users, FileInput } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
 import { useResourceStore } from '../store/resourceStore';
+import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { ResourceManagement } from "@/components/ResourceManagement";
+import { parsePracticesCSV } from "../utils/practicesImport";
 
 const Index = () => {
   const { teams, setTeams } = useScrumTeamStore();
   const { sprints, setSprints } = useSprintStore();
   const { resources, setResources } = useResourceStore();
+  const { initializePractices } = useAgilePracticesStore();
   const [showResourceManagement, setShowResourceManagement] = useState(false);
 
   const handleExport = () => {
@@ -80,6 +83,27 @@ const Index = () => {
     reader.readAsText(file);
   };
 
+  const handlePracticesImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const practices = await parsePracticesCSV(file);
+      
+      // Update practices for all teams
+      teams.forEach(team => {
+        initializePractices(team.id, practices);
+      });
+      
+      toast.success("Pratiques importées avec succès !");
+    } catch (error) {
+      toast.error("Erreur lors de l'import des pratiques : " + (error as Error).message);
+    }
+    
+    // Reset input
+    event.target.value = '';
+  };
+
   return (
     <div className="min-h-screen p-6 space-y-6">
       <header className="text-center mb-8 relative">
@@ -109,6 +133,20 @@ const Index = () => {
                       accept=".json"
                       className="hidden"
                       onChange={handleImport}
+                    />
+                  </label>
+                  <label className="w-full">
+                    <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                      <span>
+                        <FileInput className="w-4 h-4 mr-2" />
+                        Importer pratiques (CSV)
+                      </span>
+                    </Button>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      className="hidden"
+                      onChange={handlePracticesImport}
                     />
                   </label>
                   <Button 
