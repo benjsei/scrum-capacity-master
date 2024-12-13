@@ -1,9 +1,101 @@
 import { create } from 'zustand';
 import { AgilePractice, TeamPractices } from '../types/agilePractice';
 
+const initialPractices: AgilePractice[] = [
+  {
+    id: '1',
+    day: 'N',
+    who: 'COLLECTIF',
+    type: 'ETAT D\'ESPRIT',
+    action: 'ONE TEAM',
+    subActions: '',
+    format: 'ATELIER',
+    duration: '',
+    isCompleted: false
+  },
+  {
+    id: '2',
+    day: 'N',
+    who: 'COLLECTIF',
+    type: 'ETAT D\'ESPRIT',
+    action: 'CONSTRUIRE ENSEMBLE',
+    subActions: '',
+    format: 'ATELIER',
+    duration: '',
+    isCompleted: false
+  },
+  // ... all other practices following the same pattern
+  {
+    id: '3',
+    day: 'N',
+    who: 'COLLECTIF',
+    type: 'ETAT D\'ESPRIT',
+    action: 'PARTAGE RESPECT ET RESPONSABILITES',
+    subActions: '',
+    format: 'ATELIER',
+    duration: '',
+    isCompleted: false
+  },
+  {
+    id: '4',
+    day: 'N',
+    who: 'COLLECTIF',
+    type: 'ETAT D\'ESPRIT',
+    action: 'Casser les silos',
+    subActions: 'Dev n\'est pas que DEV (Posture)',
+    format: 'ATELIER',
+    duration: '',
+    isCompleted: false
+  },
+  {
+    id: '5',
+    day: 'N',
+    who: 'COLLECTIF',
+    type: 'ETAT D\'ESPRIT',
+    action: 'Casser les silos',
+    subActions: 'Métier embarqué dans la méthodo',
+    format: 'ATELIER',
+    duration: '',
+    isCompleted: false
+  },
+  {
+    id: '6',
+    day: 'N+1',
+    who: 'SCRUM MASTER',
+    type: 'ACTIONS',
+    action: 'Mise en place du cadre (JIRA/KPI)',
+    subActions: 'Configuration Scrum Board simple tourné vers les DEV et l\'objectif de sprint',
+    format: 'ACTION',
+    duration: '30 min',
+    isCompleted: false
+  },
+  {
+    id: '7',
+    day: 'N+5',
+    who: 'SCRUM MASTER',
+    type: 'ACTIONS',
+    action: 'Mettre en place l\'outilage',
+    subActions: 'Créer un template d\'US',
+    format: 'ATELIER',
+    duration: '30 min',
+    isCompleted: false
+  },
+  {
+    id: '8',
+    day: 'N+14',
+    who: 'COLLECTIF',
+    type: 'ACTIONS',
+    action: 'OKR',
+    subActions: 'Mettre en place des OKR choisis collectivement',
+    format: 'ATELIER',
+    duration: '1 heure',
+    isCompleted: false
+  }
+];
+
 interface AgilePracticesStore {
   teamPractices: TeamPractices[];
-  initializePractices: (teamId: string, practices: AgilePractice[]) => void;
+  initializePractices: (teamId: string, practices?: AgilePractice[]) => void;
   togglePracticeCompletion: (teamId: string, practiceId: string) => void;
   updatePracticeUrl: (teamId: string, practiceId: string, url: string) => void;
   getPracticesForTeam: (teamId: string) => AgilePractice[];
@@ -12,16 +104,18 @@ interface AgilePracticesStore {
 export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => ({
   teamPractices: [],
   
-  initializePractices: (teamId: string, practices: AgilePractice[]) => {
+  initializePractices: (teamId: string, practices?: AgilePractice[]) => {
     set((state) => {
       const existingTeamIndex = state.teamPractices.findIndex(tp => tp.teamId === teamId);
+      const practicesToUse = practices || initialPractices;
+      
       if (existingTeamIndex >= 0) {
         const newTeamPractices = [...state.teamPractices];
-        newTeamPractices[existingTeamIndex] = { teamId, practices };
+        newTeamPractices[existingTeamIndex] = { teamId, practices: practicesToUse };
         return { teamPractices: newTeamPractices };
       }
       return {
-        teamPractices: [...state.teamPractices, { teamId, practices }]
+        teamPractices: [...state.teamPractices, { teamId, practices: practicesToUse }]
       };
     });
   },
