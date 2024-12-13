@@ -9,11 +9,11 @@ import { useAgilePracticesStore } from "../store/agilePracticesStore";
 const IndexContent = () => {
   const navigate = useNavigate();
   const { teams } = useScrumTeamStore();
-  const { teamPractices, getPracticesForTeam } = useAgilePracticesStore();
+  const { getPracticesForTeam } = useAgilePracticesStore();
 
   const getPracticesProgress = (teamId: string) => {
     const practices = getPracticesForTeam(teamId);
-    if (practices.length === 0) return 0;
+    if (!practices || practices.length === 0) return 0;
     return Math.round((practices.filter(p => p.isCompleted).length / practices.length) * 100);
   };
 
@@ -39,8 +39,10 @@ const IndexContent = () => {
                   className="flex-1 relative overflow-hidden group"
                   onClick={() => navigate(`/team/${team.id}/practices`)}
                 >
-                  <div className="absolute inset-0 bg-primary/10 origin-left transition-transform duration-300" 
-                       style={{ transform: `scaleX(${getPracticesProgress(team.id) / 100})` }} />
+                  <div 
+                    className="absolute inset-0 bg-primary/10 origin-left transition-transform duration-300" 
+                    style={{ transform: `scaleX(${getPracticesProgress(team.id) / 100})` }} 
+                  />
                   <span className="relative z-10">Pratiques</span>
                 </Button>
                 <Button

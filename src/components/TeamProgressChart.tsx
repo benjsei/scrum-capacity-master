@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
-import { TeamPractices } from '../types/agilePractice';
+import { AgilePractice } from '../types/agilePractice';
+import { Progress } from "@/components/ui/progress";
 
 interface TeamProgressChartProps {
   teamId: string;
@@ -8,17 +9,18 @@ interface TeamProgressChartProps {
 
 export const TeamProgressChart: FC<TeamProgressChartProps> = ({ teamId }) => {
   const { getPracticesForTeam } = useAgilePracticesStore();
-  const practices: TeamPractices[] = getPracticesForTeam(teamId);
+  const practices: AgilePractice[] = getPracticesForTeam(teamId);
 
-  // Logic to render the chart based on practices
   const completedCount = practices.filter(p => p.isCompleted).length;
   const totalCount = practices.length;
   const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
-    <div>
-      <div className="progress-bar" style={{ width: `${progressPercentage}%` }} />
-      <span>{completedCount} of {totalCount} practices completed</span>
+    <div className="space-y-2">
+      <Progress value={progressPercentage} className="w-full" />
+      <span className="text-sm text-muted-foreground">
+        {completedCount} of {totalCount} practices completed
+      </span>
     </div>
   );
 };

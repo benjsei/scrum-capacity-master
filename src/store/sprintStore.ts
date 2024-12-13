@@ -1,312 +1,208 @@
 import { create } from 'zustand';
-import { Sprint, Resource, ResourceDailyCapacity, SprintResourceData } from '../types/sprint';
-import { useScrumTeamStore } from './scrumTeamStore';
-import { toast } from "sonner";
+import { ScrumTeam } from '../types/scrumTeam';
+import { Resource, ResourceDailyCapacity } from '../types/sprint';
 import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
+import { toast } from "sonner";
+import { mapDailyCapacitiesToJson } from "../utils/sprintUtils";
 
-const mapDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapacity[]): Json => {
-  return dailyCapacities.map(dc => ({
-    date: dc.date,
-    capacity: dc.capacity
-  })) as Json;
-};
-
-const mapJsonToDailyCapacities = (json: any): ResourceDailyCapacity[] => {
-  if (!json) return [];
-  return json.map((dc: any) => ({
-    date: dc.date,
-    capacity: dc.capacity
-  }));
-};
-
-interface SprintStore {
-  sprints: Sprint[];
-  activeSprint: Sprint | null;
-  setSprints: (sprints: Sprint[]) => void;
-  loadSprints: () => Promise<void>;
-  addSprint: (sprint: Sprint) => Promise<void>;
-  updateSprint: (sprintId: string, sprint: Partial<Sprint>) => Promise<void>;
-  deleteSprint: (sprintId: string) => Promise<void>;
-  completeSprint: (sprintId: string, storyPointsCompleted: number) => Promise<void>;
-  calculateTheoreticalCapacity: (resources: Resource[], duration: number) => number;
-  getAverageVelocity: () => number;
-  getActiveTeamSprints: () => Sprint[];
-  canCreateNewSprint: () => boolean;
+interface ScrumTeamStore {
+  teams: ScrumTeam[];
+  activeTeam: ScrumTeam | null;
+  setActiveTeam: (team: ScrumTeam | null) => void;
+  setTeams: (teams: ScrumTeam[]) => void;
+  loadTeams: () => Promise<void>;
+  addTeam: (team: ScrumTeam) => void;
+  deleteTeam: (teamId: string) => void;
+  updateTeamName: (teamId: string, newName: string) => void;
+  addResource: (teamId: string, resource: Resource) => void;
+  updateResource: (teamId: string, resourceId: string, updates: Partial<Resource>) => void;
+  deleteResource: (teamId: string, resourceId: string) => void;
 }
 
-export const useSprintStore = create<SprintStore>((set, get) => ({
-  sprints: [],
-  activeSprint: null,
-  setSprints: (sprints) => set({ sprints }),
-
-  loadSprints: async () => {
+export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
+  teams: [],
+  activeTeam: null,
+  setActiveTeam: (team) => set({ activeTeam: team }),
+  setTeams: (teams) => set({ teams }),
+  
+  loadTeams: async () => {
     try {
-      const { data: sprintsData, error: sprintsError } = await supabase
-        .from('sprints')
+      const { data: teams, error } = await supabase
+        .from('teams')
         .select(`
           *,
-          sprint_resources (
-            resource_id,
-            daily_capacities
-          )
+          resources (*)
         `);
 
-      if (sprintsError) throw sprintsError;
+      if (error) throw error;
 
-      if (sprintsData) {
-        const formattedSprints: Sprint[] = sprintsData.map(sprint => ({
-          id: sprint.id,
-          teamId: sprint.team_id || '',
-          startDate: sprint.start_date,
-          endDate: sprint.end_date,
-          duration: sprint.duration,
-          storyPointsCommitted: sprint.story_points_committed,
-          storyPointsCompleted: sprint.story_points_completed,
-          theoreticalCapacity: sprint.theoretical_capacity,
-          velocityAchieved: sprint.velocity_achieved,
-          commitmentRespected: sprint.commitment_respected,
-          objective: sprint.objective || '',
-          objectiveAchieved: sprint.objective_achieved,
-          resources: sprint.sprint_resources.map((sr: any) => ({
-            id: sr.resource_id,
-            name: '', // Will be populated from the resources store when needed
-            capacityPerDay: 1,
-            dailyCapacities: mapJsonToDailyCapacities(sr.daily_capacities)
-          }))
-        }));
-        set({ sprints: formattedSprints });
-      }
+      set({ teams: teams.map(team => ({
+        id: team.id,
+        name: team.name,
+        resources: team.resources.map(resource => ({
+          id: resource.id,
+          name: resource.name,
+          capacityPerDay: resource.capacity_per_day || 1,
+          teamId: resource.team_id
+        })) || [],
+        createdAt: team.created_at
+      })) });
     } catch (error) {
-      console.error('Error loading sprints:', error);
-      toast.error("Erreur lors du chargement des sprints");
+      console.error('Error loading teams:', error);
     }
   },
 
-  addSprint: async (sprint) => {
-    const activeTeam = useScrumTeamStore.getState().activeTeam;
-    if (!activeTeam) {
-      toast.error("No active team selected");
-      return;
-    }
-
+  addTeam: async (team) => {
     try {
-      // First, create resources in the resources table
-      const resourcePromises = sprint.resources.map(async (resource) => {
-        const { data: resourceData, error: resourceError } = await supabase
-          .from('resources')
-          .insert({
-            id: resource.id,
-            name: resource.name,
-            capacity_per_day: resource.capacityPerDay,
-            team_id: activeTeam.id
-          })
-          .select()
-          .single();
-
-        if (resourceError) throw resourceError;
-        return resourceData;
-      });
-
-      await Promise.all(resourcePromises);
-
-      // Then create the sprint
-      const { data: sprintData, error: sprintError } = await supabase
-        .from('sprints')
-        .insert({
-          team_id: activeTeam.id,
-          start_date: sprint.startDate,
-          end_date: sprint.endDate,
-          duration: sprint.duration,
-          story_points_committed: sprint.storyPointsCommitted,
-          theoretical_capacity: sprint.theoreticalCapacity,
-          objective: sprint.objective
-        })
+      const { data, error } = await supabase
+        .from('teams')
+        .insert([{ name: team.name }])
         .select()
         .single();
 
-      if (sprintError) throw sprintError;
-      if (!sprintData) throw new Error('No data returned from sprint insert');
-
-      // Create sprint_resources with properly serialized daily capacities
-      const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
-        sprint_id: sprintData.id,
-        resource_id: resource.id,
-        daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
-      }));
-
-      const { error: resourcesError } = await supabase
-        .from('sprint_resources')
-        .insert(sprintResourcesData);
-
-      if (resourcesError) throw resourcesError;
-
-      const newSprint = {
-        ...sprint,
-        id: sprintData.id,
-      };
-
-      set((state) => ({
-        sprints: [...state.sprints, newSprint],
-        activeSprint: newSprint,
-      }));
-
-      toast.success('Sprint créé avec succès!');
-    } catch (error) {
-      console.error('Error adding sprint:', error);
-      toast.error("Erreur lors de la création du sprint");
-    }
-  },
-
-  completeSprint: async (sprintId, storyPointsCompleted) => {
-    try {
-      const sprint = get().sprints.find(s => s.id === sprintId);
-      if (!sprint) throw new Error('Sprint not found');
-
-      const velocityAchieved = storyPointsCompleted / sprint.duration;
-      const commitmentRespected = (storyPointsCompleted / sprint.storyPointsCommitted) * 100;
-
-      const { error } = await supabase
-        .from('sprints')
-        .update({
-          story_points_completed: storyPointsCompleted,
-          velocity_achieved: velocityAchieved,
-          commitment_respected: commitmentRespected,
-          is_successful: true
-        })
-        .eq('id', sprintId);
-
       if (error) throw error;
+      if (!data) throw new Error('No data returned from insert');
 
-      set((state) => ({
-        sprints: state.sprints.map((s) =>
-          s.id === sprintId
-            ? {
-                ...s,
-                storyPointsCompleted,
-                velocityAchieved,
-                commitmentRespected,
-                isSuccessful: true
-              }
-            : s
-        ),
+      set((state) => ({ 
+        teams: [...state.teams, { ...team, id: data.id }] 
       }));
-
-      toast.success("Sprint terminé avec succès!");
     } catch (error) {
-      console.error('Error completing sprint:', error);
-      toast.error("Erreur lors de la complétion du sprint");
+      console.error('Error adding team:', error);
     }
   },
 
-  updateSprint: async (sprintId, updatedFields) => {
-    try {
-      const { error: sprintError } = await supabase
-        .from('sprints')
-        .update({
-          start_date: updatedFields.startDate,
-          end_date: updatedFields.endDate,
-          duration: updatedFields.duration,
-          story_points_committed: updatedFields.storyPointsCommitted,
-          theoretical_capacity: updatedFields.theoreticalCapacity,
-          objective: updatedFields.objective,
-          objective_achieved: updatedFields.objectiveAchieved
-        })
-        .eq('id', sprintId);
-
-      if (sprintError) throw sprintError;
-
-      if (updatedFields.resources) {
-        const { error: deleteError } = await supabase
-          .from('sprint_resources')
-          .delete()
-          .eq('sprint_id', sprintId);
-
-        if (deleteError) throw deleteError;
-
-        const sprintResourcesData = updatedFields.resources.map(resource => ({
-          sprint_id: sprintId,
-          resource_id: resource.id,
-          daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
-        }));
-
-        const { error: resourcesError } = await supabase
-          .from('sprint_resources')
-          .insert(sprintResourcesData);
-
-        if (resourcesError) throw resourcesError;
-      }
-
-      set((state) => ({
-        sprints: state.sprints.map((sprint) =>
-          sprint.id === sprintId ? { ...sprint, ...updatedFields } : sprint
-        ),
-      }));
-
-      toast.success("Sprint mis à jour avec succès!");
-    } catch (error) {
-      console.error('Error updating sprint:', error);
-      toast.error("Erreur lors de la mise à jour du sprint");
-    }
-  },
-
-  deleteSprint: async (sprintId) => {
+  deleteTeam: async (teamId) => {
     try {
       const { error } = await supabase
-        .from('sprints')
+        .from('teams')
         .delete()
-        .eq('id', sprintId);
+        .eq('id', teamId);
 
       if (error) throw error;
 
       set((state) => ({
-        sprints: state.sprints.filter((sprint) => sprint.id !== sprintId),
-        activeSprint: state.activeSprint?.id === sprintId ? null : state.activeSprint,
+        teams: state.teams.filter((team) => team.id !== teamId),
+        activeTeam: state.activeTeam?.id === teamId ? null : state.activeTeam,
       }));
-
-      toast.success("Sprint supprimé avec succès!");
     } catch (error) {
-      console.error('Error deleting sprint:', error);
-      toast.error("Erreur lors de la suppression du sprint");
+      console.error('Error deleting team:', error);
     }
   },
 
-  calculateTheoreticalCapacity: (resources: Resource[], duration: number) => {
-    const averageVelocity = get().getAverageVelocity();
-    
-    const totalResourceCapacity = resources.reduce((acc, resource) => {
-      if (resource.dailyCapacities && resource.dailyCapacities.length > 0) {
-        return acc + resource.dailyCapacities.reduce((sum, dc) => sum + dc.capacity, 0);
-      }
-      return acc + (resource.capacityPerDay * duration);
-    }, 0);
+  updateTeamName: async (teamId, newName) => {
+    try {
+      const { error } = await supabase
+        .from('teams')
+        .update({ name: newName })
+        .eq('id', teamId);
 
-    return averageVelocity * totalResourceCapacity;
+      if (error) throw error;
+
+      set((state) => ({
+        teams: state.teams.map((team) =>
+          team.id === teamId ? { ...team, name: newName } : team
+        ),
+        activeTeam: state.activeTeam?.id === teamId 
+          ? { ...state.activeTeam, name: newName }
+          : state.activeTeam,
+      }));
+    } catch (error) {
+      console.error('Error updating team name:', error);
+    }
   },
 
-  getAverageVelocity: () => {
-    const sprints = get().sprints;
-    const completedSprints = sprints.filter(s => s.velocityAchieved !== undefined);
-    
-    if (completedSprints.length === 0) return 1; // Default velocity
+  addResource: async (teamId, resource) => {
+    try {
+      const { data, error } = await supabase
+        .from('resources')
+        .insert([{
+          name: resource.name,
+          capacity_per_day: resource.capacityPerDay,
+          team_id: teamId
+        }])
+        .select()
+        .single();
 
-    const totalVelocity = completedSprints.reduce((sum, sprint) => 
-      sum + (sprint.velocityAchieved || 0), 0);
-    
-    return totalVelocity / completedSprints.length;
+      if (error) throw error;
+      if (!data) throw new Error('No data returned from insert');
+
+      set((state) => ({
+        teams: state.teams.map((team) =>
+          team.id === teamId
+            ? { ...team, resources: [...team.resources, { ...resource, id: data.id }] }
+            : team
+        ),
+      }));
+    } catch (error) {
+      console.error('Error adding resource:', error);
+    }
   },
 
-  getActiveTeamSprints: () => {
-    const activeTeam = useScrumTeamStore.getState().activeTeam;
-    if (!activeTeam) return [];
-    return get().sprints.filter(sprint => sprint.teamId === activeTeam.id);
+  updateResource: async (teamId, resourceId, updates) => {
+    try {
+      const { error } = await supabase
+        .from('resources')
+        .update({
+          name: updates.name,
+          capacity_per_day: updates.capacityPerDay
+        })
+        .eq('id', resourceId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        teams: state.teams.map((team) =>
+          team.id === teamId
+            ? {
+                ...team,
+                resources: team.resources.map((resource) =>
+                  resource.id === resourceId
+                    ? { ...resource, ...updates }
+                    : resource
+                ),
+              }
+            : team
+        ),
+      }));
+    } catch (error) {
+      console.error('Error updating resource:', error);
+    }
   },
 
-  canCreateNewSprint: () => {
-    const activeTeam = useScrumTeamStore.getState().activeTeam;
-    if (!activeTeam) return false;
-    
-    const teamSprints = get().getActiveTeamSprints();
-    return !teamSprints.some(s => s.storyPointsCompleted === undefined);
+  deleteResource: async (teamId, resourceId) => {
+    try {
+      // First, delete any sprint_resources entries that reference this resource
+      const { error: sprintResourcesError } = await supabase
+        .from('sprint_resources')
+        .delete()
+        .eq('resource_id', resourceId);
+
+      if (sprintResourcesError) throw sprintResourcesError;
+
+      // Then delete the resource itself
+      const { error } = await supabase
+        .from('resources')
+        .delete()
+        .eq('id', resourceId);
+
+      if (error) throw error;
+
+      // Update local state
+      set((state) => ({
+        teams: state.teams.map((team) =>
+          team.id === teamId
+            ? {
+                ...team,
+                resources: team.resources.filter((r) => r.id !== resourceId),
+              }
+            : team
+        ),
+      }));
+
+      toast.success("Ressource supprimée avec succès");
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+      toast.error("Erreur lors de la suppression de la ressource");
+    }
   },
 }));
