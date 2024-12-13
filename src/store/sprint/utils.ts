@@ -8,6 +8,6 @@ export const convertDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapac
   }));
 };
 
-export const calculateSprintSuccess = (storyPointsCompleted: number, storyPointsCommitted: number): boolean => {
-  return (storyPointsCompleted / storyPointsCommitted) >= 0.8;
+export const calculateSprintSuccess = (completed: number, committed: number): boolean => {
+  return (completed / committed) >= 0.8;
 };

@@ -1,13 +1,13 @@
 import { Json } from "@/integrations/supabase/types";
-import { Resource, ResourceDailyCapacity } from "@/types/sprint";
+import { Resource, Sprint } from "@/types/sprint";
 
 export interface SprintStore {
-  sprints: any[];
+  sprints: Sprint[];
   loadSprints: () => Promise<void>;
-  addSprint: (sprint: any) => void;
-  updateSprint: (id: string, updates: any) => void;
-  completeSprint: (id: string, storyPoints: number) => void;
-  getActiveTeamSprints: () => any[];
+  addSprint: (sprint: Sprint) => Promise<void>;
+  updateSprint: (id: string, updates: Partial<Sprint>) => Promise<void>;
+  completeSprint: (id: string, storyPoints: number) => Promise<void>;
+  getActiveTeamSprints: () => Sprint[];
   calculateTheoreticalCapacity: (resources: Resource[], duration: number) => number;
   getAverageVelocity: () => number;
   canCreateNewSprint: () => boolean;

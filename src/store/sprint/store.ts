@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
-import { SprintStore, SprintResourceData } from './types';
+import { SprintStore } from './types';
 import { convertDailyCapacitiesToJson, calculateSprintSuccess } from './utils';
 import { useScrumTeamStore } from '../scrumTeamStore';
 
@@ -50,8 +50,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       const sprintId = data.id;
 
-      // Insert sprint resources
-      const sprintResources: SprintResourceData[] = sprint.resources.map(resource => ({
+      // Insert sprint resources with converted daily capacities
+      const sprintResources = sprint.resources.map(resource => ({
         sprint_id: sprintId,
         resource_id: resource.id,
         daily_capacities: convertDailyCapacitiesToJson(resource.dailyCapacities || [])
@@ -91,17 +91,19 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       if (error) throw error;
 
-      // Update sprint resources
-      for (const resource of updates.resources) {
-        const { error: resourceError } = await supabase
-          .from('sprint_resources')
-          .upsert({
-            sprint_id: id,
-            resource_id: resource.id,
-            daily_capacities: convertDailyCapacitiesToJson(resource.dailyCapacities || [])
-          });
+      // Update sprint resources with converted daily capacities
+      if (updates.resources) {
+        for (const resource of updates.resources) {
+          const { error: resourceError } = await supabase
+            .from('sprint_resources')
+            .upsert({
+              sprint_id: id,
+              resource_id: resource.id,
+              daily_capacities: convertDailyCapacitiesToJson(resource.dailyCapacities || [])
+            });
 
-        if (resourceError) throw resourceError;
+          if (resourceError) throw resourceError;
+        }
       }
 
       set(state => ({
@@ -121,7 +123,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (!sprint) throw new Error('Sprint not found');
 
       const velocityAchieved = storyPoints / sprint.duration;
-      const isSuccessful = calculateSprintSuccess(storyPoints, sprint.story_points_committed);
+      const isSuccessful = calculateSprintSuccess(storyPoints, sprint.storyPointsCommitted);
 
       const { error } = await supabase
         .from('sprints')
@@ -129,7 +131,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           story_points_completed: storyPoints,
           velocity_achieved: velocityAchieved,
           is_successful: isSuccessful,
-          commitment_respected: (storyPoints / sprint.story_points_committed) * 100
+          commitment_respected: (storyPoints / sprint.storyPointsCommitted) * 100
         })
         .eq('id', id);
 
