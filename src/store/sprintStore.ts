@@ -5,21 +5,6 @@ import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 
-interface SprintStore {
-  sprints: Sprint[];
-  activeSprint: Sprint | null;
-  setSprints: (sprints: Sprint[]) => void;
-  loadSprints: () => Promise<void>;
-  addSprint: (sprint: Sprint) => Promise<void>;
-  updateSprint: (sprintId: string, sprint: Partial<Sprint>) => Promise<void>;
-  deleteSprint: (sprintId: string) => Promise<void>;
-  completeSprint: (sprintId: string, storyPointsCompleted: number) => Promise<void>;
-  calculateTheoreticalCapacity: (resources: Resource[], duration: number) => number;
-  getAverageVelocity: () => number;
-  getActiveTeamSprints: () => Sprint[];
-  canCreateNewSprint: () => boolean;
-}
-
 const mapDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapacity[]): Json => {
   return dailyCapacities.map(dc => ({
     date: dc.date,
@@ -34,6 +19,21 @@ const mapJsonToDailyCapacities = (json: any): ResourceDailyCapacity[] => {
     capacity: dc.capacity
   }));
 };
+
+interface SprintStore {
+  sprints: Sprint[];
+  activeSprint: Sprint | null;
+  setSprints: (sprints: Sprint[]) => void;
+  loadSprints: () => Promise<void>;
+  addSprint: (sprint: Sprint) => Promise<void>;
+  updateSprint: (sprintId: string, sprint: Partial<Sprint>) => Promise<void>;
+  deleteSprint: (sprintId: string) => Promise<void>;
+  completeSprint: (sprintId: string, storyPointsCompleted: number) => Promise<void>;
+  calculateTheoreticalCapacity: (resources: Resource[], duration: number) => number;
+  getAverageVelocity: () => number;
+  getActiveTeamSprints: () => Sprint[];
+  canCreateNewSprint: () => boolean;
+}
 
 export const useSprintStore = create<SprintStore>((set, get) => ({
   sprints: [],
@@ -91,7 +91,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }
 
     try {
-      // Insert sprint
       const { data: sprintData, error: sprintError } = await supabase
         .from('sprints')
         .insert([{
@@ -109,7 +108,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (sprintError) throw sprintError;
       if (!sprintData) throw new Error('No data returned from sprint insert');
 
-      // Insert sprint resources
       const sprintResourcesData = sprint.resources.map(resource => ({
         sprint_id: sprintData.id,
         resource_id: resource.id,
@@ -122,7 +120,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       if (resourcesError) throw resourcesError;
 
-      // Update local state
       const newSprint = {
         ...sprint,
         id: sprintData.id,
@@ -198,7 +195,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (sprintError) throw sprintError;
 
       if (updatedFields.resources) {
-        // Update sprint resources
         const { error: deleteError } = await supabase
           .from('sprint_resources')
           .delete()

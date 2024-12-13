@@ -107,7 +107,12 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const handleAddResource = () => {
     setResources([
       ...resources,
-      { id: String(resources.length + 1), name: '', capacityPerDay: 1, dailyCapacities: [] }
+      { 
+        id: crypto.randomUUID(), // Generate proper UUID instead of numeric ID
+        name: '', 
+        capacityPerDay: 1, 
+        dailyCapacities: [] 
+      }
     ]);
   };
 
