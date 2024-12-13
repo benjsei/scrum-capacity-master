@@ -1,6 +1,26 @@
 import { create } from 'zustand';
 import { AgilePractice, TeamPractices } from '../types/agilePractice';
 
+const STORAGE_KEY = 'team-practices';
+
+const getStoredPractices = (): TeamPractices[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Error reading from localStorage:', error);
+    return [];
+  }
+};
+
+const savePractices = (practices: TeamPractices[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(practices));
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+  }
+};
+
 const initialPractices: AgilePractice[] = [
   {
     id: '1',
@@ -102,36 +122,33 @@ interface AgilePracticesStore {
 }
 
 export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => ({
-  teamPractices: [],
+  teamPractices: getStoredPractices(),
   
   initializePractices: (teamId: string, practices?: AgilePractice[]) => {
     set((state) => {
-      // Si des pratiques sont fournies, on les utilise, sinon on utilise les pratiques initiales
       const practicesToUse = practices ? practices.map(p => ({
         ...p,
-        isCompleted: false // Réinitialise l'état de complétion
+        isCompleted: false
       })) : initialPractices;
 
-      // Trouve l'index de l'équipe si elle existe déjà
       const existingTeamIndex = state.teamPractices.findIndex(tp => tp.teamId === teamId);
       
+      let newTeamPractices;
       if (existingTeamIndex >= 0) {
-        // Met à jour les pratiques de l'équipe existante
-        const newTeamPractices = [...state.teamPractices];
+        newTeamPractices = [...state.teamPractices];
         newTeamPractices[existingTeamIndex] = { 
           teamId, 
           practices: practicesToUse
         };
-        return { teamPractices: newTeamPractices };
-      }
-
-      // Ajoute une nouvelle équipe avec ses pratiques
-      return {
-        teamPractices: [...state.teamPractices, { 
+      } else {
+        newTeamPractices = [...state.teamPractices, { 
           teamId, 
           practices: practicesToUse 
-        }]
-      };
+        }];
+      }
+
+      savePractices(newTeamPractices);
+      return { teamPractices: newTeamPractices };
     });
   },
 
@@ -153,6 +170,7 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
         return { ...tp, practices: newPractices };
       });
       
+      savePractices(newTeamPractices);
       return { teamPractices: newTeamPractices };
     });
   },
@@ -170,6 +188,7 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
         return { ...tp, practices: newPractices };
       });
       
+      savePractices(newTeamPractices);
       return { teamPractices: newTeamPractices };
     });
   },
