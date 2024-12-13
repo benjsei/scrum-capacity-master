@@ -126,11 +126,7 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
   
   initializePractices: (teamId: string, practices?: AgilePractice[]) => {
     set((state) => {
-      const practicesToUse = practices ? practices.map(p => ({
-        ...p,
-        isCompleted: false
-      })) : initialPractices;
-
+      const practicesToUse = practices || initialPractices;
       const existingTeamIndex = state.teamPractices.findIndex(tp => tp.teamId === teamId);
       
       let newTeamPractices;
@@ -146,7 +142,7 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
           practices: practicesToUse 
         }];
       }
-
+      
       savePractices(newTeamPractices);
       return { teamPractices: newTeamPractices };
     });
