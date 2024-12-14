@@ -50,7 +50,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
             resource_id,
             daily_capacities
           )
-        `);
+        `)
+        .order('start_date', { ascending: false }); // Sort sprints by start date, most recent first
 
       if (sprintsError) throw sprintsError;
 
@@ -91,7 +92,25 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }
 
     try {
-      // First, create the sprint
+      // First, verify that all resources exist in the database
+      const { data: existingResources, error: resourcesError } = await supabase
+        .from('resources')
+        .select('id')
+        .in('id', sprint.resources.map(r => r.id));
+
+      if (resourcesError) throw resourcesError;
+
+      // Create a set of existing resource IDs for quick lookup
+      const existingResourceIds = new Set(existingResources?.map(r => r.id));
+
+      // Filter out resources that don't exist in the database
+      const validResources = sprint.resources.filter(r => existingResourceIds.has(r.id));
+
+      if (validResources.length !== sprint.resources.length) {
+        console.warn('Some resources were filtered out as they no longer exist in the database');
+      }
+
+      // Create the sprint
       const { data: sprintData, error: sprintError } = await supabase
         .from('sprints')
         .insert({
@@ -109,26 +128,29 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (sprintError) throw sprintError;
       if (!sprintData) throw new Error('No data returned from sprint insert');
 
-      // Create sprint_resources with properly serialized daily capacities
-      const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
-        sprint_id: sprintData.id,
-        resource_id: resource.id,
-        daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
-      }));
+      // Create sprint_resources only for valid resources
+      if (validResources.length > 0) {
+        const sprintResourcesData: SprintResourceData[] = validResources.map(resource => ({
+          sprint_id: sprintData.id,
+          resource_id: resource.id,
+          daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
+        }));
 
-      const { error: resourcesError } = await supabase
-        .from('sprint_resources')
-        .insert(sprintResourcesData);
+        const { error: resourcesError } = await supabase
+          .from('sprint_resources')
+          .insert(sprintResourcesData);
 
-      if (resourcesError) throw resourcesError;
+        if (resourcesError) throw resourcesError;
+      }
 
       const newSprint = {
         ...sprint,
         id: sprintData.id,
+        resources: validResources
       };
 
       set((state) => ({
-        sprints: [...state.sprints, newSprint],
+        sprints: [newSprint, ...state.sprints], // Add new sprint at the beginning
         activeSprint: newSprint,
       }));
 
