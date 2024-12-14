@@ -107,23 +107,16 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     }
   }, [duration, resources, calculateTheoreticalCapacity]);
 
-  const handleAddResource = (resource: Resource) => {
-    const start = new Date(startDate);
-    const dailyCapacities = [];
-    
-    for (let i = 0; i < parseInt(duration); i++) {
-      const currentDate = new Date(start);
-      currentDate.setDate(start.getDate() + i);
-      const dateStr = currentDate.toISOString().split('T')[0];
-      
-      const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-      dailyCapacities.push({
-        date: dateStr,
-        capacity: isWeekend ? 0 : resource.capacityPerDay
-      });
-    }
-
-    setResources([...resources, { ...resource, dailyCapacities }]);
+  const handleAddResource = () => {
+    setResources([
+      ...resources,
+      { 
+        id: crypto.randomUUID(), // Generate proper UUID instead of numeric ID
+        name: '', 
+        capacityPerDay: 1, 
+        dailyCapacities: [] 
+      }
+    ]);
   };
 
   const handleResourceChange = (id: string, field: keyof Resource, value: string | number) => {
@@ -218,7 +211,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
 
         <SprintResourcesSection
           resources={resources}
-          availableResources={activeTeam?.resources || []}
           showDailyCapacities={showDailyCapacities}
           resourcePresenceDays={resourcePresenceDays}
           onResourceChange={handleResourceChange}
@@ -242,5 +234,3 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     </Card>
   );
 };
-
-export default SprintForm;

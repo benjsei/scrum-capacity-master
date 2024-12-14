@@ -1,9 +1,10 @@
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import AgilePractices from "@/components/AgilePractices";
 import {
   Accordion,
@@ -18,12 +19,28 @@ const TeamPractices = () => {
   const { activeTeam } = useScrumTeamStore();
   const { initializePractices, getPracticesForTeam, togglePracticeCompletion, updatePracticeUrl } = useAgilePracticesStore();
   const navigate = useNavigate();
+  const [expandedDays, setExpandedDays] = useState<string[]>([]);
 
   useEffect(() => {
     if (activeTeam) {
       initializePractices(activeTeam.id);
     }
   }, [activeTeam, initializePractices]);
+
+  useEffect(() => {
+    if (activeTeam) {
+      const practices = getPracticesForTeam(activeTeam.id);
+      const dayOrder = ["N", "N + 1", "N + 5", "N + 14"];
+      
+      // Find days that are not 100% complete
+      const incompleteDays = dayOrder.filter(day => {
+        const dayPractices = practices.filter(p => p.day === day);
+        return dayPractices.some(p => !p.isCompleted);
+      });
+
+      setExpandedDays(incompleteDays);
+    }
+  }, [activeTeam, getPracticesForTeam]);
 
   if (!activeTeam) {
     navigate('/');
@@ -83,7 +100,8 @@ const TeamPractices = () => {
       <Accordion 
         type="multiple" 
         className="space-y-8"
-        defaultValue={dayOrder} // Show all days expanded by default
+        value={expandedDays}
+        onValueChange={setExpandedDays}
       >
         {Object.entries(practicesByDay).map(([day, dayPractices]) => (
           <AccordionItem key={day} value={day} className="border-none">

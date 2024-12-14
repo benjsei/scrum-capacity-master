@@ -1,30 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Resource } from "@/types/sprint";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ResourceInput } from "../ResourceInput";
 
 interface SprintResourcesSectionProps {
   resources: Resource[];
-  availableResources: Resource[];
   showDailyCapacities: boolean;
   resourcePresenceDays: { [key: string]: number };
   onResourceChange: (id: string, field: keyof Resource, value: string | number) => void;
   onDailyCapacityChange: (resourceId: string, date: string, capacity: number) => void;
   onToggleDailyCapacities: () => void;
-  onAddResource: (resource: Resource) => void;
+  onAddResource: () => void;
   onDeleteResource: (resourceId: string) => void;
 }
 
 export const SprintResourcesSection = ({
   resources,
-  availableResources,
   showDailyCapacities,
   resourcePresenceDays,
   onResourceChange,
@@ -34,11 +25,6 @@ export const SprintResourcesSection = ({
   onDeleteResource,
 }: SprintResourcesSectionProps) => {
   const totalTeamDays = Object.values(resourcePresenceDays).reduce((sum, days) => sum + days, 0);
-
-  // Filter out resources that are already added
-  const unusedResources = availableResources.filter(
-    ar => !resources.some(r => r.id === ar.id)
-  );
 
   return (
     <div className="space-y-4">
@@ -68,33 +54,9 @@ export const SprintResourcesSection = ({
           </Button>
         </div>
       ))}
-
-      {unusedResources.length > 0 && (
-        <div className="flex gap-2">
-          <Select
-            onValueChange={(value) => {
-              const resource = availableResources.find(r => r.id === value);
-              if (resource) {
-                onAddResource({
-                  ...resource,
-                  dailyCapacities: []
-                });
-              }
-            }}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Ajouter une ressource" />
-            </SelectTrigger>
-            <SelectContent>
-              {unusedResources.map((resource) => (
-                <SelectItem key={resource.id} value={resource.id}>
-                  {resource.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      <Button type="button" variant="outline" onClick={onAddResource}>
+        Add Resource
+      </Button>
     </div>
   );
 };
