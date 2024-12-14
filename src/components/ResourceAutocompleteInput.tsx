@@ -19,7 +19,7 @@ export const ResourceAutocompleteInput = ({
   const [inputValue, setInputValue] = useState(value);
   const [suggestions, setSuggestions] = useState<Resource[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const { findResources, addResource } = useResourceStore();
+  const { findResources } = useResourceStore();
   const { activeTeam } = useScrumTeamStore();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -65,19 +65,15 @@ export const ResourceAutocompleteInput = ({
         if (existingResource) {
           onChange(existingResource);
         } else {
-          try {
-            const newResource: Resource = {
-              id: crypto.randomUUID(),
-              name: inputValue.trim(),
-              capacityPerDay: 1,
-              teamId: activeTeam.id
-            };
-            console.log('Adding resource with data:', newResource);
-            const savedResource = await addResource(newResource);
-            onChange(savedResource);
-          } catch (error) {
-            console.error('Error adding resource:', error);
-          }
+          const newResource: Resource = {
+            id: crypto.randomUUID(),
+            name: inputValue.trim(),
+            capacityPerDay: 1,
+            teamId: activeTeam.id,
+            isTemporary: true // Mark as temporary until sprint is saved
+          };
+          console.log('Creating temporary resource:', newResource);
+          onChange(newResource);
         }
       }
       setShowSuggestions(false);

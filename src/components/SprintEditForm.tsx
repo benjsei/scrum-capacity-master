@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSprintStore } from '../store/sprintStore';
+import { useResourceStore } from '../store/resourceStore';
 import { Sprint, Resource, ResourceDailyCapacity } from "../types/sprint";
 import { ResourceInput } from "./ResourceInput";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
   const [editedSprint, setEditedSprint] = useState<Sprint>({ ...sprint });
   const [showDailyCapacities, setShowDailyCapacities] = useState<boolean>(false);
   const { updateSprint } = useSprintStore();
+  const { addResource } = useResourceStore();
 
   useEffect(() => {
     const loadSprintResources = async () => {
@@ -75,7 +77,6 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     loadSprintResources();
   }, [sprint.id]);
 
-  // Initialize daily capacities for a new resource
   const initializeDailyCapacities = (resource: Resource): Resource => {
     const start = new Date(editedSprint.startDate);
     const dailyCapacities = [];
@@ -110,6 +111,22 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     }
 
     try {
+      // First, save any temporary resources
+      const resourcePromises = editedSprint.resources
+        .filter(r => r.isTemporary)
+        .map(async (resource) => {
+          console.log('Saving temporary resource:', resource);
+          const savedResource = await addResource({
+            id: resource.id,
+            name: resource.name,
+            capacityPerDay: resource.capacityPerDay,
+            teamId: resource.teamId
+          });
+          return savedResource;
+        });
+
+      await Promise.all(resourcePromises);
+
       // Calculate success based on story points completed
       if (editedSprint.storyPointsCompleted !== undefined) {
         const commitmentRespected = (editedSprint.storyPointsCompleted / editedSprint.storyPointsCommitted) * 100;
