@@ -3,7 +3,7 @@ import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Percent, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Percent } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import AgilePractices from "@/components/AgilePractices";
 import {
@@ -80,7 +80,10 @@ const TeamPractices = () => {
 
   // Group practices by day, keeping all days even if they have no practices after filtering
   const practicesByDay = dayOrder.reduce((acc, day) => {
-    acc[day] = filteredPractices.filter(practice => practice.day === day);
+    const dayPractices = practices.filter(practice => practice.day === day);
+    if (dayPractices.length > 0) {
+      acc[day] = filteredPractices.filter(practice => practice.day === day);
+    }
     return acc;
   }, {} as Record<string, typeof filteredPractices>);
 
@@ -154,30 +157,22 @@ const TeamPractices = () => {
         value={expandedDays}
         onValueChange={setExpandedDays}
       >
-        {dayOrder.map(day => {
-          const dayPractices = practicesByDay[day] || [];
-          const hasMatchingPractices = practices.some(p => p.day === day);
-
-          // Only show days that have practices in the unfiltered list
-          if (!hasMatchingPractices) return null;
-
-          return (
-            <AccordionItem key={day} value={day} className="border-none">
-              <div className="flex items-center justify-between mb-4">
-                <AccordionTrigger className="hover:no-underline">
-                  <h2 className="text-2xl font-bold">Jour {day}</h2>
-                </AccordionTrigger>
-                <Card className="p-2 flex items-center gap-2">
-                  <Percent className="h-4 w-4 text-primary" />
-                  <span className="font-medium">{getDayProgress(dayPractices)}%</span>
-                </Card>
-              </div>
-              <AccordionContent>
-                <AgilePractices teamId={activeTeam.id} dayFilter={day} />
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
+        {Object.entries(practicesByDay).map(([day, dayPractices]) => (
+          <AccordionItem key={day} value={day} className="border-none">
+            <div className="flex items-center justify-between mb-4">
+              <AccordionTrigger className="hover:no-underline">
+                <h2 className="text-2xl font-bold">Jour {day}</h2>
+              </AccordionTrigger>
+              <Card className="p-2 flex items-center gap-2">
+                <Percent className="h-4 w-4 text-primary" />
+                <span className="font-medium">{getDayProgress(dayPractices)}%</span>
+              </Card>
+            </div>
+            <AccordionContent>
+              <AgilePractices teamId={activeTeam.id} dayFilter={day} />
+            </AccordionContent>
+          </AccordionItem>
+        ))}
       </Accordion>
     </div>
   );

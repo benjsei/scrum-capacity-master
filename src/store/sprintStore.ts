@@ -9,7 +9,7 @@ const mapDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapacity[]): Jso
   return dailyCapacities.map(dc => ({
     date: dc.date,
     capacity: dc.capacity
-  }));
+  })) as Json;
 };
 
 const mapJsonToDailyCapacities = (json: any): ResourceDailyCapacity[] => {
