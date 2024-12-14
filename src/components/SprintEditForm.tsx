@@ -30,7 +30,6 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
   const [editedSprint, setEditedSprint] = useState<Sprint>({ ...sprint });
   const [showDailyCapacities, setShowDailyCapacities] = useState<boolean>(false);
   const { updateSprint } = useSprintStore();
-  const { findResources } = useResourceStore();
 
   useEffect(() => {
     const loadSprintResources = async () => {
@@ -79,6 +78,10 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
 
   // Initialize daily capacities for a new resource
   const initializeDailyCapacities = (resource: Resource): Resource => {
+    if (resource.dailyCapacities && resource.dailyCapacities.length > 0) {
+      return resource;
+    }
+
     const start = new Date(editedSprint.startDate);
     const dailyCapacities = [];
     
@@ -137,7 +140,9 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     setEditedSprint(prev => ({
       ...prev,
       resources: prev.resources.map(resource =>
-        resource.id === resourceId ? { ...resource, [field]: value } : resource
+        resource.id === resourceId
+          ? { ...resource, [field]: value }
+          : resource
       )
     }));
   };
