@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSprintStore } from '../store/sprintStore';
-import { useResourceStore } from '../store/resourceStore';
 import { Sprint, Resource, ResourceDailyCapacity } from "../types/sprint";
 import { ResourceInput } from "./ResourceInput";
 import { toast } from "sonner";
@@ -78,10 +77,6 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
 
   // Initialize daily capacities for a new resource
   const initializeDailyCapacities = (resource: Resource): Resource => {
-    if (resource.dailyCapacities && resource.dailyCapacities.length > 0) {
-      return resource;
-    }
-
     const start = new Date(editedSprint.startDate);
     const dailyCapacities = [];
     
