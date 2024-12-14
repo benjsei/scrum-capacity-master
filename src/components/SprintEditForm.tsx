@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useSprintStore } from '../store/sprintStore';
 import { useResourceStore } from '../store/resourceStore';
 import { Sprint, Resource } from "../types/sprint";
@@ -51,7 +52,7 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
             name: sr.resources.name,
             capacityPerDay: sr.resources.capacity_per_day || 1,
             teamId: sr.resources.team_id,
-            dailyCapacities: sr.daily_capacities ? sr.daily_capacities.map((dc: any) => ({
+            dailyCapacities: Array.isArray(sr.daily_capacities) ? sr.daily_capacities.map((dc: any) => ({
               date: dc.date,
               capacity: dc.capacity
             })) : []
