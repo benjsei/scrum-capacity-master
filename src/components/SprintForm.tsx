@@ -24,19 +24,21 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [showDailyCapacities, setShowDailyCapacities] = useState(false);
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
   const [resourcePresenceDays, setResourcePresenceDays] = useState<{ [key: string]: number }>({});
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, loadSprints, getActiveTeamSprints } = useSprintStore();
   const { activeTeam } = useScrumTeamStore();
   const averageVelocity = getAverageVelocity();
   const teamSprints = getActiveTeamSprints();
 
+  // Load sprints only once when component mounts
   useEffect(() => {
     loadSprints();
   }, [loadSprints]);
 
-  // Set default start date, duration and resources based on last sprint
+  // Initialize form with default values only once
   useEffect(() => {
-    if (activeTeam) {
+    if (!isInitialized && activeTeam) {
       if (teamSprints.length > 0) {
         const lastSprint = teamSprints[teamSprints.length - 1];
         const nextDay = new Date(lastSprint.endDate);
@@ -44,10 +46,9 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
         setStartDate(nextDay.toISOString().split('T')[0]);
         setDuration(lastSprint.duration.toString());
         
-        // Initialize resources from last sprint
         const lastSprintResources = lastSprint.resources.map(resource => ({
           ...resource,
-          dailyCapacities: [] // Reset daily capacities for the new sprint
+          dailyCapacities: []
         }));
         setResources(lastSprintResources);
       } else {
@@ -56,16 +57,16 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
         setStartDate(today.toISOString().split('T')[0]);
         setDuration('14');
       }
+      setIsInitialized(true);
     }
-  }, [activeTeam, teamSprints]);
+  }, [activeTeam, teamSprints, isInitialized]);
 
+  // Update daily capacities when start date, duration or resources change
   useEffect(() => {
-    if (startDate && duration) {
-      const start = new Date(startDate);
-      resources.forEach(resource => {
-        if (!resource.dailyCapacities) {
-          resource.dailyCapacities = [];
-        }
+    if (startDate && duration && resources.length > 0) {
+      const updatedResources = resources.map(resource => {
+        const start = new Date(startDate);
+        const dailyCapacities = [];
         
         for (let i = 0; i < parseInt(duration); i++) {
           const currentDate = new Date(start);
@@ -75,22 +76,24 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
           const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
           const defaultCapacity = isWeekend ? 0 : resource.capacityPerDay;
           
-          if (!resource.dailyCapacities.find(dc => dc.date === dateStr)) {
-            resource.dailyCapacities.push({
-              date: dateStr,
-              capacity: defaultCapacity
-            });
-          }
+          const existingCapacity = resource.dailyCapacities?.find(dc => dc.date === dateStr);
+          dailyCapacities.push({
+            date: dateStr,
+            capacity: existingCapacity?.capacity ?? defaultCapacity
+          });
         }
 
-        if (resource.dailyCapacities.length > parseInt(duration)) {
-          resource.dailyCapacities = resource.dailyCapacities.slice(0, parseInt(duration));
-        }
+        return {
+          ...resource,
+          dailyCapacities
+        };
       });
-      setResources([...resources]);
-    }
-  }, [startDate, duration, resources.length]);
 
+      setResources(updatedResources);
+    }
+  }, [startDate, duration]);
+
+  // Calculate theoretical capacity and resource presence days
   useEffect(() => {
     if (duration && resources.length > 0) {
       const capacity = calculateTheoreticalCapacity(resources, Number(duration));
