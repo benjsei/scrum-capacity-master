@@ -72,6 +72,7 @@ export const ResourceAutocompleteInput = ({
               capacityPerDay: 1,
               teamId: activeTeam.id
             };
+            console.log('Adding resource with data:', newResource);
             const savedResource = await addResource(newResource);
             onChange(savedResource);
           } catch (error) {

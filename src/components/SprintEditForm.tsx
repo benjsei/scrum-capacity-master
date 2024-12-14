@@ -60,12 +60,7 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
             name: sr.resources.name,
             capacityPerDay: sr.resources.capacity_per_day || 1,
             teamId: sr.resources.team_id,
-            dailyCapacities: Array.isArray(sr.daily_capacities) 
-              ? sr.daily_capacities.map(dc => ({
-                  date: dc.date,
-                  capacity: dc.capacity
-                }))
-              : []
+            dailyCapacities: mapJsonToDailyCapacities(sr.daily_capacities)
           }));
 
           setEditedSprint(prev => ({
@@ -81,6 +76,29 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
 
     loadSprintResources();
   }, [sprint.id]);
+
+  // Initialize daily capacities for a new resource
+  const initializeDailyCapacities = (resource: Resource): Resource => {
+    const start = new Date(editedSprint.startDate);
+    const dailyCapacities = [];
+    
+    for (let i = 0; i < editedSprint.duration; i++) {
+      const currentDate = new Date(start);
+      currentDate.setDate(start.getDate() + i);
+      const dateStr = currentDate.toISOString().split('T')[0];
+      
+      const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+      dailyCapacities.push({
+        date: dateStr,
+        capacity: isWeekend ? 0 : resource.capacityPerDay
+      });
+    }
+
+    return {
+      ...resource,
+      dailyCapacities
+    };
+  };
 
   const handleSave = async () => {
     if (new Date(editedSprint.startDate) > new Date(editedSprint.endDate)) {
@@ -234,7 +252,7 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
             {editedSprint.resources.map((resource) => (
               <div key={resource.id} className="space-y-2 p-4 border rounded-lg">
                 <ResourceInput
-                  resource={resource}
+                  resource={initializeDailyCapacities(resource)}
                   onResourceChange={handleResourceChange}
                   onDailyCapacityChange={handleDailyCapacityChange}
                   showDailyCapacities={showDailyCapacities}
