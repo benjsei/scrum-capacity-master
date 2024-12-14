@@ -50,6 +50,22 @@ export const SprintList = () => {
     }, 0);
   };
 
+  const getSprintStatus = (sprint: any) => {
+    if (sprint.storyPointsCompleted === undefined) {
+      return 'En cours';
+    }
+    if (sprint.isSuccessful === true) {
+      return 'Succès';
+    }
+    if (sprint.isSuccessful === false) {
+      return 'Échec';
+    }
+    // Si isSuccessful n'est pas défini mais que le sprint est terminé,
+    // on considère que c'est un succès si on a atteint 80% de l'engagement
+    const commitmentPercentage = (sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100;
+    return commitmentPercentage >= 80 ? 'Succès' : 'Échec';
+  };
+
   return (
     <Card className="p-6">
       <Table>
@@ -91,8 +107,7 @@ export const SprintList = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {sprint.storyPointsCompleted === undefined ? 'En cours' : 
-                     sprint.isSuccessful ? 'Succès' : 'Échec'}
+                    {getSprintStatus(sprint)}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-2">
