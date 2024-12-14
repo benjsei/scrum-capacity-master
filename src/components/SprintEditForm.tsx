@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSprintStore } from '../store/sprintStore';
+import { useResourceStore } from '../store/resourceStore';
 import { Sprint, Resource } from "../types/sprint";
 import { ResourceInput } from "./ResourceInput";
 import { toast } from "sonner";
@@ -9,7 +10,6 @@ import { TableCell } from "./ui/table";
 import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
-import { cn } from "@/lib/utils";
 
 interface SprintEditFormProps {
   sprint: Sprint;
@@ -21,6 +21,23 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
   const [editedSprint, setEditedSprint] = useState<Sprint>({ ...sprint });
   const [showDailyCapacities, setShowDailyCapacities] = useState<boolean>(false);
   const { updateSprint } = useSprintStore();
+  const { findResources } = useResourceStore();
+
+  // Load resource names when component mounts
+  useEffect(() => {
+    const updatedResources = editedSprint.resources.map(resource => {
+      const foundResource = findResources(resource.id)[0];
+      return {
+        ...resource,
+        name: foundResource?.name || resource.name
+      };
+    });
+
+    setEditedSprint(prev => ({
+      ...prev,
+      resources: updatedResources
+    }));
+  }, []);
 
   const handleSave = () => {
     if (new Date(editedSprint.startDate) > new Date(editedSprint.endDate)) {

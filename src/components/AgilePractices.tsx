@@ -31,15 +31,15 @@ const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
   const [urlValue, setUrlValue] = useState('');
   
-  const teamPractice = teamPractices.find(tp => tp.teamId === teamId);
-  
   useEffect(() => {
     if (teamId) {
       initializePractices(teamId);
     }
-  }, [teamId, initializePractices]);
+  }, [teamId]);
   
-  if (!teamPractice || !teamPractice.practices || teamPractice.practices.length === 0) {
+  const teamPractice = teamPractices.find(tp => tp.teamId === teamId);
+  
+  if (!teamPractice || !teamPractice.practices) {
     return <div className="text-center text-muted-foreground">Chargement des pratiques...</div>;
   }
 

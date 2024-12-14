@@ -91,26 +91,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }
 
     try {
-      // First, create resources in the resources table
-      const resourcePromises = sprint.resources.map(async (resource) => {
-        const { data: resourceData, error: resourceError } = await supabase
-          .from('resources')
-          .insert({
-            id: resource.id,
-            name: resource.name,
-            capacity_per_day: resource.capacityPerDay,
-            team_id: activeTeam.id
-          })
-          .select()
-          .single();
-
-        if (resourceError) throw resourceError;
-        return resourceData;
-      });
-
-      await Promise.all(resourcePromises);
-
-      // Then create the sprint
+      // First, create the sprint
       const { data: sprintData, error: sprintError } = await supabase
         .from('sprints')
         .insert({
