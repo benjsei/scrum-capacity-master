@@ -11,7 +11,6 @@ export const VelocityChart = () => {
     .map((sprint) => ({
       name: new Date(sprint.startDate).toLocaleDateString(),
       velocity: sprint.velocityAchieved || 0,
-      theoretical: sprint.theoreticalCapacity,
     }));
 
   return (
@@ -30,13 +29,6 @@ export const VelocityChart = () => {
               dataKey="velocity" 
               stroke="#1E40AF" 
               name="Actual Velocity"
-            />
-            <Line 
-              type="monotone" 
-              dataKey="theoretical" 
-              stroke="#60A5FA" 
-              name="Theoretical Capacity"
-              strokeDasharray="5 5"
             />
           </LineChart>
         </ResponsiveContainer>

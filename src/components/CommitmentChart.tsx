@@ -12,7 +12,9 @@ export const CommitmentChart = () => {
       name: new Date(sprint.startDate).toLocaleDateString(),
       committed: sprint.storyPointsCommitted,
       completed: sprint.storyPointsCompleted || 0,
-      theoretical: sprint.theoreticalCapacity,
+      percentage: sprint.storyPointsCompleted 
+        ? Math.round((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
+        : 0,
     }))
     .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
 
@@ -41,10 +43,9 @@ export const CommitmentChart = () => {
             />
             <Line 
               type="monotone" 
-              dataKey="theoretical" 
-              stroke="#60A5FA" 
-              name="Capacité théorique"
-              strokeDasharray="5 5"
+              dataKey="percentage" 
+              stroke="#EA580C" 
+              name="% Réalisation"
             />
           </LineChart>
         </ResponsiveContainer>

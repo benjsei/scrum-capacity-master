@@ -11,7 +11,7 @@ export const ResourceManagement = () => {
   const { resources, setResources, updateResource, deleteResource } = useResourceStore();
   const { activeTeam, loadTeams } = useScrumTeamStore();
 
-  // Charger les ressources au montage du composant
+  // Load resources when component mounts or when activeTeam changes
   useEffect(() => {
     const loadResources = async () => {
       if (!activeTeam) return;

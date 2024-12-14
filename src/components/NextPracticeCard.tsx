@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { AlertCircle, Link as LinkIcon } from "lucide-react";
+import { AlertCircle, Link as LinkIcon, User, Users, UserCheck, UserPlus, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,6 +12,21 @@ interface NextPracticeCardProps {
   onToggleCompletion: (teamId: string, practiceId: string) => void;
   onUpdateUrl: (teamId: string, practiceId: string, url: string) => void;
 }
+
+const getWhoIcon = (who: string) => {
+  switch (who.toUpperCase()) {
+    case 'COLLECTIF':
+      return <Users className="h-6 w-6" />;
+    case 'SCRUM MASTER':
+      return <UserCheck className="h-6 w-6" />;
+    case 'PRODUCT OWNER':
+      return <UserPlus className="h-6 w-6" />;
+    case 'EQUIPE':
+      return <UsersRound className="h-6 w-6" />;
+    default:
+      return <User className="h-6 w-6" />;
+  }
+};
 
 const NextPracticeCard = ({ practice, teamId, onToggleCompletion, onUpdateUrl }: NextPracticeCardProps) => {
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
@@ -32,21 +47,27 @@ const NextPracticeCard = ({ practice, teamId, onToggleCompletion, onUpdateUrl }:
         <h2 className="text-lg font-semibold">Prochaine pratique à réaliser</h2>
       </div>
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Checkbox
-            checked={practice.isCompleted}
-            onCheckedChange={() => onToggleCompletion(teamId, practice.id)}
-          />
-          <div>
-            <div className="font-medium">{practice.action}</div>
-            {practice.subActions && (
-              <div className="text-muted-foreground">{practice.subActions}</div>
-            )}
-            <div className="text-sm text-muted-foreground">
-              Jour {practice.day} • {practice.who}
-              {practice.format && ` • ${practice.format}`}
-              {practice.duration && ` • ${practice.duration}`}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <Checkbox
+              checked={practice.isCompleted}
+              onCheckedChange={() => onToggleCompletion(teamId, practice.id)}
+            />
+            <div>
+              <div className="font-medium">{practice.action}</div>
+              {practice.subActions && (
+                <div className="text-muted-foreground">{practice.subActions}</div>
+              )}
+              <div className="text-sm text-muted-foreground">
+                Jour {practice.day}
+                {practice.format && ` • ${practice.format}`}
+                {practice.duration && ` • ${practice.duration}`}
+              </div>
             </div>
+          </div>
+          <div className="flex flex-col items-center gap-1 min-w-[100px]">
+            {getWhoIcon(practice.who)}
+            <span className="text-sm font-medium text-muted-foreground">{practice.who}</span>
           </div>
         </div>
 
