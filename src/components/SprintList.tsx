@@ -24,7 +24,9 @@ export const SprintList = () => {
     loadSprints();
   }, [loadSprints]);
 
-  const sprints = getActiveTeamSprints();
+  const sprints = getActiveTeamSprints().sort((a, b) => 
+    new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+  );
 
   const handleCompleteSprint = (sprintId: string) => {
     const storyPoints = completionData[sprintId];

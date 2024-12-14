@@ -23,20 +23,25 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
   const { updateSprint } = useSprintStore();
   const { findResources } = useResourceStore();
 
-  // Load resource names when component mounts
   useEffect(() => {
-    const updatedResources = editedSprint.resources.map(resource => {
-      const foundResource = findResources(resource.id)[0];
-      return {
-        ...resource,
-        name: foundResource?.name || resource.name
-      };
-    });
+    const loadResourceNames = async () => {
+      const updatedResources = await Promise.all(
+        editedSprint.resources.map(async (resource) => {
+          const foundResource = (await findResources(resource.id))[0];
+          return {
+            ...resource,
+            name: foundResource?.name || resource.name
+          };
+        })
+      );
 
-    setEditedSprint(prev => ({
-      ...prev,
-      resources: updatedResources
-    }));
+      setEditedSprint(prev => ({
+        ...prev,
+        resources: updatedResources
+      }));
+    };
+
+    loadResourceNames();
   }, []);
 
   const handleSave = () => {
@@ -48,6 +53,17 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     if (editedSprint.objective && editedSprint.objective.length > 300) {
       toast.error("L'objectif ne peut pas dépasser 300 caractères");
       return;
+    }
+
+    // Calculate success based on story points completed
+    if (editedSprint.storyPointsCompleted !== undefined) {
+      const commitmentRespected = (editedSprint.storyPointsCompleted / editedSprint.storyPointsCommitted) * 100;
+      const isSuccessful = commitmentRespected >= 80;
+      const velocityAchieved = editedSprint.storyPointsCompleted / editedSprint.duration;
+
+      editedSprint.commitmentRespected = commitmentRespected;
+      editedSprint.isSuccessful = isSuccessful;
+      editedSprint.velocityAchieved = velocityAchieved;
     }
 
     updateSprint(sprint.id, editedSprint);
@@ -87,17 +103,9 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     }));
   };
 
-  const toggleDailyCapacities = () => {
-    setShowDailyCapacities(!showDailyCapacities);
-  };
-
-  const calculateTotalPresenceDays = (resource: Resource) => {
-    return resource.dailyCapacities?.reduce((sum, dc) => sum + dc.capacity, 0) || 0;
-  };
-
   return (
     <>
-      <TableCell colSpan={6}>
+      <TableCell colSpan={8}>
         <div className="space-y-4 p-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -125,17 +133,31 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
             </div>
           </div>
 
-          <div>
-            <Label className="block text-sm font-medium mb-1">Story Points engagés</Label>
-            <Input
-              type="number"
-              min="0"
-              value={editedSprint.storyPointsCommitted}
-              onChange={(e) => setEditedSprint(prev => ({
-                ...prev,
-                storyPointsCommitted: Number(e.target.value)
-              }))}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="block text-sm font-medium mb-1">Story Points engagés</Label>
+              <Input
+                type="number"
+                min="0"
+                value={editedSprint.storyPointsCommitted}
+                onChange={(e) => setEditedSprint(prev => ({
+                  ...prev,
+                  storyPointsCommitted: Number(e.target.value)
+                }))}
+              />
+            </div>
+            <div>
+              <Label className="block text-sm font-medium mb-1">Story Points réalisés</Label>
+              <Input
+                type="number"
+                min="0"
+                value={editedSprint.storyPointsCompleted || ''}
+                onChange={(e) => setEditedSprint(prev => ({
+                  ...prev,
+                  storyPointsCompleted: e.target.value ? Number(e.target.value) : undefined
+                }))}
+              />
+            </div>
           </div>
 
           <div>
@@ -172,8 +194,8 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
                   onResourceChange={handleResourceChange}
                   onDailyCapacityChange={handleDailyCapacityChange}
                   showDailyCapacities={showDailyCapacities}
-                  onToggleDailyCapacities={toggleDailyCapacities}
-                  totalPresenceDays={calculateTotalPresenceDays(resource)}
+                  onToggleDailyCapacities={() => setShowDailyCapacities(!showDailyCapacities)}
+                  totalPresenceDays={resource.dailyCapacities?.reduce((sum, dc) => sum + dc.capacity, 0) || 0}
                 />
                 <Button 
                   variant="destructive" 

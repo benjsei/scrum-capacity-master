@@ -35,7 +35,7 @@ const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
     if (teamId) {
       initializePractices(teamId);
     }
-  }, [teamId]);
+  }, [teamId, initializePractices]);
   
   const teamPractice = teamPractices.find(tp => tp.teamId === teamId);
   

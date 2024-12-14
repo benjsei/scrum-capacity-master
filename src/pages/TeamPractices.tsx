@@ -3,9 +3,10 @@ import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Percent, AlertCircle } from "lucide-react";
+import { ArrowLeft, Percent, AlertCircle, Link as LinkIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import AgilePractices from "@/components/AgilePractices";
+import { Input } from "@/components/ui/input";
 import {
   Accordion,
   AccordionContent,
@@ -15,9 +16,11 @@ import {
 
 const TeamPractices = () => {
   const { activeTeam } = useScrumTeamStore();
-  const { initializePractices, getPracticesForTeam } = useAgilePracticesStore();
+  const { initializePractices, getPracticesForTeam, togglePracticeCompletion, updatePracticeUrl } = useAgilePracticesStore();
   const navigate = useNavigate();
   const [expandedDays, setExpandedDays] = useState<string[]>([]);
+  const [editingUrl, setEditingUrl] = useState<string | null>(null);
+  const [urlValue, setUrlValue] = useState('');
 
   useEffect(() => {
     if (activeTeam) {
@@ -30,16 +33,13 @@ const TeamPractices = () => {
       const practices = getPracticesForTeam(activeTeam.id);
       const dayOrder = ["N", "N + 1", "N + 5", "N + 14"];
       
-      // Find the first day with an incomplete action
-      const firstDayWithIncomplete = dayOrder.find(day => 
-        practices.some(practice => 
-          practice.day === day && !practice.isCompleted
-        )
-      );
+      // Find days that are not 100% complete
+      const incompleteDays = dayOrder.filter(day => {
+        const dayPractices = practices.filter(p => p.day === day);
+        return dayPractices.some(p => !p.isCompleted);
+      });
 
-      if (firstDayWithIncomplete) {
-        setExpandedDays([firstDayWithIncomplete]);
-      }
+      setExpandedDays(incompleteDays);
     }
   }, [activeTeam, getPracticesForTeam]);
 
@@ -74,6 +74,14 @@ const TeamPractices = () => {
   // Find first incomplete practice
   const firstIncompletePractice = practices.find(p => !p.isCompleted);
 
+  const handleUrlSave = () => {
+    if (editingUrl && firstIncompletePractice) {
+      updatePracticeUrl(activeTeam.id, firstIncompletePractice.id, urlValue);
+      setEditingUrl(null);
+      setUrlValue('');
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 space-y-6">
       <header className="flex items-center justify-between mb-8">
@@ -98,15 +106,78 @@ const TeamPractices = () => {
             <AlertCircle className="h-5 w-5" />
             <h2 className="text-lg font-semibold">Prochaine pratique à réaliser</h2>
           </div>
-          <div className="space-y-2">
-            <div className="font-medium">{firstIncompletePractice.action}</div>
-            {firstIncompletePractice.subActions && (
-              <div className="text-muted-foreground">{firstIncompletePractice.subActions}</div>
-            )}
-            <div className="text-sm text-muted-foreground">
-              Jour {firstIncompletePractice.day} • {firstIncompletePractice.who}
-              {firstIncompletePractice.format && ` • ${firstIncompletePractice.format}`}
-              {firstIncompletePractice.duration && ` • ${firstIncompletePractice.duration}`}
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Checkbox
+                checked={firstIncompletePractice.isCompleted}
+                onCheckedChange={() => togglePracticeCompletion(activeTeam.id, firstIncompletePractice.id)}
+              />
+              <div>
+                <div className="font-medium">{firstIncompletePractice.action}</div>
+                {firstIncompletePractice.subActions && (
+                  <div className="text-muted-foreground">{firstIncompletePractice.subActions}</div>
+                )}
+                <div className="text-sm text-muted-foreground">
+                  Jour {firstIncompletePractice.day} • {firstIncompletePractice.who}
+                  {firstIncompletePractice.format && ` • ${firstIncompletePractice.format}`}
+                  {firstIncompletePractice.duration && ` • ${firstIncompletePractice.duration}`}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <LinkIcon className="h-4 w-4 text-muted-foreground" />
+              {editingUrl === firstIncompletePractice.id ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <Input
+                    value={urlValue}
+                    onChange={(e) => setUrlValue(e.target.value)}
+                    placeholder="Entrez l'URL..."
+                    className="flex-1"
+                  />
+                  <Button 
+                    size="sm"
+                    onClick={handleUrlSave}
+                  >
+                    Sauvegarder
+                  </Button>
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingUrl(null);
+                      setUrlValue('');
+                    }}
+                  >
+                    Annuler
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 flex-1">
+                  {firstIncompletePractice.url ? (
+                    <a 
+                      href={firstIncompletePractice.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-500 hover:underline truncate"
+                    >
+                      {firstIncompletePractice.url}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Aucune URL</span>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditingUrl(firstIncompletePractice.id);
+                      setUrlValue(firstIncompletePractice.url || '');
+                    }}
+                  >
+                    Modifier
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </Card>
