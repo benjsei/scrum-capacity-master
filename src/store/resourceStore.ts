@@ -6,56 +6,60 @@ import { toast } from "sonner";
 interface ResourceStore {
   resources: Resource[];
   setResources: (resources: Resource[]) => void;
+  addResource: (resource: Resource) => Promise<Resource>;
   findResources: (query: string) => Resource[];
-  addResource: (resource: Resource) => Promise<void>;
-  updateResource: (id: string, updates: Partial<Resource>) => Promise<void>;
-  deleteResource: (id: string) => Promise<void>;
+  updateResource: (resourceId: string, updates: Partial<Resource>) => Promise<void>;
+  deleteResource: (resourceId: string) => Promise<void>;
 }
 
 export const useResourceStore = create<ResourceStore>((set, get) => ({
   resources: [],
   setResources: (resources) => set({ resources }),
-  
-  findResources: (query) => {
-    const resources = get().resources;
-    const lowercaseQuery = query.toLowerCase();
-    return resources.filter((resource) =>
-      resource.name.toLowerCase().includes(lowercaseQuery)
-    );
-  },
 
-  addResource: async (resource) => {
+  addResource: async (resource: Resource) => {
     try {
+      console.log('Adding resource with data:', resource);
       const { data, error } = await supabase
         .from('resources')
-        .insert([{
+        .insert({
+          id: resource.id,
           name: resource.name,
           capacity_per_day: resource.capacityPerDay,
           team_id: resource.teamId
-        }])
+        })
         .select()
         .single();
 
       if (error) throw error;
       if (!data) throw new Error('No data returned from insert');
 
+      const newResource: Resource = {
+        id: data.id,
+        name: data.name,
+        capacityPerDay: data.capacity_per_day || 1,
+        teamId: data.team_id
+      };
+
       set((state) => ({
-        resources: [...state.resources, {
-          id: data.id,
-          name: data.name,
-          capacityPerDay: data.capacity_per_day || 1,
-          teamId: data.team_id
-        }]
+        resources: [...state.resources, newResource]
       }));
 
-      toast.success("Ressource ajoutée avec succès");
+      return newResource;
     } catch (error) {
       console.error('Error adding resource:', error);
       toast.error("Erreur lors de l'ajout de la ressource");
+      throw error;
     }
   },
 
-  updateResource: async (id, updates) => {
+  findResources: (query: string) => {
+    const resources = get().resources;
+    return resources.filter(resource =>
+      resource.name.toLowerCase().includes(query.toLowerCase())
+    );
+  },
+
+  updateResource: async (resourceId: string, updates: Partial<Resource>) => {
     try {
       const { error } = await supabase
         .from('resources')
@@ -64,13 +68,15 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
           capacity_per_day: updates.capacityPerDay,
           team_id: updates.teamId
         })
-        .eq('id', id);
+        .eq('id', resourceId);
 
       if (error) throw error;
 
       set((state) => ({
         resources: state.resources.map((resource) =>
-          resource.id === id ? { ...resource, ...updates } : resource
+          resource.id === resourceId
+            ? { ...resource, ...updates }
+            : resource
         ),
       }));
     } catch (error) {
@@ -80,29 +86,18 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
     }
   },
 
-  deleteResource: async (id) => {
+  deleteResource: async (resourceId: string) => {
     try {
-      // D'abord, supprimer les références dans sprint_resources
-      const { error: sprintResourcesError } = await supabase
-        .from('sprint_resources')
-        .delete()
-        .eq('resource_id', id);
-
-      if (sprintResourcesError) throw sprintResourcesError;
-
-      // Ensuite, supprimer la ressource
       const { error } = await supabase
         .from('resources')
         .delete()
-        .eq('id', id);
+        .eq('id', resourceId);
 
       if (error) throw error;
 
       set((state) => ({
-        resources: state.resources.filter((r) => r.id !== id),
+        resources: state.resources.filter((r) => r.id !== resourceId),
       }));
-
-      toast.success("Ressource supprimée avec succès");
     } catch (error) {
       console.error('Error deleting resource:', error);
       toast.error("Erreur lors de la suppression de la ressource");

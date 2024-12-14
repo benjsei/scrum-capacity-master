@@ -3,6 +3,7 @@ import { Input } from "./ui/input";
 import { useResourceStore } from "../store/resourceStore";
 import { Resource } from "../types/sprint";
 import { cn } from "@/lib/utils";
+import { useScrumTeamStore } from "../store/scrumTeamStore";
 
 interface ResourceAutocompleteInputProps {
   value: string;
@@ -19,9 +20,9 @@ export const ResourceAutocompleteInput = ({
   const [suggestions, setSuggestions] = useState<Resource[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { findResources, addResource } = useResourceStore();
+  const { activeTeam } = useScrumTeamStore();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Synchroniser l'état local avec la prop value
   useEffect(() => {
     setInputValue(value);
   }, [value]);
@@ -57,21 +58,25 @@ export const ResourceAutocompleteInput = ({
     setShowSuggestions(false);
   };
 
-  const handleInputBlur = () => {
-    // Petit délai pour permettre le clic sur une suggestion
-    setTimeout(() => {
-      if (inputValue.trim() && inputValue !== value) {
+  const handleInputBlur = async () => {
+    setTimeout(async () => {
+      if (inputValue.trim() && inputValue !== value && activeTeam) {
         const existingResource = findResources(inputValue.trim())[0];
         if (existingResource) {
           onChange(existingResource);
         } else {
-          const newResource: Resource = {
-            id: Date.now().toString(),
-            name: inputValue.trim(),
-            capacityPerDay: 1,
-          };
-          addResource(newResource);
-          onChange(newResource);
+          try {
+            const newResource: Resource = {
+              id: crypto.randomUUID(),
+              name: inputValue.trim(),
+              capacityPerDay: 1,
+              teamId: activeTeam.id
+            };
+            const savedResource = await addResource(newResource);
+            onChange(savedResource);
+          } catch (error) {
+            console.error('Error adding resource:', error);
+          }
         }
       }
       setShowSuggestions(false);

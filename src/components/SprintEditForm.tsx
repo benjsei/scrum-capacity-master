@@ -18,6 +18,14 @@ interface SprintEditFormProps {
   onSave: () => void;
 }
 
+const mapJsonToDailyCapacities = (json: any): ResourceDailyCapacity[] => {
+  if (!json || !Array.isArray(json)) return [];
+  return json.map((dc: any) => ({
+    date: dc.date,
+    capacity: dc.capacity
+  }));
+};
+
 export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps) => {
   const [editedSprint, setEditedSprint] = useState<Sprint>({ ...sprint });
   const [showDailyCapacities, setShowDailyCapacities] = useState<boolean>(false);
