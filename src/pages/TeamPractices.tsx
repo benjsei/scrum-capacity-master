@@ -3,16 +3,9 @@ import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Percent } from "lucide-react";
+import { ArrowLeft, Percent, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import AgilePractices from "@/components/AgilePractices";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Accordion,
   AccordionContent,
@@ -24,9 +17,6 @@ const TeamPractices = () => {
   const { activeTeam } = useScrumTeamStore();
   const { initializePractices, getPracticesForTeam } = useAgilePracticesStore();
   const navigate = useNavigate();
-  const [selectedDay, setSelectedDay] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [completionFilter, setCompletionFilter] = useState<string>("all");
   const [expandedDays, setExpandedDays] = useState<string[]>([]);
 
   useEffect(() => {
@@ -60,32 +50,17 @@ const TeamPractices = () => {
 
   const practices = getPracticesForTeam(activeTeam.id);
   
-  // Get unique types for filter
-  const uniqueTypes = Array.from(new Set(practices.map(p => p.type)));
-
   // Order days according to specification
   const dayOrder = ["N", "N + 1", "N + 5", "N + 14"];
   
-  // Filter practices based on selected filters
-  const filteredPractices = practices.filter(practice => {
-    const dayMatch = selectedDay === "all" || practice.day === selectedDay;
-    const typeMatch = selectedType === "all" || practice.type === selectedType;
-    const completionMatch = 
-      completionFilter === "all" || 
-      (completionFilter === "completed" && practice.isCompleted) ||
-      (completionFilter === "pending" && !practice.isCompleted);
-    
-    return dayMatch && typeMatch && completionMatch;
-  });
-
-  // Group practices by day, keeping all days even if they have no practices after filtering
+  // Group practices by day
   const practicesByDay = dayOrder.reduce((acc, day) => {
     const dayPractices = practices.filter(practice => practice.day === day);
     if (dayPractices.length > 0) {
-      acc[day] = filteredPractices.filter(practice => practice.day === day);
+      acc[day] = dayPractices;
     }
     return acc;
-  }, {} as Record<string, typeof filteredPractices>);
+  }, {} as Record<string, typeof practices>);
 
   const getDayProgress = (dayPractices) => {
     if (!dayPractices || dayPractices.length === 0) return 0;
@@ -95,6 +70,9 @@ const TeamPractices = () => {
   const totalProgress = practices.length > 0 
     ? Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100)
     : 0;
+
+  // Find first incomplete practice
+  const firstIncompletePractice = practices.find(p => !p.isCompleted);
 
   return (
     <div className="min-h-screen p-6 space-y-6">
@@ -114,42 +92,25 @@ const TeamPractices = () => {
         </Card>
       </header>
 
-      <div className="flex flex-wrap gap-4 mb-6">
-        <Select value={selectedDay} onValueChange={setSelectedDay}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrer par jour" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les jours</SelectItem>
-            {dayOrder.map(day => (
-              <SelectItem key={day} value={day}>Jour {day}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrer par type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les types</SelectItem>
-            {uniqueTypes.map(type => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={completionFilter} onValueChange={setCompletionFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrer par statut" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toutes les pratiques</SelectItem>
-            <SelectItem value="completed">Terminées</SelectItem>
-            <SelectItem value="pending">Non terminées</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {firstIncompletePractice && (
+        <Card className="p-6 border-2 border-primary">
+          <div className="flex items-center gap-2 text-primary mb-4">
+            <AlertCircle className="h-5 w-5" />
+            <h2 className="text-lg font-semibold">Prochaine pratique à réaliser</h2>
+          </div>
+          <div className="space-y-2">
+            <div className="font-medium">{firstIncompletePractice.action}</div>
+            {firstIncompletePractice.subActions && (
+              <div className="text-muted-foreground">{firstIncompletePractice.subActions}</div>
+            )}
+            <div className="text-sm text-muted-foreground">
+              Jour {firstIncompletePractice.day} • {firstIncompletePractice.who}
+              {firstIncompletePractice.format && ` • ${firstIncompletePractice.format}`}
+              {firstIncompletePractice.duration && ` • ${firstIncompletePractice.duration}`}
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Accordion 
         type="multiple" 

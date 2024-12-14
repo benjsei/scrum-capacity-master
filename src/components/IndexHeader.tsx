@@ -1,9 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Download, Upload, Users, FileInput } from "lucide-react";
+import { Download, Upload, FileInput } from "lucide-react";
 import { useState } from "react";
-import { ResourceManagement } from "./ResourceManagement";
 import { importData } from "@/utils/dataImport";
 import { importPractices } from "@/utils/dataImport";
 import { parsePracticesCSV } from "@/utils/practicesImport";
@@ -11,7 +10,6 @@ import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { toast } from "sonner";
 
 export const IndexHeader = () => {
-  const [showResourceManagement, setShowResourceManagement] = useState(false);
   const { teams } = useScrumTeamStore();
 
   const handleExport = () => {
@@ -124,15 +122,6 @@ export const IndexHeader = () => {
                     onChange={handlePracticesImport}
                   />
                 </label>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full justify-start"
-                  onClick={() => setShowResourceManagement(true)}
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Ressources
-                </Button>
               </div>
             </div>
           </PopoverContent>
@@ -140,15 +129,6 @@ export const IndexHeader = () => {
       </div>
       <h1 className="text-3xl font-bold text-primary">Pratiques et Capacité Scrum</h1>
       <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
-
-      <Dialog open={showResourceManagement} onOpenChange={setShowResourceManagement}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Gestion des ressources</DialogTitle>
-          </DialogHeader>
-          <ResourceManagement />
-        </DialogContent>
-      </Dialog>
     </header>
   );
 };

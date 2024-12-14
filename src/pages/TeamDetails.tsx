@@ -6,14 +6,17 @@ import { CommitmentChart } from "@/components/CommitmentChart";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
+import { ResourceManagement } from "@/components/ResourceManagement";
 
 const TeamDetails = () => {
   const { activeTeam } = useScrumTeamStore();
   const { canCreateNewSprint } = useSprintStore();
   const [showSprintForm, setShowSprintForm] = useState(false);
+  const [showResourceManagement, setShowResourceManagement] = useState(false);
   const navigate = useNavigate();
 
   if (!activeTeam) {
@@ -33,6 +36,13 @@ const TeamDetails = () => {
             <p className="text-muted-foreground">Gestion des sprints et performances</p>
           </div>
         </div>
+        <Button 
+          variant="outline"
+          onClick={() => setShowResourceManagement(true)}
+        >
+          <Users className="h-4 w-4 mr-2" />
+          Ressources
+        </Button>
       </header>
 
       <div className="space-y-6">
@@ -62,6 +72,15 @@ const TeamDetails = () => {
           <CommitmentChart />
         </div>
       </div>
+
+      <Dialog open={showResourceManagement} onOpenChange={setShowResourceManagement}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Gestion des ressources</DialogTitle>
+          </DialogHeader>
+          <ResourceManagement />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
