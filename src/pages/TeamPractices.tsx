@@ -78,19 +78,20 @@ const TeamPractices = () => {
     return dayMatch && typeMatch && completionMatch;
   });
 
-  const practicesByDay = filteredPractices.reduce((acc, practice) => {
-    if (!acc[practice.day]) {
-      acc[practice.day] = [];
-    }
-    acc[practice.day].push(practice);
+  // Group practices by day, keeping all days even if they have no practices after filtering
+  const practicesByDay = dayOrder.reduce((acc, day) => {
+    acc[day] = filteredPractices.filter(practice => practice.day === day);
     return acc;
   }, {} as Record<string, typeof filteredPractices>);
 
   const getDayProgress = (dayPractices) => {
+    if (!dayPractices || dayPractices.length === 0) return 0;
     return Math.round(dayPractices.filter(p => p.isCompleted).length / dayPractices.length * 100);
   };
 
-  const totalProgress = Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100);
+  const totalProgress = practices.length > 0 
+    ? Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100)
+    : 0;
 
   return (
     <div className="min-h-screen p-6 space-y-6">
@@ -155,7 +156,10 @@ const TeamPractices = () => {
       >
         {dayOrder.map(day => {
           const dayPractices = practicesByDay[day] || [];
-          if (dayPractices.length === 0 && selectedDay !== "all") return null;
+          const hasMatchingPractices = practices.some(p => p.day === day);
+
+          // Only show days that have practices in the unfiltered list
+          if (!hasMatchingPractices) return null;
 
           return (
             <AccordionItem key={day} value={day} className="border-none">
