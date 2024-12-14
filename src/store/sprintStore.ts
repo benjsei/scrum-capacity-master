@@ -204,6 +204,9 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
   updateSprint: async (sprintId, updatedFields) => {
     try {
+      console.log('Updating sprint with ID:', sprintId);
+      console.log('Updated fields:', updatedFields);
+
       const { error: sprintError } = await supabase
         .from('sprints')
         .update({
@@ -211,15 +214,20 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           end_date: updatedFields.endDate,
           duration: updatedFields.duration,
           story_points_committed: updatedFields.storyPointsCommitted,
+          story_points_completed: updatedFields.storyPointsCompleted,
           theoretical_capacity: updatedFields.theoreticalCapacity,
           objective: updatedFields.objective,
-          objective_achieved: updatedFields.objectiveAchieved
+          objective_achieved: updatedFields.objectiveAchieved,
+          velocity_achieved: updatedFields.velocityAchieved,
+          commitment_respected: updatedFields.commitmentRespected,
+          is_successful: updatedFields.isSuccessful
         })
         .eq('id', sprintId);
 
       if (sprintError) throw sprintError;
 
       if (updatedFields.resources) {
+        // First, delete existing sprint resources
         const { error: deleteError } = await supabase
           .from('sprint_resources')
           .delete()
@@ -227,11 +235,14 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
         if (deleteError) throw deleteError;
 
+        // Then, insert new sprint resources
         const sprintResourcesData = updatedFields.resources.map(resource => ({
           sprint_id: sprintId,
           resource_id: resource.id,
           daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
         }));
+
+        console.log('Inserting sprint resources:', sprintResourcesData);
 
         const { error: resourcesError } = await supabase
           .from('sprint_resources')
@@ -250,6 +261,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     } catch (error) {
       console.error('Error updating sprint:', error);
       toast.error("Erreur lors de la mise à jour du sprint");
+      throw error;
     }
   },
 

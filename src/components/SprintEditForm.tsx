@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSprintStore } from '../store/sprintStore';
 import { useResourceStore } from '../store/resourceStore';
-import { Sprint, Resource } from "../types/sprint";
+import { Sprint, Resource, ResourceDailyCapacity } from "../types/sprint";
 import { ResourceInput } from "./ResourceInput";
 import { toast } from "sonner";
 import { TableCell } from "./ui/table";
@@ -52,7 +52,7 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
             name: sr.resources.name,
             capacityPerDay: sr.resources.capacity_per_day || 1,
             teamId: sr.resources.team_id,
-            dailyCapacities: sr.daily_capacities || []
+            dailyCapacities: (sr.daily_capacities as ResourceDailyCapacity[]) || []
           }));
 
           setEditedSprint(prev => ({
@@ -92,6 +92,7 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
         editedSprint.velocityAchieved = velocityAchieved;
       }
 
+      console.log('Saving sprint with data:', editedSprint);
       await updateSprint(sprint.id, editedSprint);
       toast.success("Sprint mis à jour avec succès!");
       onSave();
