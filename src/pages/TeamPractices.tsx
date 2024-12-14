@@ -3,24 +3,23 @@ import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Percent, AlertCircle, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import AgilePractices from "@/components/AgilePractices";
-import { Input } from "@/components/ui/input";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import NextPracticeCard from '@/components/NextPracticeCard';
+import DayProgressCard from '@/components/DayProgressCard';
 
 const TeamPractices = () => {
   const { activeTeam } = useScrumTeamStore();
   const { initializePractices, getPracticesForTeam, togglePracticeCompletion, updatePracticeUrl } = useAgilePracticesStore();
   const navigate = useNavigate();
   const [expandedDays, setExpandedDays] = useState<string[]>([]);
-  const [editingUrl, setEditingUrl] = useState<string | null>(null);
-  const [urlValue, setUrlValue] = useState('');
 
   useEffect(() => {
     if (activeTeam) {
@@ -74,14 +73,6 @@ const TeamPractices = () => {
   // Find first incomplete practice
   const firstIncompletePractice = practices.find(p => !p.isCompleted);
 
-  const handleUrlSave = () => {
-    if (editingUrl && firstIncompletePractice) {
-      updatePracticeUrl(activeTeam.id, firstIncompletePractice.id, urlValue);
-      setEditingUrl(null);
-      setUrlValue('');
-    }
-  };
-
   return (
     <div className="min-h-screen p-6 space-y-6">
       <header className="flex items-center justify-between mb-8">
@@ -94,93 +85,16 @@ const TeamPractices = () => {
             <p className="text-muted-foreground">Suivi des pratiques agiles</p>
           </div>
         </div>
-        <Card className="p-4 flex items-center gap-2">
-          <Percent className="h-5 w-5 text-primary" />
-          <span className="text-lg font-semibold">{totalProgress}% complété</span>
-        </Card>
+        <DayProgressCard progress={totalProgress} />
       </header>
 
       {firstIncompletePractice && (
-        <Card className="p-6 border-2 border-primary">
-          <div className="flex items-center gap-2 text-primary mb-4">
-            <AlertCircle className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">Prochaine pratique à réaliser</h2>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Checkbox
-                checked={firstIncompletePractice.isCompleted}
-                onCheckedChange={() => togglePracticeCompletion(activeTeam.id, firstIncompletePractice.id)}
-              />
-              <div>
-                <div className="font-medium">{firstIncompletePractice.action}</div>
-                {firstIncompletePractice.subActions && (
-                  <div className="text-muted-foreground">{firstIncompletePractice.subActions}</div>
-                )}
-                <div className="text-sm text-muted-foreground">
-                  Jour {firstIncompletePractice.day} • {firstIncompletePractice.who}
-                  {firstIncompletePractice.format && ` • ${firstIncompletePractice.format}`}
-                  {firstIncompletePractice.duration && ` • ${firstIncompletePractice.duration}`}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <LinkIcon className="h-4 w-4 text-muted-foreground" />
-              {editingUrl === firstIncompletePractice.id ? (
-                <div className="flex items-center gap-2 flex-1">
-                  <Input
-                    value={urlValue}
-                    onChange={(e) => setUrlValue(e.target.value)}
-                    placeholder="Entrez l'URL..."
-                    className="flex-1"
-                  />
-                  <Button 
-                    size="sm"
-                    onClick={handleUrlSave}
-                  >
-                    Sauvegarder
-                  </Button>
-                  <Button 
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setEditingUrl(null);
-                      setUrlValue('');
-                    }}
-                  >
-                    Annuler
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 flex-1">
-                  {firstIncompletePractice.url ? (
-                    <a 
-                      href={firstIncompletePractice.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-500 hover:underline truncate"
-                    >
-                      {firstIncompletePractice.url}
-                    </a>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">Aucune URL</span>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setEditingUrl(firstIncompletePractice.id);
-                      setUrlValue(firstIncompletePractice.url || '');
-                    }}
-                  >
-                    Modifier
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
+        <NextPracticeCard
+          practice={firstIncompletePractice}
+          teamId={activeTeam.id}
+          onToggleCompletion={togglePracticeCompletion}
+          onUpdateUrl={updatePracticeUrl}
+        />
       )}
 
       <Accordion 
@@ -195,10 +109,7 @@ const TeamPractices = () => {
               <AccordionTrigger className="hover:no-underline">
                 <h2 className="text-2xl font-bold">Jour {day}</h2>
               </AccordionTrigger>
-              <Card className="p-2 flex items-center gap-2">
-                <Percent className="h-4 w-4 text-primary" />
-                <span className="font-medium">{getDayProgress(dayPractices)}%</span>
-              </Card>
+              <DayProgressCard progress={getDayProgress(dayPractices)} small />
             </div>
             <AccordionContent>
               <AgilePractices teamId={activeTeam.id} dayFilter={day} />
