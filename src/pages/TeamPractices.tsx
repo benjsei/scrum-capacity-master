@@ -16,7 +16,12 @@ import DayProgressCard from '@/components/DayProgressCard';
 
 const TeamPractices = () => {
   const { activeTeam } = useScrumTeamStore();
-  const { initializePractices, getPracticesForTeam } = useAgilePracticesStore();
+  const { 
+    initializePractices, 
+    getPracticesForTeam, 
+    togglePracticeCompletion, 
+    updatePracticeUrl 
+  } = useAgilePracticesStore();
   const navigate = useNavigate();
   const [expandedDays, setExpandedDays] = useState<string[]>([]);
 
