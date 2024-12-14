@@ -10,6 +10,7 @@ import { TableCell } from "./ui/table";
 import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SprintEditFormProps {
   sprint: Sprint;
@@ -24,27 +25,51 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
   const { findResources } = useResourceStore();
 
   useEffect(() => {
-    const loadResourceNames = async () => {
-      const updatedResources = await Promise.all(
-        editedSprint.resources.map(async (resource) => {
-          const foundResource = (await findResources(resource.id))[0];
-          return {
-            ...resource,
-            name: foundResource?.name || resource.name
-          };
-        })
-      );
+    const loadSprintResources = async () => {
+      try {
+        console.log('Loading sprint resources for sprint:', sprint.id);
+        const { data: sprintResourcesData, error: sprintResourcesError } = await supabase
+          .from('sprint_resources')
+          .select(`
+            resource_id,
+            daily_capacities,
+            resources (
+              id,
+              name,
+              capacity_per_day,
+              team_id
+            )
+          `)
+          .eq('sprint_id', sprint.id);
 
-      setEditedSprint(prev => ({
-        ...prev,
-        resources: updatedResources
-      }));
+        if (sprintResourcesError) throw sprintResourcesError;
+
+        console.log('Loaded sprint resources:', sprintResourcesData);
+
+        if (sprintResourcesData) {
+          const resources = sprintResourcesData.map(sr => ({
+            id: sr.resources.id,
+            name: sr.resources.name,
+            capacityPerDay: sr.resources.capacity_per_day || 1,
+            teamId: sr.resources.team_id,
+            dailyCapacities: sr.daily_capacities || []
+          }));
+
+          setEditedSprint(prev => ({
+            ...prev,
+            resources: resources
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading sprint resources:', error);
+        toast.error("Erreur lors du chargement des ressources du sprint");
+      }
     };
 
-    loadResourceNames();
-  }, []);
+    loadSprintResources();
+  }, [sprint.id]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (new Date(editedSprint.startDate) > new Date(editedSprint.endDate)) {
       toast.error("La date de fin doit être après la date de début");
       return;
@@ -55,20 +80,25 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
       return;
     }
 
-    // Calculate success based on story points completed
-    if (editedSprint.storyPointsCompleted !== undefined) {
-      const commitmentRespected = (editedSprint.storyPointsCompleted / editedSprint.storyPointsCommitted) * 100;
-      const isSuccessful = commitmentRespected >= 80;
-      const velocityAchieved = editedSprint.storyPointsCompleted / editedSprint.duration;
+    try {
+      // Calculate success based on story points completed
+      if (editedSprint.storyPointsCompleted !== undefined) {
+        const commitmentRespected = (editedSprint.storyPointsCompleted / editedSprint.storyPointsCommitted) * 100;
+        const isSuccessful = commitmentRespected >= 80;
+        const velocityAchieved = editedSprint.storyPointsCompleted / editedSprint.duration;
 
-      editedSprint.commitmentRespected = commitmentRespected;
-      editedSprint.isSuccessful = isSuccessful;
-      editedSprint.velocityAchieved = velocityAchieved;
+        editedSprint.commitmentRespected = commitmentRespected;
+        editedSprint.isSuccessful = isSuccessful;
+        editedSprint.velocityAchieved = velocityAchieved;
+      }
+
+      await updateSprint(sprint.id, editedSprint);
+      toast.success("Sprint mis à jour avec succès!");
+      onSave();
+    } catch (error) {
+      console.error('Error saving sprint:', error);
+      toast.error("Erreur lors de la sauvegarde du sprint");
     }
-
-    updateSprint(sprint.id, editedSprint);
-    toast.success("Sprint mis à jour avec succès!");
-    onSave();
   };
 
   const handleResourceChange = (resourceId: string, field: keyof Resource, value: string | number) => {

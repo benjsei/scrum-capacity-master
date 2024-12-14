@@ -17,13 +17,18 @@ export const ResourceManagement = () => {
       if (!activeTeam) return;
 
       try {
+        console.log('Loading resources for team:', activeTeam.id);
         const { data, error } = await supabase
           .from('resources')
           .select('*')
           .eq('team_id', activeTeam.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error loading resources:', error);
+          throw error;
+        }
 
+        console.log('Loaded resources:', data);
         const formattedResources = data.map(resource => ({
           id: resource.id,
           name: resource.name,
@@ -53,9 +58,14 @@ export const ResourceManagement = () => {
     }
 
     if (name.trim()) {
-      await updateResource(id, { name: name.trim() });
-      await loadTeams();
-      toast.success("Ressource mise à jour");
+      try {
+        await updateResource(id, { name: name.trim() });
+        await loadTeams();
+        toast.success("Ressource mise à jour");
+      } catch (error) {
+        console.error('Error updating resource:', error);
+        toast.error("Erreur lors de la mise à jour de la ressource");
+      }
     }
   };
 
@@ -65,8 +75,14 @@ export const ResourceManagement = () => {
       return;
     }
 
-    await deleteResource(id);
-    await loadTeams();
+    try {
+      await deleteResource(id);
+      await loadTeams();
+      toast.success("Ressource supprimée");
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+      toast.error("Erreur lors de la suppression de la ressource");
+    }
   };
 
   // Filtrer les ressources pour n'afficher que celles de l'équipe active
