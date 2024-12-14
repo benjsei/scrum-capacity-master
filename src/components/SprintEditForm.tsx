@@ -3,28 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSprintStore } from '../store/sprintStore';
 import { useResourceStore } from '../store/resourceStore';
-import { Sprint, Resource, ResourceDailyCapacity } from "../types/sprint";
+import { Sprint, Resource } from "../types/sprint";
 import { ResourceInput } from "./ResourceInput";
 import { toast } from "sonner";
 import { TableCell } from "./ui/table";
-import { Textarea } from "./ui/textarea";
-import { Switch } from "./ui/switch";
-import { Label } from "./ui/label";
+import { SprintObjectiveSection } from "./sprint/SprintObjectiveSection";
 import { supabase } from "@/integrations/supabase/client";
+import { initializeDailyCapacities } from "@/utils/sprintUtils";
 
 interface SprintEditFormProps {
   sprint: Sprint;
   onCancel: () => void;
   onSave: () => void;
 }
-
-const mapJsonToDailyCapacities = (json: any): ResourceDailyCapacity[] => {
-  if (!json || !Array.isArray(json)) return [];
-  return json.map((dc: any) => ({
-    date: dc.date,
-    capacity: dc.capacity
-  }));
-};
 
 export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps) => {
   const [editedSprint, setEditedSprint] = useState<Sprint>({ ...sprint });
@@ -60,12 +51,17 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
             name: sr.resources.name,
             capacityPerDay: sr.resources.capacity_per_day || 1,
             teamId: sr.resources.team_id,
-            dailyCapacities: mapJsonToDailyCapacities(sr.daily_capacities)
+            dailyCapacities: sr.daily_capacities ? sr.daily_capacities.map((dc: any) => ({
+              date: dc.date,
+              capacity: dc.capacity
+            })) : []
           }));
 
           setEditedSprint(prev => ({
             ...prev,
-            resources: resources
+            resources: resources.map(resource => 
+              initializeDailyCapacities(resource, editedSprint.startDate, editedSprint.duration)
+            )
           }));
         }
       } catch (error) {
@@ -75,29 +71,7 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     };
 
     loadSprintResources();
-  }, [sprint.id]);
-
-  const initializeDailyCapacities = (resource: Resource): Resource => {
-    const start = new Date(editedSprint.startDate);
-    const dailyCapacities = [];
-    
-    for (let i = 0; i < editedSprint.duration; i++) {
-      const currentDate = new Date(start);
-      currentDate.setDate(start.getDate() + i);
-      const dateStr = currentDate.toISOString().split('T')[0];
-      
-      const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-      dailyCapacities.push({
-        date: dateStr,
-        capacity: isWeekend ? 0 : resource.capacityPerDay
-      });
-    }
-
-    return {
-      ...resource,
-      dailyCapacities
-    };
-  };
+  }, [sprint.id, editedSprint.startDate, editedSprint.duration]);
 
   const handleSave = async () => {
     if (new Date(editedSprint.startDate) > new Date(editedSprint.endDate)) {
@@ -111,6 +85,8 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     }
 
     try {
+      console.log('Saving sprint with resources:', editedSprint.resources);
+
       // First, save any temporary resources
       const resourcePromises = editedSprint.resources
         .filter(r => r.isTemporary)
@@ -125,21 +101,37 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
           return savedResource;
         });
 
-      await Promise.all(resourcePromises);
+      const savedResources = await Promise.all(resourcePromises);
+      console.log('Saved temporary resources:', savedResources);
+
+      // Update resources array with saved resources
+      const updatedResources = editedSprint.resources.map(resource => {
+        const savedResource = savedResources.find(sr => sr.id === resource.id);
+        return savedResource || resource;
+      });
 
       // Calculate success based on story points completed
+      let updatedFields: Partial<Sprint> = {
+        ...editedSprint,
+        resources: updatedResources
+      };
+
       if (editedSprint.storyPointsCompleted !== undefined) {
         const commitmentRespected = (editedSprint.storyPointsCompleted / editedSprint.storyPointsCommitted) * 100;
         const isSuccessful = commitmentRespected >= 80;
         const velocityAchieved = editedSprint.storyPointsCompleted / editedSprint.duration;
 
-        editedSprint.commitmentRespected = commitmentRespected;
-        editedSprint.isSuccessful = isSuccessful;
-        editedSprint.velocityAchieved = velocityAchieved;
+        updatedFields = {
+          ...updatedFields,
+          commitmentRespected,
+          isSuccessful,
+          velocityAchieved
+        };
       }
 
-      console.log('Saving sprint with data:', editedSprint);
-      await updateSprint(sprint.id, editedSprint);
+      console.log('Updating sprint with data:', updatedFields);
+      await updateSprint(sprint.id, updatedFields);
+      
       toast.success("Sprint mis à jour avec succès!");
       onSave();
     } catch (error) {
@@ -239,37 +231,20 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
             </div>
           </div>
 
-          <div>
-            <Label className="block text-sm font-medium mb-1">Objectif du sprint</Label>
-            <Textarea
-              value={editedSprint.objective || ''}
-              onChange={(e) => setEditedSprint(prev => ({
-                ...prev,
-                objective: e.target.value
-              }))}
-              maxLength={300}
-              className="h-24"
-              placeholder="Décrivez l'objectif principal du sprint..."
-            />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={editedSprint.objectiveAchieved || false}
-              onCheckedChange={(checked) => setEditedSprint(prev => ({
-                ...prev,
-                objectiveAchieved: checked
-              }))}
-            />
-            <Label>Objectif atteint</Label>
-          </div>
+          <SprintObjectiveSection
+            objective={editedSprint.objective || ''}
+            objectiveAchieved={editedSprint.objectiveAchieved}
+            onObjectiveChange={(value) => setEditedSprint(prev => ({ ...prev, objective: value }))}
+            onObjectiveAchievedChange={(value) => setEditedSprint(prev => ({ ...prev, objectiveAchieved: value }))}
+            isCompleted={editedSprint.storyPointsCompleted !== undefined}
+          />
 
           <div className="space-y-4">
             <Label className="block text-sm font-medium">Ressources</Label>
             {editedSprint.resources.map((resource) => (
               <div key={resource.id} className="space-y-2 p-4 border rounded-lg">
                 <ResourceInput
-                  resource={initializeDailyCapacities(resource)}
+                  resource={resource}
                   onResourceChange={handleResourceChange}
                   onDailyCapacityChange={handleDailyCapacityChange}
                   showDailyCapacities={showDailyCapacities}
