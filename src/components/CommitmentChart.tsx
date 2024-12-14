@@ -10,13 +10,13 @@ export const CommitmentChart = () => {
     .filter(sprint => sprint.isSuccessful !== undefined)
     .map((sprint) => ({
       name: new Date(sprint.startDate).toLocaleDateString(),
-      committed: sprint.storyPointsCommitted,
-      completed: sprint.storyPointsCompleted || 0,
       percentage: sprint.storyPointsCompleted 
         ? Math.round((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
         : 0,
+      date: new Date(sprint.startDate), // Used for sorting
     }))
-    .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map(({ name, percentage }) => ({ name, percentage })); // Remove date after sorting
 
   return (
     <Card className="p-6">
@@ -29,18 +29,6 @@ export const CommitmentChart = () => {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="committed" 
-              stroke="#1E40AF" 
-              name="SP engagés"
-            />
-            <Line 
-              type="monotone" 
-              dataKey="completed" 
-              stroke="#15803D" 
-              name="SP réalisés"
-            />
             <Line 
               type="monotone" 
               dataKey="percentage" 

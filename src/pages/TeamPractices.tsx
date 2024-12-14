@@ -34,6 +34,7 @@ const TeamPractices = () => {
   useEffect(() => {
     if (activeTeam) {
       const practices = getPracticesForTeam(activeTeam.id);
+      console.log('Practices for team:', practices);
       // Initialize with all days expanded
       const dayOrder = ["N", "N + 1", "N + 5", "N + 14"];
       setExpandedDays(dayOrder);

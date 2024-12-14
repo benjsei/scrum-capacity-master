@@ -10,7 +10,6 @@ export const TeamVelocityChart = () => {
   const { teams } = useScrumTeamStore();
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
-  // Initialize with all teams selected
   useEffect(() => {
     setSelectedTeams(teams.map(t => t.id));
   }, [teams]);
@@ -25,20 +24,26 @@ export const TeamVelocityChart = () => {
 
   const allDates = [...new Set(sprints.map(sprint => sprint.startDate))].sort();
   
-  const data = allDates.map(date => {
-    const dataPoint: any = { date: new Date(date).toLocaleDateString() };
-    teams.forEach(team => {
-      const teamSprint = sprints.find(sprint => 
-        sprint.teamId === team.id && 
-        sprint.startDate === date &&
-        sprint.velocityAchieved !== undefined
-      );
-      if (teamSprint) {
-        dataPoint[team.id] = teamSprint.velocityAchieved;
-      }
-    });
-    return dataPoint;
-  });
+  const data = allDates
+    .map(date => {
+      const dataPoint: any = { 
+        date: new Date(date).toLocaleDateString(),
+        originalDate: new Date(date), // Used for sorting
+      };
+      teams.forEach(team => {
+        const teamSprint = sprints.find(sprint => 
+          sprint.teamId === team.id && 
+          sprint.startDate === date &&
+          sprint.velocityAchieved !== undefined
+        );
+        if (teamSprint) {
+          dataPoint[team.id] = teamSprint.velocityAchieved;
+        }
+      });
+      return dataPoint;
+    })
+    .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime())
+    .map(({ date, originalDate, ...rest }) => ({ date, ...rest })); // Remove originalDate after sorting
 
   const colors = [
     '#1E40AF', '#15803D', '#B91C1C', '#6B21A8', '#C2410C',
