@@ -35,21 +35,22 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     loadSprints();
   }, [loadSprints]);
 
+  // Initialize form with team resources when activeTeam changes
   useEffect(() => {
-    if (activeTeam) {
+    if (activeTeam?.resources) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      setStartDate(tomorrow.toISOString().split('T')[0]);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      
+      setStartDate(tomorrowStr);
       setDuration('14');
 
-      if (activeTeam.resources) {
-        const initializedResources = initializeSprintResources(
-          activeTeam.resources,
-          tomorrow.toISOString().split('T')[0],
-          14
-        );
-        setResources(initializedResources);
-      }
+      const initializedResources = initializeSprintResources(
+        activeTeam.resources,
+        tomorrowStr,
+        14
+      );
+      setResources(initializedResources);
     }
   }, [activeTeam]);
 
