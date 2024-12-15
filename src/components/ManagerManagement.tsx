@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Progress } from "@/components/ui/progress";
+import { useScrumTeamStore } from "../store/scrumTeamStore";
+import { useAgilePracticesStore } from "../store/agilePracticesStore";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +21,9 @@ import {
 export const ManagerManagement = () => {
   const [newManagerName, setNewManagerName] = useState("");
   const [managerToDelete, setManagerToDelete] = useState(null);
-  const { managers, addManager, editManager } = useManagerStore();
+  const { managers, addManager } = useManagerStore();
+  const { teams } = useScrumTeamStore();
+  const { getPracticesForTeam } = useAgilePracticesStore();
   const navigate = useNavigate();
 
   const handleAddManager = () => {
@@ -28,8 +33,19 @@ export const ManagerManagement = () => {
     }
   };
 
-  const handleEditClick = (manager) => {
-    editManager(manager);
+  const getManagerProgress = (managerId: string) => {
+    const managerTeams = teams.filter(team => team.managerId === managerId);
+    if (managerTeams.length === 0) return 0;
+    
+    let totalProgress = 0;
+    managerTeams.forEach(team => {
+      const practices = getPracticesForTeam(team.id);
+      if (practices.length > 0) {
+        totalProgress += (practices.filter(p => p.isCompleted).length / practices.length);
+      }
+    });
+    
+    return Math.round((totalProgress / managerTeams.length) * 100);
   };
 
   return (
@@ -50,6 +66,7 @@ export const ManagerManagement = () => {
             <thead className="[&_tr]:border-b">
               <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                 <th className="h-12 px-4 text-left align-middle font-medium">Nom</th>
+                <th className="h-12 px-4 text-left align-middle font-medium">Progression</th>
                 <th className="h-12 px-4 text-right align-middle font-medium">Actions</th>
               </tr>
             </thead>
@@ -60,6 +77,14 @@ export const ManagerManagement = () => {
                   className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                 >
                   <td className="p-4 align-middle">{manager.name}</td>
+                  <td className="p-4 align-middle">
+                    <div className="flex items-center gap-2">
+                      <Progress value={getManagerProgress(manager.id)} className="w-[60%]" />
+                      <span className="text-sm text-muted-foreground">
+                        {getManagerProgress(manager.id)}%
+                      </span>
+                    </div>
+                  </td>
                   <td className="p-4 align-middle">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -73,7 +98,6 @@ export const ManagerManagement = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEditClick(manager)}
                       >
                         Modifier
                       </Button>

@@ -10,6 +10,7 @@ export interface AgilePractice {
   isCompleted: boolean;
   completedAt?: string;
   url?: string;
+  description?: string;
 }
 
 export interface TeamPractices {

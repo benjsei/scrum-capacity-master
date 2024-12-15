@@ -55,7 +55,8 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
           duration: p.duration || '',
           isCompleted: p.is_completed || false,
           completedAt: p.completed_at,
-          url: p.url
+          url: p.url,
+          description: p.description || ''
         }));
 
         set(state => ({
@@ -84,7 +85,8 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
         sub_actions: p.sub_actions,
         format: p.format,
         duration: p.duration,
-        is_completed: false
+        is_completed: false,
+        description: p.description
       }));
 
       // Insert default practices for the team
@@ -107,7 +109,8 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
         duration: p.duration || '',
         isCompleted: p.is_completed || false,
         completedAt: p.completed_at,
-        url: p.url
+        url: p.url,
+        description: p.description || ''
       }));
 
       set(state => ({
