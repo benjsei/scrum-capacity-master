@@ -94,23 +94,31 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     try {
       console.log('Starting to add sprint with data:', sprint);
       
-      // First, verify that all resources exist in the database
-      const { data: existingResources, error: resourcesError } = await supabase
-        .from('resources')
-        .select('id')
-        .in('id', sprint.resources.map(r => r.id));
+      // First, save any temporary resources
+      const resourcePromises = sprint.resources
+        .filter(r => r.isTemporary)
+        .map(async (resource) => {
+          console.log('Saving temporary resource:', resource);
+          const { data, error } = await supabase
+            .from('resources')
+            .insert({
+              id: resource.id,
+              name: resource.name,
+              capacity_per_day: resource.capacityPerDay,
+              team_id: activeTeam.id
+            })
+            .select()
+            .single();
 
-      if (resourcesError) throw resourcesError;
+          if (error) throw error;
+          if (!data) throw new Error('No data returned from resource insert');
 
-      // Create a set of existing resource IDs for quick lookup
-      const existingResourceIds = new Set(existingResources?.map(r => r.id));
+          console.log('Temporary resource saved successfully:', data);
+          return data;
+        });
 
-      // Filter out resources that don't exist in the database
-      const validResources = sprint.resources.filter(r => existingResourceIds.has(r.id));
-
-      if (validResources.length !== sprint.resources.length) {
-        console.warn('Some resources were filtered out as they no longer exist in the database');
-      }
+      const savedResources = await Promise.all(resourcePromises);
+      console.log('All temporary resources saved:', savedResources);
 
       // Create the sprint
       const { data: sprintData, error: sprintError } = await supabase
@@ -132,29 +140,26 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       console.log('Sprint created successfully:', sprintData);
 
-      // Create sprint_resources only for valid resources
-      if (validResources.length > 0) {
-        const sprintResourcesData: SprintResourceData[] = validResources.map(resource => ({
-          sprint_id: sprintData.id,
-          resource_id: resource.id,
-          daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
-        }));
+      // Create sprint_resources for all resources (both temporary and existing)
+      const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
+        sprint_id: sprintData.id,
+        resource_id: resource.id,
+        daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
+      }));
 
-        console.log('Inserting sprint resources:', sprintResourcesData);
+      console.log('Inserting sprint resources:', sprintResourcesData);
 
-        const { error: resourcesError } = await supabase
-          .from('sprint_resources')
-          .insert(sprintResourcesData);
+      const { error: resourcesError } = await supabase
+        .from('sprint_resources')
+        .insert(sprintResourcesData);
 
-        if (resourcesError) throw resourcesError;
-        
-        console.log('Sprint resources inserted successfully');
-      }
+      if (resourcesError) throw resourcesError;
+      
+      console.log('Sprint resources inserted successfully');
 
       const newSprint = {
         ...sprint,
         id: sprintData.id,
-        resources: validResources
       };
 
       set((state) => ({
@@ -174,6 +179,33 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       console.log('Starting updateSprint with ID:', sprintId);
       console.log('Updated fields:', updatedFields);
 
+      if (updatedFields.resources) {
+        // First, save any temporary resources
+        const resourcePromises = updatedFields.resources
+          .filter(r => r.isTemporary)
+          .map(async (resource) => {
+            console.log('Saving temporary resource:', resource);
+            const { data, error } = await supabase
+              .from('resources')
+              .insert({
+                id: resource.id,
+                name: resource.name,
+                capacity_per_day: resource.capacityPerDay,
+                team_id: resource.teamId
+              })
+              .select()
+              .single();
+
+            if (error) throw error;
+            if (!data) throw new Error('No data returned from resource insert');
+
+            console.log('Temporary resource saved successfully:', data);
+            return data;
+          });
+
+        await Promise.all(resourcePromises);
+      }
+
       // Update sprint basic info
       const { error: sprintError } = await supabase
         .from('sprints')
@@ -190,8 +222,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           commitment_respected: updatedFields.commitmentRespected,
           is_successful: updatedFields.isSuccessful
         })
-        .eq('id', sprintId)
-        .select();
+        .eq('id', sprintId);
 
       if (sprintError) {
         console.error('Error updating sprint:', sprintError);
@@ -215,16 +246,11 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
         console.log('Successfully deleted existing sprint resources');
 
         // Then, insert new sprint resources
-        const sprintResourcesData = updatedFields.resources.map(resource => {
-          console.log('Preparing resource data for:', resource.name, 'with ID:', resource.id);
-          console.log('Daily capacities:', resource.dailyCapacities);
-          
-          return {
-            sprint_id: sprintId,
-            resource_id: resource.id,
-            daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
-          };
-        });
+        const sprintResourcesData = updatedFields.resources.map(resource => ({
+          sprint_id: sprintId,
+          resource_id: resource.id,
+          daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
+        }));
 
         console.log('Inserting sprint resources:', sprintResourcesData);
 
