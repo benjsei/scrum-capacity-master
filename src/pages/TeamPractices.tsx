@@ -45,6 +45,15 @@ const TeamPractices = () => {
     return null;
   }
 
+  const handleBack = () => {
+    // Navigate back to the manager's team list if managerId exists
+    if (activeTeam.managerId) {
+      navigate(`/teams/${activeTeam.managerId}`);
+    } else {
+      navigate('/');
+    }
+  };
+
   const practices = getPracticesForTeam(activeTeam.id);
   
   // Order days according to specification
@@ -75,12 +84,12 @@ const TeamPractices = () => {
     <div className="min-h-screen p-6 space-y-6">
       <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => navigate('/')}>
+          <Button variant="outline" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-primary">{activeTeam.name}</h1>
-            <p className="text-muted-foreground">Suivi des pratiques agiles</p>
+            <h1 className="text-3xl font-bold text-primary">Pratiques et Capacité Scrum</h1>
+            <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
           </div>
         </div>
         <DayProgressCard progress={totalProgress} />
