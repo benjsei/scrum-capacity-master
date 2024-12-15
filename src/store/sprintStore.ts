@@ -95,7 +95,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       console.log('Starting to add sprint with data:', sprint);
       
       // First, save any temporary resources and collect their IDs
-      const temporaryResources = sprint.resources.filter(r => r.isTemporary);
+      const temporaryResources = sprint.resources.filter(r => r.isTemporary === true);
       console.log('Temporary resources to save:', temporaryResources);
 
       const savedResourcesMap = new Map();
@@ -160,7 +160,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
         const savedResource = savedResourcesMap.get(resource.id);
         return savedResource ? {
           ...resource,
-          id: savedResource.id
+          id: savedResource.id,
+          isTemporary: false // Reset isTemporary flag after saving
         } : resource;
       });
 

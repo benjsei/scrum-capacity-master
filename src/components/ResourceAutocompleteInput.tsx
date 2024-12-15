@@ -54,7 +54,10 @@ export const ResourceAutocompleteInput = ({
 
   const handleSuggestionClick = (resource: Resource) => {
     setInputValue(resource.name);
-    onChange(resource);
+    onChange({
+      ...resource,
+      isTemporary: false // Explicitly set isTemporary to false for existing resources
+    });
     setShowSuggestions(false);
   };
 
@@ -63,14 +66,17 @@ export const ResourceAutocompleteInput = ({
       if (inputValue.trim() && inputValue !== value && activeTeam) {
         const existingResource = findResources(inputValue.trim())[0];
         if (existingResource) {
-          onChange(existingResource);
+          onChange({
+            ...existingResource,
+            isTemporary: false // Explicitly set isTemporary to false for existing resources
+          });
         } else {
           const newResource: Resource = {
             id: crypto.randomUUID(),
             name: inputValue.trim(),
             capacityPerDay: 1,
             teamId: activeTeam.id,
-            isTemporary: true // Mark as temporary until sprint is saved
+            isTemporary: true // Explicitly set isTemporary to true for new resources
           };
           console.log('Creating temporary resource:', newResource);
           onChange(newResource);
