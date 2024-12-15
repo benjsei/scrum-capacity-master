@@ -30,8 +30,17 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
         .select()
         .single();
 
-      if (error) throw error;
-      if (!data) throw new Error('No data returned from insert');
+      if (error) {
+        console.error('Error in supabase insert:', error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.error('No data returned from insert');
+        throw new Error('No data returned from insert');
+      }
+
+      console.log('Resource added successfully:', data);
 
       const newResource: Resource = {
         id: data.id,

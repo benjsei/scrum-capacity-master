@@ -204,9 +204,10 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
   updateSprint: async (sprintId, updatedFields) => {
     try {
-      console.log('Updating sprint with ID:', sprintId);
+      console.log('Starting updateSprint with ID:', sprintId);
       console.log('Updated fields:', updatedFields);
 
+      // Update sprint basic info
       const { error: sprintError } = await supabase
         .from('sprints')
         .update({
@@ -224,23 +225,38 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
         })
         .eq('id', sprintId);
 
-      if (sprintError) throw sprintError;
+      if (sprintError) {
+        console.error('Error updating sprint:', sprintError);
+        throw sprintError;
+      }
 
       if (updatedFields.resources) {
+        console.log('Updating sprint resources:', updatedFields.resources);
+        
         // First, delete existing sprint resources
         const { error: deleteError } = await supabase
           .from('sprint_resources')
           .delete()
           .eq('sprint_id', sprintId);
 
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error('Error deleting existing sprint resources:', deleteError);
+          throw deleteError;
+        }
+
+        console.log('Successfully deleted existing sprint resources');
 
         // Then, insert new sprint resources
-        const sprintResourcesData = updatedFields.resources.map(resource => ({
-          sprint_id: sprintId,
-          resource_id: resource.id,
-          daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
-        }));
+        const sprintResourcesData = updatedFields.resources.map(resource => {
+          console.log('Preparing resource data for:', resource.name, 'with ID:', resource.id);
+          console.log('Daily capacities:', resource.dailyCapacities);
+          
+          return {
+            sprint_id: sprintId,
+            resource_id: resource.id,
+            daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
+          };
+        });
 
         console.log('Inserting sprint resources:', sprintResourcesData);
 
@@ -248,7 +264,12 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           .from('sprint_resources')
           .insert(sprintResourcesData);
 
-        if (resourcesError) throw resourcesError;
+        if (resourcesError) {
+          console.error('Error inserting sprint resources:', resourcesError);
+          throw resourcesError;
+        }
+
+        console.log('Successfully inserted sprint resources');
       }
 
       set((state) => ({
@@ -257,9 +278,10 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
         ),
       }));
 
+      console.log('Sprint store updated successfully');
       toast.success("Sprint mis à jour avec succès!");
     } catch (error) {
-      console.error('Error updating sprint:', error);
+      console.error('Error in updateSprint:', error);
       toast.error("Erreur lors de la mise à jour du sprint");
       throw error;
     }
