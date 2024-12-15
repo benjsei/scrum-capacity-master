@@ -93,28 +93,8 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     try {
       console.log('Starting to save sprint with resources:', editedSprint.resources);
 
-      // First, save any temporary resources
-      const resourcePromises = editedSprint.resources
-        .filter(r => r.isTemporary)
-        .map(async (resource) => {
-          console.log('Saving temporary resource:', resource);
-          const savedResource = await addResource({
-            id: resource.id,
-            name: resource.name,
-            capacityPerDay: resource.capacityPerDay,
-            teamId: resource.teamId
-          });
-          return savedResource;
-        });
-
-      const savedResources = await Promise.all(resourcePromises);
-      console.log('Saved temporary resources:', savedResources);
-
       // Update resources array with saved resources
-      const updatedResources = editedSprint.resources.map(resource => {
-        const savedResource = savedResources.find(sr => sr.id === resource.id);
-        return savedResource || resource;
-      });
+      const updatedResources = editedSprint.resources;
 
       // Calculate success based on story points completed
       let updatedFields: Partial<Sprint> = {

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Sprint, Resource, SprintResourceData } from '../types/sprint';
+import { Sprint, Resource, ResourceDailyCapacity } from '../types/sprint';
 import { useScrumTeamStore } from './scrumTeamStore';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,14 @@ const mapDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapacity[]): Jso
     date: dc.date,
     capacity: dc.capacity
   })) as Json;
+};
+
+const mapJsonToDailyCapacities = (json: Json): ResourceDailyCapacity[] => {
+  if (!Array.isArray(json)) return [];
+  return json.map(item => ({
+    date: item.date as string,
+    capacity: item.capacity as number
+  }));
 };
 
 interface SprintStore {
