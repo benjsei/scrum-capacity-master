@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import TeamDetails from "./pages/TeamDetails";
 import TeamPractices from "./pages/TeamPractices";
+import ManagerList from "./pages/ManagerList";
 
 const queryClient = new QueryClient();
 
@@ -16,7 +17,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<ManagerList />} />
+          <Route path="/teams" element={<Index />} />
           <Route path="/team/:teamId" element={<TeamDetails />} />
           <Route path="/team/:teamId/practices" element={<TeamPractices />} />
         </Routes>

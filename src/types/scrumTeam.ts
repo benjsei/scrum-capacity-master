@@ -2,6 +2,7 @@ export interface ScrumTeam {
   id: string;
   name: string;
   createdAt: string;
+  managerId?: string;
   resources: Resource[];
 }
 

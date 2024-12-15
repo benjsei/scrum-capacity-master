@@ -98,6 +98,24 @@ export type Database = {
         }
         Relationships: []
       }
+      managers: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       resources: {
         Row: {
           capacity_per_day: number | null
@@ -223,19 +241,30 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          manager_id: string | null
           name: string
         }
         Insert: {
           created_at?: string | null
           id?: string
+          manager_id?: string | null
           name: string
         }
         Update: {
           created_at?: string | null
           id?: string
+          manager_id?: string | null
           name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "teams_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "managers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
