@@ -58,7 +58,12 @@ const NextPracticeCard = ({ practice, teamId, onToggleCompletion, onUpdateUrl }:
               {practice.subActions && (
                 <div className="text-muted-foreground">{practice.subActions}</div>
               )}
-              <div className="text-sm text-muted-foreground">
+              {practice.description && (
+                <div className="mt-2 text-sm text-muted-foreground whitespace-pre-line">
+                  {practice.description}
+                </div>
+              )}
+              <div className="text-sm text-muted-foreground mt-1">
                 Jour {practice.day}
                 {practice.format && ` • ${practice.format}`}
                 {practice.duration && ` • ${practice.duration}`}

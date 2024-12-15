@@ -92,6 +92,11 @@ const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
                       {practice.subActions && (
                         <span className="text-sm text-muted-foreground">{practice.subActions}</span>
                       )}
+                      {practice.description && (
+                        <div className="mt-2 text-sm text-muted-foreground whitespace-pre-line">
+                          {practice.description}
+                        </div>
+                      )}
                       {practice.format && practice.duration && (
                         <span className="text-sm text-muted-foreground">
                           {practice.format} • {practice.duration}
