@@ -2,10 +2,45 @@ import { TeamManagement } from "./TeamManagement";
 import { TeamPodium } from "./TeamPodium";
 import { TeamProgressChart } from "./TeamProgressChart";
 import { TeamVelocityChart } from "./TeamVelocityChart";
+import { Button } from "./ui/button";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useManagerStore } from "@/store/managerStore";
+import { useScrumTeamStore } from "@/store/scrumTeamStore";
 
 export const IndexContent = () => {
+  const navigate = useNavigate();
+  const { managers } = useManagerStore();
+  const { teams } = useScrumTeamStore();
+
+  const getManagerName = (teamManagerId: string | undefined) => {
+    if (!teamManagerId) return "Sans manager";
+    const manager = managers.find(m => m.id === teamManagerId);
+    return manager ? manager.name : "Sans manager";
+  };
+
+  const uniqueManagerIds = [...new Set(teams.map(team => team.managerId))];
+  const managerNames = uniqueManagerIds
+    .map(id => getManagerName(id))
+    .join(", ");
+
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate("/managers")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-xl font-semibold">
+            Équipes {managerNames ? `(${managerNames})` : ""}
+          </h2>
+        </div>
+      </div>
+
       <div>
         <h2 className="text-xl font-semibold mb-4">Gestion des équipes</h2>
         <TeamManagement />

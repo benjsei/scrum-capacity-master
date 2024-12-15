@@ -2,10 +2,10 @@ import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 
-interface Manager {
+export interface Manager {
   id: string;
   name: string;
-  createdAt: string;
+  createdAt: string | null;
 }
 
 interface ManagerStore {
@@ -27,7 +27,13 @@ export const useManagerStore = create<ManagerStore>((set) => ({
         
       if (error) throw error;
       
-      set({ managers: data });
+      set({ 
+        managers: data.map(manager => ({
+          id: manager.id,
+          name: manager.name,
+          createdAt: manager.created_at
+        }))
+      });
     } catch (error) {
       console.error('Error loading managers:', error);
       toast.error("Erreur lors du chargement des managers");
@@ -45,7 +51,11 @@ export const useManagerStore = create<ManagerStore>((set) => ({
       if (error) throw error;
       
       set(state => ({
-        managers: [...state.managers, data]
+        managers: [...state.managers, {
+          id: data.id,
+          name: data.name,
+          createdAt: data.created_at
+        }]
       }));
       
       toast.success("Manager ajouté avec succès");
