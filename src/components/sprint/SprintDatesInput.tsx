@@ -17,7 +17,7 @@ export const SprintDatesInput = ({
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
-        <Label htmlFor="startDate">Date de début</Label>
+        <Label htmlFor="startDate">Start Date</Label>
         <Input
           id="startDate"
           type="date"
@@ -27,7 +27,7 @@ export const SprintDatesInput = ({
         />
       </div>
       <div>
-        <Label htmlFor="duration">Durée (jours)</Label>
+        <Label htmlFor="duration">Duration (days)</Label>
         <Input
           id="duration"
           type="number"

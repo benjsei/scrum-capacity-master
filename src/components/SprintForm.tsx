@@ -18,7 +18,7 @@ interface SprintFormProps {
 
 export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [startDate, setStartDate] = useState('');
-  const [duration, setDuration] = useState('14');
+  const [duration, setDuration] = useState('10');
   const [resources, setResources] = useState<Resource[]>([]);
   const [storyPoints, setStoryPoints] = useState('');
   const [objective, setObjective] = useState('');
@@ -38,47 +38,34 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   // Initialize form with team resources when activeTeam changes
   useEffect(() => {
     if (activeTeam?.resources) {
-      // Find the most recent sprint for the team
-      const sortedSprints = [...teamSprints].sort((a, b) => 
-        new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
-      );
-      const mostRecentSprint = sortedSprints[0];
-
-      let defaultStartDate: Date;
-      if (mostRecentSprint) {
-        // Set start date to the day after the most recent sprint's end date
-        defaultStartDate = new Date(mostRecentSprint.endDate);
-        defaultStartDate.setDate(defaultStartDate.getDate() + 1);
-      } else {
-        // If no previous sprint exists, set start date to tomorrow
-        defaultStartDate = new Date();
-        defaultStartDate.setDate(defaultStartDate.getDate() + 1);
-      }
-
-      const startDateStr = defaultStartDate.toISOString().split('T')[0];
-      setStartDate(startDateStr);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      
+      setStartDate(tomorrowStr);
+      setDuration('14');
 
       const initializedResources = initializeSprintResources(
         activeTeam.resources,
-        startDateStr,
+        tomorrowStr,
         14
       );
       setResources(initializedResources);
     }
-  }, [activeTeam, teamSprints]);
+  }, [activeTeam]);
 
   // Update daily capacities when start date or duration changes
   useEffect(() => {
-    if (startDate && duration && activeTeam?.resources) {
+    if (startDate && duration && resources.length > 0) {
       const updatedResources = initializeSprintResources(
-        resources.length > 0 ? resources : activeTeam.resources,
+        resources,
         startDate,
         parseInt(duration),
-        true
+        true // Force recalculation of daily capacities
       );
       setResources(updatedResources);
     }
-  }, [startDate, duration, activeTeam?.resources]);
+  }, [startDate, duration]);
 
   useEffect(() => {
     if (duration && resources.length > 0) {
@@ -202,7 +189,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
         />
 
         <Button type="submit" className="w-full">
-          Créer le sprint
+          Create Sprint
         </Button>
       </form>
     </Card>
