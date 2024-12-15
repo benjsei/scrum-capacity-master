@@ -24,7 +24,6 @@ export const SprintDatesInput = ({
           value={startDate}
           onChange={(e) => onStartDateChange(e.target.value)}
           required
-          min={new Date().toISOString().split('T')[0]} // Prevent past dates
         />
       </div>
       <div>

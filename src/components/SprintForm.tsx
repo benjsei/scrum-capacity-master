@@ -18,7 +18,7 @@ interface SprintFormProps {
 
 export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [startDate, setStartDate] = useState('');
-  const [duration, setDuration] = useState('10');
+  const [duration, setDuration] = useState('14');
   const [resources, setResources] = useState<Resource[]>([]);
   const [storyPoints, setStoryPoints] = useState('');
   const [objective, setObjective] = useState('');
@@ -57,7 +57,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
 
       const startDateStr = defaultStartDate.toISOString().split('T')[0];
       setStartDate(startDateStr);
-      setDuration('14');
 
       const initializedResources = initializeSprintResources(
         activeTeam.resources,
@@ -70,16 +69,16 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
 
   // Update daily capacities when start date or duration changes
   useEffect(() => {
-    if (startDate && duration && resources.length > 0) {
+    if (startDate && duration && activeTeam?.resources) {
       const updatedResources = initializeSprintResources(
-        resources,
+        resources.length > 0 ? resources : activeTeam.resources,
         startDate,
         parseInt(duration),
-        true // Force recalculation of daily capacities
+        true
       );
       setResources(updatedResources);
     }
-  }, [startDate, duration]);
+  }, [startDate, duration, activeTeam?.resources]);
 
   useEffect(() => {
     if (duration && resources.length > 0) {
