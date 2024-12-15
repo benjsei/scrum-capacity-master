@@ -34,9 +34,8 @@ const TeamPractices = () => {
   useEffect(() => {
     if (activeTeam) {
       const practices = getPracticesForTeam(activeTeam.id);
-      console.log('Practices for team:', practices);
       // Initialize with all days expanded
-      const dayOrder = ["N", "N + 1", "N + 5", "N + 14"];
+      const dayOrder = ["N", "N+1", "N+5", "N+14"];
       setExpandedDays(dayOrder);
     }
   }, [activeTeam, getPracticesForTeam]);
@@ -49,7 +48,7 @@ const TeamPractices = () => {
   const practices = getPracticesForTeam(activeTeam.id);
   
   // Order days according to specification
-  const dayOrder = ["N", "N + 1", "N + 5", "N + 14"];
+  const dayOrder = ["N", "N+1", "N+5", "N+14"];
   
   // Group practices by day
   const practicesByDay = dayOrder.reduce((acc, day) => {
