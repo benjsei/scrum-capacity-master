@@ -75,18 +75,23 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
   }, [sprint.id, editedSprint.startDate, editedSprint.duration]);
 
   const handleSave = async () => {
+    console.log('handleSave called - Starting save process');
+    console.log('Current editedSprint state:', editedSprint);
+
     if (new Date(editedSprint.startDate) > new Date(editedSprint.endDate)) {
+      console.log('Save validation failed: End date before start date');
       toast.error("La date de fin doit être après la date de début");
       return;
     }
 
     if (editedSprint.objective && editedSprint.objective.length > 300) {
+      console.log('Save validation failed: Objective too long');
       toast.error("L'objectif ne peut pas dépasser 300 caractères");
       return;
     }
 
     try {
-      console.log('Saving sprint with resources:', editedSprint.resources);
+      console.log('Starting to save sprint with resources:', editedSprint.resources);
 
       // First, save any temporary resources
       const resourcePromises = editedSprint.resources
@@ -133,6 +138,7 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
       console.log('Updating sprint with data:', updatedFields);
       await updateSprint(sprint.id, updatedFields);
       
+      console.log('Sprint successfully updated');
       toast.success("Sprint mis à jour avec succès!");
       onSave();
     } catch (error) {
@@ -185,10 +191,13 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
               <Input
                 type="date"
                 value={editedSprint.startDate}
-                onChange={(e) => setEditedSprint(prev => ({
-                  ...prev,
-                  startDate: e.target.value
-                }))}
+                onChange={(e) => {
+                  console.log('Changing start date to:', e.target.value);
+                  setEditedSprint(prev => ({
+                    ...prev,
+                    startDate: e.target.value
+                  }));
+                }}
               />
             </div>
             <div>
@@ -197,10 +206,13 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
                 type="number"
                 min="1"
                 value={editedSprint.duration}
-                onChange={(e) => setEditedSprint(prev => ({
-                  ...prev,
-                  duration: Number(e.target.value)
-                }))}
+                onChange={(e) => {
+                  console.log('Changing duration to:', e.target.value);
+                  setEditedSprint(prev => ({
+                    ...prev,
+                    duration: Number(e.target.value)
+                  }));
+                }}
               />
             </div>
           </div>
