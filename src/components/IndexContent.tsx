@@ -4,14 +4,20 @@ import { TeamProgressChart } from "./TeamProgressChart";
 import { TeamVelocityChart } from "./TeamVelocityChart";
 import { Button } from "./ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useManagerStore } from "@/store/managerStore";
 import { useScrumTeamStore } from "@/store/scrumTeamStore";
 
 export const IndexContent = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const managerId = searchParams.get('managerId');
   const { managers } = useManagerStore();
   const { teams } = useScrumTeamStore();
+
+  const filteredTeams = managerId 
+    ? teams.filter(team => team.managerId === managerId)
+    : teams;
 
   const getManagerName = (teamManagerId: string | undefined) => {
     if (!teamManagerId) return "Sans manager";
@@ -19,7 +25,7 @@ export const IndexContent = () => {
     return manager ? manager.name : "Sans manager";
   };
 
-  const uniqueManagerIds = [...new Set(teams.map(team => team.managerId))];
+  const uniqueManagerIds = [...new Set(filteredTeams.map(team => team.managerId))];
   const managerNames = uniqueManagerIds
     .map(id => getManagerName(id))
     .join(", ");
@@ -31,7 +37,7 @@ export const IndexContent = () => {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => navigate("/managers")}
+            onClick={() => navigate("/")}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -43,7 +49,7 @@ export const IndexContent = () => {
 
       <div>
         <h2 className="text-xl font-semibold mb-4">Gestion des équipes</h2>
-        <TeamManagement />
+        <TeamManagement managerId={managerId} />
       </div>
 
       <div>

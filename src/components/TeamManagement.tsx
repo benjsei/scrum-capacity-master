@@ -10,13 +10,21 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { ListTodo, SparklesIcon } from 'lucide-react';
 
-export const TeamManagement = () => {
+interface TeamManagementProps {
+  managerId: string | null;
+}
+
+export const TeamManagement = ({ managerId }: TeamManagementProps) => {
   const [newTeamName, setNewTeamName] = useState('');
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const { teams, addTeam, deleteTeam, setActiveTeam, activeTeam, updateTeamName } = useScrumTeamStore();
+  const { teams, addTeam, deleteTeam, setActiveTeam, updateTeamName } = useScrumTeamStore();
   const { getPracticesForTeam } = useAgilePracticesStore();
   const navigate = useNavigate();
+
+  const filteredTeams = managerId 
+    ? teams.filter(team => team.managerId === managerId)
+    : teams;
 
   const handleCreateTeam = (e?: React.FormEvent) => {
     if (e) {
@@ -33,6 +41,7 @@ export const TeamManagement = () => {
       name: newTeamName.trim(),
       createdAt: new Date().toISOString(),
       resources: [],
+      managerId: managerId || undefined,
     };
 
     addTeam(newTeam);
@@ -90,7 +99,7 @@ export const TeamManagement = () => {
         <div className="space-y-4">
           <h3 className="font-semibold">Teams</h3>
           <div className="space-y-2">
-            {teams.map((team) => (
+            {filteredTeams.map((team) => (
               <div key={team.id} className="flex items-center justify-between p-2 border rounded">
                 {editingTeamId === team.id ? (
                   <div className="flex gap-2 flex-1 mr-2">

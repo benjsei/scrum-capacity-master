@@ -63,7 +63,7 @@ export const ManagerManagement = () => {
                 <span className="font-medium">{manager.name}</span>
                 <div className="flex items-center gap-2">
                   <Link
-                    to="/teams"
+                    to={`/teams?managerId=${manager.id}`}
                     className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                   >
                     <Users className="h-4 w-4" />
