@@ -3,7 +3,6 @@ import { useManagerStore } from "../store/managerStore";
 import { ManagerManagement } from "@/components/ManagerManagement";
 import { ManagerProgressChart } from "@/components/ManagerProgressChart";
 import { ManagerVelocityChart } from "@/components/ManagerVelocityChart";
-import { Link } from "react-router-dom";
 
 const ManagerList = () => {
   const { loadManagers } = useManagerStore();
@@ -14,17 +13,13 @@ const ManagerList = () => {
 
   return (
     <div className="min-h-screen p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des managers</h1>
-        <Link
-          to="/teams"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-        >
-          Voir les équipes
-        </Link>
-      </div>
+      <header className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-primary">Pratiques et Capacité Scrum</h1>
+        <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
+      </header>
       
       <div className="space-y-6">
+        <h2 className="text-2xl font-bold">Gestion des managers</h2>
         <ManagerManagement />
         
         <div>

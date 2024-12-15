@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Trash2, Users } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAgilePracticesStore } from "../store/agilePracticesStore";
 import { useScrumTeamStore } from "../store/scrumTeamStore";
@@ -64,16 +64,18 @@ export const ManagerManagement = () => {
                 <div className="flex items-center gap-2">
                   <Link
                     to={`/teams?managerId=${manager.id}`}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                    className="text-sm"
                   >
-                    <Users className="h-4 w-4" />
+                    <Button variant="outline">
+                      Voir les équipes
+                    </Button>
                   </Link>
-                  <button
+                  <Button
+                    variant="destructive"
                     onClick={() => deleteManager(manager.id)}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors text-red-500"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                    Supprimer
+                  </Button>
                 </div>
               </div>
               <Progress value={getManagerProgress(manager.id)} className="h-2" />
