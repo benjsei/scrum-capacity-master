@@ -130,7 +130,7 @@ const NextPracticeCard = ({ practice, teamId, onToggleCompletion, onUpdateUrl }:
 
         {practice.description && (
           <div className="pt-4 border-t">
-            <div className="text-sm text-muted-foreground whitespace-pre-line pl-4">
+            <div className="text-sm text-muted-foreground whitespace-pre-line">
               {practice.description}
             </div>
           </div>
