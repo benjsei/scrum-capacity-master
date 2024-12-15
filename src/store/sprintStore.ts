@@ -111,20 +111,19 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
               capacity_per_day: resource.capacityPerDay,
               team_id: activeTeam.id
             })
-            .select()
-            .single();
+            .select('*');
 
           if (error) {
             console.error('Error saving resource:', error);
             throw error;
           }
           
-          if (!data) {
+          if (!data || data.length === 0) {
             throw new Error('No data returned from resource insert');
           }
 
-          console.log('Resource saved successfully:', data);
-          savedResourcesMap.set(resource.id, data);
+          console.log('Resource saved successfully:', data[0]);
+          savedResourcesMap.set(resource.id, data[0]);
         } catch (error) {
           console.error(`Failed to save resource ${resource.name}:`, error);
           throw error;
@@ -158,7 +157,10 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       // Map resources to their final IDs (either saved or existing)
       const resourcesWithFinalIds = sprint.resources.map(resource => {
         const savedResource = savedResourcesMap.get(resource.id);
-        return savedResource || resource;
+        return savedResource ? {
+          ...resource,
+          id: savedResource.id // Use the new ID from the saved resource
+        } : resource;
       });
 
       // Prepare sprint_resources data using final resource IDs
