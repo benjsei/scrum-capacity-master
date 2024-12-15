@@ -51,7 +51,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
             daily_capacities
           )
         `)
-        .order('start_date', { ascending: false }); // Sort sprints by start date, most recent first
+        .order('start_date', { ascending: false });
 
       if (sprintsError) throw sprintsError;
 
@@ -92,6 +92,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }
 
     try {
+      console.log('Starting to add sprint with data:', sprint);
+      
       // First, verify that all resources exist in the database
       const { data: existingResources, error: resourcesError } = await supabase
         .from('resources')
@@ -128,6 +130,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (sprintError) throw sprintError;
       if (!sprintData) throw new Error('No data returned from sprint insert');
 
+      console.log('Sprint created successfully:', sprintData);
+
       // Create sprint_resources only for valid resources
       if (validResources.length > 0) {
         const sprintResourcesData: SprintResourceData[] = validResources.map(resource => ({
@@ -136,11 +140,15 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
         }));
 
+        console.log('Inserting sprint resources:', sprintResourcesData);
+
         const { error: resourcesError } = await supabase
           .from('sprint_resources')
           .insert(sprintResourcesData);
 
         if (resourcesError) throw resourcesError;
+        
+        console.log('Sprint resources inserted successfully');
       }
 
       const newSprint = {
@@ -150,7 +158,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       };
 
       set((state) => ({
-        sprints: [newSprint, ...state.sprints], // Add new sprint at the beginning
+        sprints: [newSprint, ...state.sprints],
         activeSprint: newSprint,
       }));
 
@@ -158,47 +166,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     } catch (error) {
       console.error('Error adding sprint:', error);
       toast.error("Erreur lors de la création du sprint");
-    }
-  },
-
-  completeSprint: async (sprintId, storyPointsCompleted) => {
-    try {
-      const sprint = get().sprints.find(s => s.id === sprintId);
-      if (!sprint) throw new Error('Sprint not found');
-
-      const velocityAchieved = storyPointsCompleted / sprint.duration;
-      const commitmentRespected = (storyPointsCompleted / sprint.storyPointsCommitted) * 100;
-
-      const { error } = await supabase
-        .from('sprints')
-        .update({
-          story_points_completed: storyPointsCompleted,
-          velocity_achieved: velocityAchieved,
-          commitment_respected: commitmentRespected,
-          is_successful: true
-        })
-        .eq('id', sprintId);
-
-      if (error) throw error;
-
-      set((state) => ({
-        sprints: state.sprints.map((s) =>
-          s.id === sprintId
-            ? {
-                ...s,
-                storyPointsCompleted,
-                velocityAchieved,
-                commitmentRespected,
-                isSuccessful: true
-              }
-            : s
-        ),
-      }));
-
-      toast.success("Sprint terminé avec succès!");
-    } catch (error) {
-      console.error('Error completing sprint:', error);
-      toast.error("Erreur lors de la complétion du sprint");
     }
   },
 
@@ -223,7 +190,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           commitment_respected: updatedFields.commitmentRespected,
           is_successful: updatedFields.isSuccessful
         })
-        .eq('id', sprintId);
+        .eq('id', sprintId)
+        .select();
 
       if (sprintError) {
         console.error('Error updating sprint:', sprintError);
@@ -305,6 +273,47 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     } catch (error) {
       console.error('Error deleting sprint:', error);
       toast.error("Erreur lors de la suppression du sprint");
+    }
+  },
+
+  completeSprint: async (sprintId, storyPointsCompleted) => {
+    try {
+      const sprint = get().sprints.find(s => s.id === sprintId);
+      if (!sprint) throw new Error('Sprint not found');
+
+      const velocityAchieved = storyPointsCompleted / sprint.duration;
+      const commitmentRespected = (storyPointsCompleted / sprint.storyPointsCommitted) * 100;
+
+      const { error } = await supabase
+        .from('sprints')
+        .update({
+          story_points_completed: storyPointsCompleted,
+          velocity_achieved: velocityAchieved,
+          commitment_respected: commitmentRespected,
+          is_successful: true
+        })
+        .eq('id', sprintId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        sprints: state.sprints.map((s) =>
+          s.id === sprintId
+            ? {
+                ...s,
+                storyPointsCompleted,
+                velocityAchieved,
+                commitmentRespected,
+                isSuccessful: true
+              }
+            : s
+        ),
+      }));
+
+      toast.success("Sprint terminé avec succès!");
+    } catch (error) {
+      console.error('Error completing sprint:', error);
+      toast.error("Erreur lors de la complétion du sprint");
     }
   },
 
