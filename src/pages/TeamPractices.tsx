@@ -34,7 +34,6 @@ const TeamPractices = () => {
   useEffect(() => {
     if (activeTeam) {
       const practices = getPracticesForTeam(activeTeam.id);
-      // Initialize with all days expanded
       const dayOrder = ["N", "N+1", "N+5", "N+14"];
       setExpandedDays(dayOrder);
     }
@@ -54,11 +53,8 @@ const TeamPractices = () => {
   };
 
   const practices = getPracticesForTeam(activeTeam.id);
-  
-  // Order days according to specification
   const dayOrder = ["N", "N+1", "N+5", "N+14"];
   
-  // Group practices by day
   const practicesByDay = dayOrder.reduce((acc, day) => {
     const dayPractices = practices.filter(practice => practice.day === day);
     if (dayPractices.length > 0) {
@@ -76,23 +72,20 @@ const TeamPractices = () => {
     ? Math.round(practices.filter(p => p.isCompleted).length / practices.length * 100)
     : 0;
 
-  // Find first incomplete practice
   const firstIncompletePractice = practices.find(p => !p.isCompleted);
 
   return (
     <div className="min-h-screen p-6">
-      <header className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={handleBack} className="shrink-0">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-primary mb-2">Pratiques et Capacité Scrum</h1>
+        <p className="text-muted-foreground mb-4">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-primary">Pratiques et Capacité Scrum</h1>
-            <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
-          </div>
+          <DayProgressCard progress={totalProgress} />
         </div>
-        <DayProgressCard progress={totalProgress} />
-      </header>
+      </div>
 
       {firstIncompletePractice && (
         <NextPracticeCard

@@ -35,25 +35,22 @@ const TeamDetails = () => {
 
   return (
     <div className="min-h-screen p-6">
-      <header className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={handleBack} className="shrink-0">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-primary mb-2">Pratiques et Capacité Scrum</h1>
+        <p className="text-muted-foreground mb-4">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-primary">Pratiques et Capacité Scrum</h1>
-            <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
-          </div>
+          <Button 
+            variant="outline"
+            onClick={() => setShowResourceManagement(true)}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Ressources
+          </Button>
         </div>
-        <Button 
-          variant="outline"
-          onClick={() => setShowResourceManagement(true)}
-          className="shrink-0"
-        >
-          <Users className="h-4 w-4 mr-2" />
-          Ressources
-        </Button>
-      </header>
+      </div>
 
       <div className="space-y-6">
         {canCreateNewSprint() && !showSprintForm && (

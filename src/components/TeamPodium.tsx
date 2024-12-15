@@ -1,10 +1,12 @@
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
 import { Trophy } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 
 export const TeamPodium = () => {
   const { teams } = useScrumTeamStore();
   const { sprints } = useSprintStore();
+  const { managerId } = useParams();
 
   const calculateTeamVelocity = (teamId: string) => {
     const teamSprints = sprints.filter(s => s.teamId === teamId && s.velocityAchieved !== undefined);
@@ -15,6 +17,7 @@ export const TeamPodium = () => {
   };
 
   const topTeams = teams
+    .filter(team => team.managerId === managerId)
     .map(team => ({
       ...team,
       velocity: calculateTeamVelocity(team.id)

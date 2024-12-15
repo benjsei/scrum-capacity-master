@@ -4,16 +4,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useParams } from 'react-router-dom';
 
 export const TeamProgressChart = () => {
   const { teams } = useScrumTeamStore();
   const { getPracticesForTeam } = useAgilePracticesStore();
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const { managerId } = useParams();
 
-  // Initialize with all teams selected
+  const managerTeams = teams.filter(team => team.managerId === managerId);
+
+  // Initialize with all manager's teams selected
   useEffect(() => {
-    setSelectedTeams(teams.map(t => t.id));
-  }, [teams]);
+    setSelectedTeams(managerTeams.map(t => t.id));
+  }, [managerTeams]);
 
   const toggleTeam = (teamId: string) => {
     setSelectedTeams(prev =>
@@ -29,7 +33,7 @@ export const TeamProgressChart = () => {
     return Math.round((practices.filter(p => p.isCompleted).length / practices.length) * 100);
   };
 
-  const chartData = teams
+  const chartData = managerTeams
     .filter(team => selectedTeams.includes(team.id))
     .map(team => ({
       name: team.name,
@@ -40,7 +44,7 @@ export const TeamProgressChart = () => {
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4">Progression des pratiques par équipe</h3>
       <div className="flex flex-wrap gap-4 mb-4">
-        {teams.map((team) => (
+        {managerTeams.map((team) => (
           <div key={team.id} className="flex items-center space-x-2">
             <Checkbox
               id={`team-${team.id}`}

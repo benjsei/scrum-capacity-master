@@ -4,15 +4,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useSprintStore } from '../store/sprintStore';
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useParams } from 'react-router-dom';
 
 export const TeamVelocityChart = () => {
   const { sprints } = useSprintStore();
   const { teams } = useScrumTeamStore();
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const { managerId } = useParams();
+
+  const managerTeams = teams.filter(team => team.managerId === managerId);
 
   useEffect(() => {
-    setSelectedTeams(teams.map(t => t.id));
-  }, [teams]);
+    setSelectedTeams(managerTeams.map(t => t.id));
+  }, [managerTeams]);
 
   const toggleTeam = (teamId: string) => {
     setSelectedTeams(prev =>
@@ -28,9 +32,9 @@ export const TeamVelocityChart = () => {
     .map(date => {
       const dataPoint: any = { 
         date: new Date(date).toLocaleDateString(),
-        originalDate: new Date(date), // Used for sorting
+        originalDate: new Date(date),
       };
-      teams.forEach(team => {
+      managerTeams.forEach(team => {
         const teamSprint = sprints.find(sprint => 
           sprint.teamId === team.id && 
           sprint.startDate === date &&
@@ -43,7 +47,7 @@ export const TeamVelocityChart = () => {
       return dataPoint;
     })
     .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime())
-    .map(({ date, originalDate, ...rest }) => ({ date, ...rest })); // Remove originalDate after sorting
+    .map(({ date, originalDate, ...rest }) => ({ date, ...rest }));
 
   const colors = [
     '#1E40AF', '#15803D', '#B91C1C', '#6B21A8', '#C2410C',
@@ -54,7 +58,7 @@ export const TeamVelocityChart = () => {
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4">Vélocité par équipe (SP/JH)</h3>
       <div className="flex flex-wrap gap-4 mb-4">
-        {teams.map((team, index) => (
+        {managerTeams.map((team, index) => (
           <div key={team.id} className="flex items-center space-x-2">
             <Checkbox
               id={`team-${team.id}`}
@@ -79,7 +83,7 @@ export const TeamVelocityChart = () => {
             <YAxis />
             <Tooltip />
             <Legend />
-            {teams.map((team, index) => (
+            {managerTeams.map((team, index) => (
               selectedTeams.includes(team.id) && (
                 <Line
                   key={team.id}
