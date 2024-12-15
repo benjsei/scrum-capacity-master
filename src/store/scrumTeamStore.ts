@@ -44,7 +44,8 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
           capacityPerDay: resource.capacity_per_day || 1,
           teamId: resource.team_id
         })) || [],
-        createdAt: team.created_at
+        createdAt: team.created_at,
+        managerId: team.manager_id
       })) });
     } catch (error) {
       console.error('Error loading teams:', error);
@@ -55,7 +56,10 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('teams')
-        .insert([{ name: team.name }])
+        .insert([{ 
+          name: team.name,
+          manager_id: team.managerId // Ensure managerId is included in the insert
+        }])
         .select()
         .single();
 
@@ -63,10 +67,17 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
       if (!data) throw new Error('No data returned from insert');
 
       set((state) => ({ 
-        teams: [...state.teams, { ...team, id: data.id }] 
+        teams: [...state.teams, { 
+          ...team, 
+          id: data.id,
+          managerId: data.manager_id // Make sure to include managerId in the state
+        }] 
       }));
+
+      toast.success('Équipe créée avec succès');
     } catch (error) {
       console.error('Error adding team:', error);
+      toast.error('Erreur lors de la création de l\'équipe');
     }
   },
 
