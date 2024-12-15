@@ -42,37 +42,34 @@ const NextPracticeCard = ({ practice, teamId, onToggleCompletion, onUpdateUrl }:
 
   return (
     <Card className="p-6 border-2 border-primary">
-      <div className="flex items-center gap-2 text-primary mb-4">
+      <div className="flex items-center gap-2 text-primary mb-6">
         <AlertCircle className="h-5 w-5" />
         <h2 className="text-lg font-semibold">Prochaine pratique à réaliser</h2>
       </div>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1">
+
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-8">
+          <div className="flex items-start gap-4 flex-1">
             <Checkbox
               checked={practice.isCompleted}
               onCheckedChange={() => onToggleCompletion(teamId, practice.id)}
+              className="mt-1"
             />
-            <div>
-              <div className="font-medium">{practice.action}</div>
+            <div className="space-y-2">
+              <div className="font-medium text-lg">{practice.action}</div>
               {practice.subActions && (
                 <div className="text-muted-foreground">{practice.subActions}</div>
               )}
-              {practice.description && (
-                <div className="mt-2 text-sm text-muted-foreground whitespace-pre-line">
-                  {practice.description}
-                </div>
-              )}
-              <div className="text-sm text-muted-foreground mt-1">
+              <div className="text-sm text-muted-foreground">
                 Jour {practice.day}
                 {practice.format && ` • ${practice.format}`}
                 {practice.duration && ` • ${practice.duration}`}
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-center gap-1 min-w-[100px]">
+          <div className="flex flex-col items-center gap-2 min-w-[120px]">
             {getWhoIcon(practice.who)}
-            <span className="text-sm font-medium text-muted-foreground">{practice.who}</span>
+            <span className="text-sm font-medium text-muted-foreground text-center">{practice.who}</span>
           </div>
         </div>
 
@@ -130,6 +127,14 @@ const NextPracticeCard = ({ practice, teamId, onToggleCompletion, onUpdateUrl }:
             </div>
           )}
         </div>
+
+        {practice.description && (
+          <div className="pt-4 border-t">
+            <div className="text-sm text-muted-foreground whitespace-pre-line pl-4">
+              {practice.description}
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   );
