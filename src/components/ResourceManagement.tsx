@@ -3,15 +3,14 @@ import { Input } from "./ui/input";
 import { useResourceStore } from "../store/resourceStore";
 import { useScrumTeamStore } from "../store/scrumTeamStore";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const ResourceManagement = () => {
-  const { resources, setResources, updateResource, deleteResource } = useResourceStore();
+  const { resources, setResources, updateResource, deleteResource, addResource } = useResourceStore();
   const { activeTeam, loadTeams } = useScrumTeamStore();
 
-  // Load resources when component mounts or when activeTeam changes
   useEffect(() => {
     const loadResources = async () => {
       if (!activeTeam) return;
@@ -85,6 +84,29 @@ export const ResourceManagement = () => {
     }
   };
 
+  const handleAddResource = async () => {
+    if (!activeTeam) {
+      toast.error("Veuillez sélectionner une équipe");
+      return;
+    }
+
+    try {
+      const newResource = {
+        id: crypto.randomUUID(),
+        name: "Nouvelle ressource",
+        capacityPerDay: 1,
+        teamId: activeTeam.id
+      };
+      
+      await addResource(newResource);
+      await loadTeams();
+      toast.success("Ressource ajoutée");
+    } catch (error) {
+      console.error('Error adding resource:', error);
+      toast.error("Erreur lors de l'ajout de la ressource");
+    }
+  };
+
   // Filtrer les ressources pour n'afficher que celles de l'équipe active
   const teamResources = resources.filter(r => 
     activeTeam ? r.teamId === activeTeam.id : false
@@ -100,6 +122,17 @@ export const ResourceManagement = () => {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Ressources de l'équipe</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAddResource}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Ajouter une ressource
+        </Button>
+      </div>
       <div className="space-y-2">
         {teamResources.map((resource) => (
           <div key={resource.id} className="flex items-center gap-2">
