@@ -15,10 +15,10 @@ const mapDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapacity[]): Jso
 const mapJsonToDailyCapacities = (json: Json): ResourceDailyCapacity[] => {
   if (!Array.isArray(json)) return [];
   return json.map(item => {
-    if (typeof item === 'object' && item !== null) {
+    if (typeof item === 'object' && item !== null && 'date' in item && 'capacity' in item) {
       return {
-        date: String(item.date || ''),
-        capacity: Number(item.capacity || 0)
+        date: String(item.date),
+        capacity: Number(item.capacity)
       };
     }
     return { date: '', capacity: 0 };
