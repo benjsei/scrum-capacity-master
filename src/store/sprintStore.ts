@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Sprint, Resource, ResourceDailyCapacity, SprintResourceData } from '../types/sprint';
+import { Sprint, Resource, SprintResourceData } from '../types/sprint';
 import { useScrumTeamStore } from './scrumTeamStore';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
@@ -10,14 +10,6 @@ const mapDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapacity[]): Jso
     date: dc.date,
     capacity: dc.capacity
   })) as Json;
-};
-
-const mapJsonToDailyCapacities = (json: any): ResourceDailyCapacity[] => {
-  if (!json) return [];
-  return json.map((dc: any) => ({
-    date: dc.date,
-    capacity: dc.capacity
-  }));
 };
 
 interface SprintStore {
@@ -93,45 +85,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
     try {
       console.log('Starting to add sprint with data:', sprint);
-      
-      // First, save any temporary resources and collect their IDs
-      const temporaryResources = sprint.resources.filter(r => r.isTemporary === true);
-      console.log('Temporary resources to save:', temporaryResources);
-
-      const savedResourcesMap = new Map();
-
-      // Save each resource individually for better error handling
-      for (const resource of temporaryResources) {
-        try {
-          console.log('Saving temporary resource:', resource);
-          const { data, error } = await supabase
-            .from('resources')
-            .insert({
-              name: resource.name,
-              capacity_per_day: resource.capacityPerDay,
-              team_id: activeTeam.id
-            })
-            .select('*')
-            .single();
-
-          if (error) {
-            console.error('Error saving resource:', error);
-            throw error;
-          }
-          
-          if (!data) {
-            throw new Error('No data returned from resource insert');
-          }
-
-          console.log('Resource saved successfully:', data);
-          savedResourcesMap.set(resource.id, data);
-        } catch (error) {
-          console.error(`Failed to save resource ${resource.name}:`, error);
-          throw error;
-        }
-      }
-
-      console.log('All temporary resources saved:', Array.from(savedResourcesMap.values()));
 
       // Create the sprint
       const { data: sprintData, error: sprintError } = await supabase
@@ -155,20 +108,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       console.log('Sprint created successfully:', sprintData);
 
-      // Map resources to their final IDs (either saved or existing)
-      const resourcesWithFinalIds = sprint.resources.map(resource => {
-        const savedResource = savedResourcesMap.get(resource.id);
-        return savedResource ? {
-          ...resource,
-          id: savedResource.id,
-          isTemporary: false // Reset isTemporary flag after saving
-        } : resource;
-      });
-
-      console.log('Resources with final IDs:', resourcesWithFinalIds);
-
-      // Prepare sprint_resources data using final resource IDs
-      const sprintResourcesData: SprintResourceData[] = resourcesWithFinalIds.map(resource => ({
+      // Prepare sprint_resources data
+      const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
         sprint_id: sprintData.id,
         resource_id: resource.id,
         daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
@@ -197,8 +138,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       const newSprint = {
         ...sprint,
-        id: sprintData.id,
-        resources: resourcesWithFinalIds
+        id: sprintData.id
       };
 
       set((state) => ({

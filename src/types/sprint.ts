@@ -11,7 +11,6 @@ export interface Resource {
   capacityPerDay: number;
   teamId?: string;
   dailyCapacities?: ResourceDailyCapacity[];
-  isTemporary?: boolean;
 }
 
 export interface Sprint {

@@ -10,6 +10,7 @@ import { SprintCapacityInfo } from './sprint/SprintCapacityInfo';
 import { SprintResourcesSection } from './sprint/SprintResourcesSection';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
+import { initializeSprintResources } from '@/utils/sprintResourcesUtils';
 
 interface SprintFormProps {
   onComplete: () => void;
@@ -24,7 +25,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [showDailyCapacities, setShowDailyCapacities] = useState(false);
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
   const [resourcePresenceDays, setResourcePresenceDays] = useState<{ [key: string]: number }>({});
-  const [isInitialized, setIsInitialized] = useState(false);
 
   const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, loadSprints, getActiveTeamSprints } = useSprintStore();
   const { activeTeam } = useScrumTeamStore();
@@ -36,59 +36,37 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     loadSprints();
   }, [loadSprints]);
 
-  // Initialize form with default values only once
+  // Initialize form with default values
   useEffect(() => {
-    if (!isInitialized && activeTeam) {
-      if (teamSprints.length > 0) {
-        const lastSprint = teamSprints[teamSprints.length - 1];
-        const nextDay = new Date(lastSprint.endDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        setStartDate(nextDay.toISOString().split('T')[0]);
-        setDuration(lastSprint.duration.toString());
-        
-        const lastSprintResources = lastSprint.resources.map(resource => ({
-          ...resource,
-          dailyCapacities: []
-        }));
-        setResources(lastSprintResources);
-      } else {
-        const today = new Date();
-        today.setDate(today.getDate() + 1);
-        setStartDate(today.toISOString().split('T')[0]);
-        setDuration('14');
-      }
-      setIsInitialized(true);
-    }
-  }, [activeTeam, teamSprints, isInitialized]);
+    if (activeTeam) {
+      // Set default start date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setStartDate(tomorrow.toISOString().split('T')[0]);
+      
+      // Set default duration
+      setDuration('14');
 
-  // Update daily capacities when start date, duration or resources change
+      // Initialize resources with all team resources
+      if (activeTeam.resources) {
+        const initializedResources = initializeSprintResources(
+          activeTeam.resources,
+          tomorrow.toISOString().split('T')[0],
+          14
+        );
+        setResources(initializedResources);
+      }
+    }
+  }, [activeTeam]);
+
+  // Update daily capacities when start date or duration changes
   useEffect(() => {
     if (startDate && duration && resources.length > 0) {
-      const updatedResources = resources.map(resource => {
-        const start = new Date(startDate);
-        const dailyCapacities = [];
-        
-        for (let i = 0; i < parseInt(duration); i++) {
-          const currentDate = new Date(start);
-          currentDate.setDate(start.getDate() + i);
-          const dateStr = currentDate.toISOString().split('T')[0];
-          
-          const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-          const defaultCapacity = isWeekend ? 0 : resource.capacityPerDay;
-          
-          const existingCapacity = resource.dailyCapacities?.find(dc => dc.date === dateStr);
-          dailyCapacities.push({
-            date: dateStr,
-            capacity: existingCapacity?.capacity ?? defaultCapacity
-          });
-        }
-
-        return {
-          ...resource,
-          dailyCapacities
-        };
-      });
-
+      const updatedResources = initializeSprintResources(
+        resources,
+        startDate,
+        parseInt(duration)
+      );
       setResources(updatedResources);
     }
   }, [startDate, duration]);
@@ -107,41 +85,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     }
   }, [duration, resources, calculateTheoreticalCapacity]);
 
-  const handleAddResource = () => {
-    setResources([
-      ...resources,
-      { 
-        id: crypto.randomUUID(), // Generate proper UUID instead of numeric ID
-        name: '', 
-        capacityPerDay: 1, 
-        dailyCapacities: [] 
-      }
-    ]);
-  };
-
-  const handleResourceChange = (id: string, field: keyof Resource, value: string | number) => {
-    setResources(resources.map(resource =>
-      resource.id === id ? { ...resource, [field]: value } : resource
-    ));
-  };
-
-  const handleDailyCapacityChange = (resourceId: string, date: string, capacity: number) => {
-    setResources(resources.map(resource => {
-      if (resource.id === resourceId) {
-        const updatedCapacities = resource.dailyCapacities?.map(dc =>
-          dc.date === date ? { ...dc, capacity } : dc
-        ) || [];
-        return { ...resource, dailyCapacities: updatedCapacities };
-      }
-      return resource;
-    }));
-  };
-
-  const handleDeleteResource = (resourceId: string) => {
-    setResources(resources.filter(resource => resource.id !== resourceId));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!activeTeam) {
@@ -183,9 +127,14 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
       objective,
     };
 
-    addSprint(newSprint);
-    toast.success('Sprint créé avec succès!');
-    onComplete();
+    try {
+      await addSprint(newSprint);
+      toast.success('Sprint créé avec succès!');
+      onComplete();
+    } catch (error) {
+      console.error('Error creating sprint:', error);
+      toast.error("Erreur lors de la création du sprint");
+    }
   };
 
   return (
@@ -213,11 +162,27 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
           resources={resources}
           showDailyCapacities={showDailyCapacities}
           resourcePresenceDays={resourcePresenceDays}
-          onResourceChange={handleResourceChange}
-          onDailyCapacityChange={handleDailyCapacityChange}
+          onResourceChange={(id, field, value) => {
+            setResources(resources.map(resource =>
+              resource.id === id ? { ...resource, [field]: value } : resource
+            ));
+          }}
+          onDailyCapacityChange={(resourceId, date, capacity) => {
+            setResources(resources.map(resource =>
+              resource.id === resourceId
+                ? {
+                    ...resource,
+                    dailyCapacities: resource.dailyCapacities?.map(dc =>
+                      dc.date === date ? { ...dc, capacity } : dc
+                    ) || []
+                  }
+                : resource
+            ));
+          }}
           onToggleDailyCapacities={() => setShowDailyCapacities(!showDailyCapacities)}
-          onAddResource={handleAddResource}
-          onDeleteResource={handleDeleteResource}
+          onDeleteResource={(resourceId) => {
+            setResources(resources.filter(r => r.id !== resourceId));
+          }}
         />
 
         <SprintCapacityInfo
