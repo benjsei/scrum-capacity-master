@@ -282,7 +282,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       return acc + (resource.capacityPerDay * duration);
     }, 0);
 
-    return averageVelocity * totalResourceCapacity;
+    // Round to 2 decimal places to stay within the database field's precision
+    return Number((averageVelocity * totalResourceCapacity).toFixed(2));
   },
 
   getAverageVelocity: () => {

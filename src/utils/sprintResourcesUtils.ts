@@ -4,9 +4,10 @@ import { initializeDailyCapacities } from "./sprintUtils";
 export const initializeSprintResources = (
   teamResources: Resource[],
   startDate: string,
-  duration: number
+  duration: number,
+  forceRecalculation = false
 ): Resource[] => {
   return teamResources.map(resource => 
-    initializeDailyCapacities(resource, startDate, duration)
+    initializeDailyCapacities(resource, startDate, duration, forceRecalculation)
   );
 };
