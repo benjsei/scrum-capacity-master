@@ -3,6 +3,7 @@ import { useManagerStore } from "../store/managerStore";
 import { ManagerManagement } from "@/components/ManagerManagement";
 import { ManagerProgressChart } from "@/components/ManagerProgressChart";
 import { ManagerVelocityChart } from "@/components/ManagerVelocityChart";
+import { ManagerCommitmentChart } from "@/components/ManagerCommitmentChart";
 
 const ManagerList = () => {
   const { loadManagers } = useManagerStore();
@@ -30,6 +31,10 @@ const ManagerList = () => {
         <div>
           <h2 className="text-xl font-semibold mb-4">Vélocité par manager</h2>
           <ManagerVelocityChart />
+        </div>
+
+        <div>
+          <ManagerCommitmentChart />
         </div>
       </div>
     </div>

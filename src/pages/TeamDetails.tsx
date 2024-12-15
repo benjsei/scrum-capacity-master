@@ -3,6 +3,7 @@ import { SprintList } from "@/components/SprintList";
 import { VelocityChart } from "@/components/VelocityChart";
 import { TeamVelocityChart } from "@/components/TeamVelocityChart";
 import { CommitmentChart } from "@/components/CommitmentChart";
+import { TeamsCommitmentChart } from "@/components/TeamsCommitmentChart";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useSprintStore } from '../store/sprintStore';
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,10 @@ const TeamDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <VelocityChart />
           <CommitmentChart />
+        </div>
+
+        <div>
+          <TeamsCommitmentChart />
         </div>
       </div>
 
