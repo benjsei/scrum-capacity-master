@@ -4,14 +4,13 @@ import { TeamProgressChart } from "./TeamProgressChart";
 import { TeamVelocityChart } from "./TeamVelocityChart";
 import { Button } from "./ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useManagerStore } from "@/store/managerStore";
 import { useScrumTeamStore } from "@/store/scrumTeamStore";
 
 export const IndexContent = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const managerId = searchParams.get('managerId');
+  const { managerId } = useParams();
   const { managers } = useManagerStore();
   const { teams } = useScrumTeamStore();
 
@@ -25,10 +24,10 @@ export const IndexContent = () => {
     return manager ? manager.name : "Sans manager";
   };
 
-  const uniqueManagerIds = [...new Set(filteredTeams.map(team => team.managerId))];
-  const managerNames = uniqueManagerIds
-    .map(id => getManagerName(id))
-    .join(", ");
+  const currentManager = managerId ? managers.find(m => m.id === managerId) : null;
+  const pageTitle = currentManager 
+    ? `Équipes de ${currentManager.name}`
+    : "Toutes les équipes";
 
   return (
     <div className="space-y-6">
@@ -42,14 +41,14 @@ export const IndexContent = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h2 className="text-xl font-semibold">
-            Équipes {managerNames ? `(${managerNames})` : ""}
+            {pageTitle}
           </h2>
         </div>
       </div>
 
       <div>
         <h2 className="text-xl font-semibold mb-4">Gestion des équipes</h2>
-        <TeamManagement managerId={managerId} />
+        <TeamManagement managerId={managerId || null} />
       </div>
 
       <div>

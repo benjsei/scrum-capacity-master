@@ -63,7 +63,7 @@ export const ManagerManagement = () => {
                 <span className="font-medium">{manager.name}</span>
                 <div className="flex items-center gap-2">
                   <Link
-                    to={`/teams?managerId=${manager.id}`}
+                    to={`/teams/${manager.id}`}
                     className="text-sm"
                   >
                     <Button variant="outline">
