@@ -11,7 +11,9 @@ import { useScrumTeamStore } from "../store/scrumTeamStore";
 
 export const ManagerManagement = () => {
   const [newManagerName, setNewManagerName] = useState("");
-  const { managers, addManager, deleteManager } = useManagerStore();
+  const [editingManagerId, setEditingManagerId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const { managers, addManager, deleteManager, updateManagerName } = useManagerStore();
   const { teams } = useScrumTeamStore();
   const { getPracticesForTeam } = useAgilePracticesStore();
 
@@ -19,6 +21,18 @@ export const ManagerManagement = () => {
     if (newManagerName.trim()) {
       await addManager(newManagerName.trim());
       setNewManagerName("");
+    }
+  };
+
+  const handleStartEditing = (managerId: string, currentName: string) => {
+    setEditingManagerId(managerId);
+    setEditingName(currentName);
+  };
+
+  const handleSaveEdit = async (managerId: string) => {
+    if (editingName.trim()) {
+      await updateManagerName(managerId, editingName.trim());
+      setEditingManagerId(null);
     }
   };
 
@@ -60,7 +74,32 @@ export const ManagerManagement = () => {
           >
             <div className="flex-1 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-medium">{manager.name}</span>
+                {editingManagerId === manager.id ? (
+                  <div className="flex gap-2">
+                    <Input
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      className="max-w-[200px]"
+                    />
+                    <Button onClick={() => handleSaveEdit(manager.id)}>
+                      Enregistrer
+                    </Button>
+                    <Button variant="outline" onClick={() => setEditingManagerId(null)}>
+                      Annuler
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <span className="font-medium">{manager.name}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleStartEditing(manager.id, manager.name)}
+                    >
+                      Modifier
+                    </Button>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <Link
                     to={`/teams/${manager.id}`}

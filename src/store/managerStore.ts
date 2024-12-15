@@ -13,6 +13,7 @@ interface ManagerStore {
   loadManagers: () => Promise<void>;
   addManager: (name: string) => Promise<void>;
   deleteManager: (id: string) => Promise<void>;
+  updateManagerName: (id: string, name: string) => Promise<void>;
 }
 
 export const useManagerStore = create<ManagerStore>((set) => ({
@@ -62,6 +63,28 @@ export const useManagerStore = create<ManagerStore>((set) => ({
     } catch (error) {
       console.error('Error adding manager:', error);
       toast.error("Erreur lors de l'ajout du manager");
+    }
+  },
+  
+  updateManagerName: async (id: string, name: string) => {
+    try {
+      const { error } = await supabase
+        .from('managers')
+        .update({ name })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      set(state => ({
+        managers: state.managers.map(manager =>
+          manager.id === id ? { ...manager, name } : manager
+        )
+      }));
+      
+      toast.success("Nom du manager mis à jour avec succès");
+    } catch (error) {
+      console.error('Error updating manager:', error);
+      toast.error("Erreur lors de la mise à jour du nom du manager");
     }
   },
   

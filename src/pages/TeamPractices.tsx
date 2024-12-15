@@ -46,7 +46,6 @@ const TeamPractices = () => {
   }
 
   const handleBack = () => {
-    // Navigate back to the manager's team list if managerId exists
     if (activeTeam.managerId) {
       navigate(`/teams/${activeTeam.managerId}`);
     } else {
@@ -81,10 +80,10 @@ const TeamPractices = () => {
   const firstIncompletePractice = practices.find(p => !p.isCompleted);
 
   return (
-    <div className="min-h-screen p-6 space-y-6">
+    <div className="min-h-screen p-6">
       <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={handleBack}>
+          <Button variant="outline" size="icon" onClick={handleBack} className="shrink-0">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
