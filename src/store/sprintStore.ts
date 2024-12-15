@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Sprint, Resource, ResourceDailyCapacity } from '../types/sprint';
+import { Sprint, Resource, ResourceDailyCapacity, SprintResourceData } from '../types/sprint';
 import { useScrumTeamStore } from './scrumTeamStore';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
@@ -14,10 +14,15 @@ const mapDailyCapacitiesToJson = (dailyCapacities: ResourceDailyCapacity[]): Jso
 
 const mapJsonToDailyCapacities = (json: Json): ResourceDailyCapacity[] => {
   if (!Array.isArray(json)) return [];
-  return json.map(item => ({
-    date: item.date as string,
-    capacity: item.capacity as number
-  }));
+  return json.map(item => {
+    if (typeof item === 'object' && item !== null) {
+      return {
+        date: String(item.date || ''),
+        capacity: Number(item.capacity || 0)
+      };
+    }
+    return { date: '', capacity: 0 };
+  });
 };
 
 interface SprintStore {
@@ -167,33 +172,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       console.log('Starting updateSprint with ID:', sprintId);
       console.log('Updated fields:', updatedFields);
 
-      if (updatedFields.resources) {
-        // First, save any temporary resources
-        const resourcePromises = updatedFields.resources
-          .filter(r => r.isTemporary)
-          .map(async (resource) => {
-            console.log('Saving temporary resource:', resource);
-            const { data, error } = await supabase
-              .from('resources')
-              .insert({
-                id: resource.id,
-                name: resource.name,
-                capacity_per_day: resource.capacityPerDay,
-                team_id: resource.teamId
-              })
-              .select()
-              .single();
-
-            if (error) throw error;
-            if (!data) throw new Error('No data returned from resource insert');
-
-            console.log('Temporary resource saved successfully:', data);
-            return data;
-          });
-
-        await Promise.all(resourcePromises);
-      }
-
       // Update sprint basic info
       const { error: sprintError } = await supabase
         .from('sprints')
@@ -215,43 +193,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (sprintError) {
         console.error('Error updating sprint:', sprintError);
         throw sprintError;
-      }
-
-      if (updatedFields.resources) {
-        console.log('Updating sprint resources:', updatedFields.resources);
-        
-        // First, delete existing sprint resources
-        const { error: deleteError } = await supabase
-          .from('sprint_resources')
-          .delete()
-          .eq('sprint_id', sprintId);
-
-        if (deleteError) {
-          console.error('Error deleting existing sprint resources:', deleteError);
-          throw deleteError;
-        }
-
-        console.log('Successfully deleted existing sprint resources');
-
-        // Then, insert new sprint resources
-        const sprintResourcesData = updatedFields.resources.map(resource => ({
-          sprint_id: sprintId,
-          resource_id: resource.id,
-          daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
-        }));
-
-        console.log('Inserting sprint resources:', sprintResourcesData);
-
-        const { error: resourcesError } = await supabase
-          .from('sprint_resources')
-          .insert(sprintResourcesData);
-
-        if (resourcesError) {
-          console.error('Error inserting sprint resources:', resourcesError);
-          throw resourcesError;
-        }
-
-        console.log('Successfully inserted sprint resources');
       }
 
       set((state) => ({
