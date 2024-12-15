@@ -91,31 +91,28 @@ export const ManagerManagement = () => {
                 ) : (
                   <div className="flex items-center gap-4">
                     <span className="font-medium">{manager.name}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleStartEditing(manager.id, manager.name)}
-                    >
-                      Modifier
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Link to={`/teams/${manager.id}`}>
+                        <Button variant="outline">
+                          Équipes
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStartEditing(manager.id, manager.name)}
+                      >
+                        Modifier
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => deleteManager(manager.id)}
+                      >
+                        Supprimer
+                      </Button>
+                    </div>
                   </div>
                 )}
-                <div className="flex items-center gap-2">
-                  <Link
-                    to={`/teams/${manager.id}`}
-                    className="text-sm"
-                  >
-                    <Button variant="outline">
-                      Équipes
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="destructive"
-                    onClick={() => deleteManager(manager.id)}
-                  >
-                    Supprimer
-                  </Button>
-                </div>
               </div>
               <Progress value={getManagerProgress(manager.id)} className="h-2" />
             </div>
