@@ -98,30 +98,40 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       const temporaryResources = sprint.resources.filter(r => r.isTemporary);
       console.log('Temporary resources to save:', temporaryResources);
 
-      const savedResourcesPromises = temporaryResources.map(async (resource) => {
-        console.log('Saving temporary resource:', resource);
-        const { data, error } = await supabase
-          .from('resources')
-          .insert({
-            id: resource.id,
-            name: resource.name,
-            capacity_per_day: resource.capacityPerDay,
-            team_id: activeTeam.id
-          })
-          .select()
-          .single();
+      const savedResourcesMap = new Map();
 
-        if (error) {
-          console.error('Error saving resource:', error);
+      // Save each resource individually for better error handling
+      for (const resource of temporaryResources) {
+        try {
+          console.log('Saving temporary resource:', resource);
+          const { data, error } = await supabase
+            .from('resources')
+            .insert({
+              name: resource.name,
+              capacity_per_day: resource.capacityPerDay,
+              team_id: activeTeam.id
+            })
+            .select()
+            .single();
+
+          if (error) {
+            console.error('Error saving resource:', error);
+            throw error;
+          }
+          
+          if (!data) {
+            throw new Error('No data returned from resource insert');
+          }
+
+          console.log('Resource saved successfully:', data);
+          savedResourcesMap.set(resource.id, data);
+        } catch (error) {
+          console.error(`Failed to save resource ${resource.name}:`, error);
           throw error;
         }
-        
-        console.log('Resource saved successfully:', data);
-        return data;
-      });
+      }
 
-      const savedResources = await Promise.all(savedResourcesPromises);
-      console.log('All temporary resources saved:', savedResources);
+      console.log('All temporary resources saved:', Array.from(savedResourcesMap.values()));
 
       // Create the sprint
       const { data: sprintData, error: sprintError } = await supabase
@@ -145,8 +155,14 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       console.log('Sprint created successfully:', sprintData);
 
-      // Prepare sprint_resources data using all resources (both existing and newly saved)
-      const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
+      // Map resources to their final IDs (either saved or existing)
+      const resourcesWithFinalIds = sprint.resources.map(resource => {
+        const savedResource = savedResourcesMap.get(resource.id);
+        return savedResource || resource;
+      });
+
+      // Prepare sprint_resources data using final resource IDs
+      const sprintResourcesData: SprintResourceData[] = resourcesWithFinalIds.map(resource => ({
         sprint_id: sprintData.id,
         resource_id: resource.id,
         daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
@@ -156,13 +172,18 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       // Insert sprint_resources one by one to better handle errors
       for (const resourceData of sprintResourcesData) {
-        const { error: resourceError } = await supabase
-          .from('sprint_resources')
-          .insert(resourceData);
+        try {
+          const { error: resourceError } = await supabase
+            .from('sprint_resources')
+            .insert(resourceData);
 
-        if (resourceError) {
-          console.error('Error inserting sprint resource:', resourceError);
-          throw resourceError;
+          if (resourceError) {
+            console.error('Error inserting sprint resource:', resourceError);
+            throw resourceError;
+          }
+        } catch (error) {
+          console.error('Failed to insert sprint resource:', error);
+          throw error;
         }
       }
 
@@ -171,6 +192,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       const newSprint = {
         ...sprint,
         id: sprintData.id,
+        resources: resourcesWithFinalIds
       };
 
       set((state) => ({
