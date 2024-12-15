@@ -4,10 +4,10 @@ export const initializeDailyCapacities = (
   resource: Resource, 
   startDate: string, 
   duration: number,
-  existingCapacities = false
+  forceRecalculation = false
 ): Resource => {
   // Si la ressource a déjà des capacités et qu'on ne force pas la réinitialisation
-  if (resource.dailyCapacities && resource.dailyCapacities.length > 0 && !existingCapacities) {
+  if (resource.dailyCapacities && resource.dailyCapacities.length > 0 && !forceRecalculation) {
     return resource;
   }
 

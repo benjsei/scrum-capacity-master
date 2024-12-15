@@ -31,23 +31,17 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const averageVelocity = getAverageVelocity();
   const teamSprints = getActiveTeamSprints();
 
-  // Load sprints only once when component mounts
   useEffect(() => {
     loadSprints();
   }, [loadSprints]);
 
-  // Initialize form with default values
   useEffect(() => {
     if (activeTeam) {
-      // Set default start date to tomorrow
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setStartDate(tomorrow.toISOString().split('T')[0]);
-      
-      // Set default duration
       setDuration('14');
 
-      // Initialize resources with all team resources
       if (activeTeam.resources) {
         const initializedResources = initializeSprintResources(
           activeTeam.resources,
@@ -65,13 +59,13 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
       const updatedResources = initializeSprintResources(
         resources,
         startDate,
-        parseInt(duration)
+        parseInt(duration),
+        true // Force recalculation of daily capacities
       );
       setResources(updatedResources);
     }
   }, [startDate, duration]);
 
-  // Calculate theoretical capacity and resource presence days
   useEffect(() => {
     if (duration && resources.length > 0) {
       const capacity = calculateTheoreticalCapacity(resources, Number(duration));
@@ -96,7 +90,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + Number(duration) - 1);
 
-    // Check for overlapping sprints
     const hasOverlap = teamSprints.some(s => {
       const sprintStart = new Date(s.startDate);
       const sprintEnd = new Date(s.endDate);
