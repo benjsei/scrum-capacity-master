@@ -43,7 +43,8 @@ export const ResourceAutocompleteInput = ({
     setInputValue(newValue);
     
     if (newValue.trim()) {
-      const foundResources = findResources(newValue);
+      const foundResources = findResources(newValue)
+        .filter(resource => resource.teamId === activeTeam?.id);
       setSuggestions(foundResources);
       setShowSuggestions(true);
     } else {
@@ -54,35 +55,19 @@ export const ResourceAutocompleteInput = ({
 
   const handleSuggestionClick = (resource: Resource) => {
     setInputValue(resource.name);
-    onChange({
-      ...resource,
-      isTemporary: false // Explicitly set isTemporary to false for existing resources
-    });
+    onChange(resource);
     setShowSuggestions(false);
   };
 
-  const handleInputBlur = async () => {
-    setTimeout(async () => {
-      if (inputValue.trim() && inputValue !== value && activeTeam) {
-        const existingResource = findResources(inputValue.trim())[0];
-        if (existingResource) {
-          onChange({
-            ...existingResource,
-            isTemporary: false // Explicitly set isTemporary to false for existing resources
-          });
-        } else {
-          const newResource: Resource = {
-            id: crypto.randomUUID(),
-            name: inputValue.trim(),
-            capacityPerDay: 1,
-            teamId: activeTeam.id,
-            isTemporary: true // Explicitly set isTemporary to true for new resources
-          };
-          console.log('Creating temporary resource:', newResource);
-          onChange(newResource);
-        }
+  const handleInputBlur = () => {
+    // Reset input value if no valid resource was selected
+    setTimeout(() => {
+      const existingResource = findResources(inputValue.trim())
+        .find(r => r.teamId === activeTeam?.id && r.name === inputValue.trim());
+      
+      if (!existingResource) {
+        setInputValue(value);
       }
-      setShowSuggestions(false);
     }, 200);
   };
 
@@ -93,7 +78,7 @@ export const ResourceAutocompleteInput = ({
         onChange={handleInputChange}
         onBlur={handleInputBlur}
         className={className}
-        placeholder="Nom de la ressource"
+        placeholder="Sélectionner une ressource"
       />
       
       {showSuggestions && suggestions.length > 0 && (
