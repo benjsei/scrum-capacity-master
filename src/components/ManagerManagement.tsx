@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useScrumTeamStore } from "../store/scrumTeamStore";
 import { useAgilePracticesStore } from "../store/agilePracticesStore";
+import type { Manager } from "../store/managerStore";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +21,7 @@ import {
 
 export const ManagerManagement = () => {
   const [newManagerName, setNewManagerName] = useState("");
-  const [managerToDelete, setManagerToDelete] = useState<any>(null);
+  const [managerToDelete, setManagerToDelete] = useState<Manager | null>(null);
   const [editingManagerId, setEditingManagerId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const { managers, addManager, deleteManager, updateManagerName } = useManagerStore();
@@ -35,7 +36,7 @@ export const ManagerManagement = () => {
     }
   };
 
-  const handleStartEditing = (manager: any) => {
+  const handleStartEditing = (manager: Manager) => {
     setEditingManagerId(manager.id);
     setEditingName(manager.name);
   };
@@ -44,6 +45,7 @@ export const ManagerManagement = () => {
     if (editingName.trim()) {
       await updateManagerName(managerId, editingName.trim());
       setEditingManagerId(null);
+      setEditingName("");
     }
   };
 
