@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { ListTodo, SparklesIcon, Percent } from 'lucide-react';
+import { ListTodo, SparklesIcon } from 'lucide-react';
 
 export const TeamManagement = () => {
   const [newTeamName, setNewTeamName] = useState('');
@@ -103,12 +104,11 @@ export const TeamManagement = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col gap-2 flex-grow">
                       <span>{team.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        <Percent className="h-4 w-4 inline mr-1" />
-                        {getTeamProgress(team.id)}%
-                      </span>
+                      <div className="w-full max-w-xs">
+                        <Progress value={getTeamProgress(team.id)} className="h-2" />
+                      </div>
                     </div>
                     <div className="space-x-2">
                       <Button
