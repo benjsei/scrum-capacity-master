@@ -16,7 +16,7 @@ export const ResourceAutocompleteInput = ({
   onChange,
   className
 }: ResourceAutocompleteInputProps) => {
-  const [inputValue, setInputValue] = useState(value);
+  const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<Resource[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { findResources } = useResourceStore();
@@ -24,8 +24,9 @@ export const ResourceAutocompleteInput = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setInputValue(value);
-  }, [value]);
+    const selectedResource = activeTeam?.resources.find(r => r.id === value);
+    setInputValue(selectedResource?.name || '');
+  }, [value, activeTeam?.resources]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,24 +60,11 @@ export const ResourceAutocompleteInput = ({
     setShowSuggestions(false);
   };
 
-  const handleInputBlur = () => {
-    // Reset input value if no valid resource was selected
-    setTimeout(() => {
-      const existingResource = findResources(inputValue.trim())
-        .find(r => r.teamId === activeTeam?.id && r.name === inputValue.trim());
-      
-      if (!existingResource) {
-        setInputValue(value);
-      }
-    }, 200);
-  };
-
   return (
     <div ref={wrapperRef} className="relative">
       <Input
         value={inputValue}
         onChange={handleInputChange}
-        onBlur={handleInputBlur}
         className={className}
         placeholder="Sélectionner une ressource"
       />

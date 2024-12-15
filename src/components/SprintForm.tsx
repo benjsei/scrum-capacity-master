@@ -183,6 +183,8 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
           onDeleteResource={(resourceId) => {
             setResources(resources.filter(r => r.id !== resourceId));
           }}
+          startDate={startDate}
+          duration={Number(duration)}
         />
 
         <SprintCapacityInfo
