@@ -32,7 +32,7 @@ export const TeamManagement = ({ managerId }: TeamManagementProps) => {
     }
     
     if (!newTeamName.trim()) {
-      toast.error('Please enter a team name');
+      toast.error('Veuillez entrer un nom d\'équipe');
       return;
     }
 
@@ -46,7 +46,7 @@ export const TeamManagement = ({ managerId }: TeamManagementProps) => {
 
     addTeam(newTeam);
     setNewTeamName('');
-    toast.success('Team created successfully!');
+    toast.success('Équipe créée avec succès!');
   };
 
   const handleStartEditing = (teamId: string, currentName: string) => {
@@ -84,20 +84,20 @@ export const TeamManagement = ({ managerId }: TeamManagementProps) => {
     <Card className="p-6">
       <div className="space-y-6">
         <div className="space-y-4">
-          <Label htmlFor="teamName">New Team Name</Label>
+          <Label htmlFor="teamName">Nouvelle équipe</Label>
           <form onSubmit={handleCreateTeam} className="flex gap-2">
             <Input
               id="teamName"
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}
-              placeholder="Enter team name"
+              placeholder="Nom de l'équipe"
             />
-            <Button type="submit">Create Team</Button>
+            <Button type="submit">Créer</Button>
           </form>
         </div>
 
         <div className="space-y-4">
-          <h3 className="font-semibold">Teams</h3>
+          <h3 className="font-semibold">Équipes</h3>
           <div className="space-y-2">
             {filteredTeams.map((team) => (
               <div key={team.id} className="flex items-center justify-between p-2 border rounded">
@@ -106,10 +106,10 @@ export const TeamManagement = ({ managerId }: TeamManagementProps) => {
                     <Input
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
-                      placeholder="Enter new name"
+                      placeholder="Nouveau nom"
                     />
-                    <Button onClick={() => handleSaveEdit(team.id)}>Save</Button>
-                    <Button variant="outline" onClick={() => setEditingTeamId(null)}>Cancel</Button>
+                    <Button onClick={() => handleSaveEdit(team.id)}>Enregistrer</Button>
+                    <Button variant="outline" onClick={() => setEditingTeamId(null)}>Annuler</Button>
                   </div>
                 ) : (
                   <>
@@ -138,13 +138,13 @@ export const TeamManagement = ({ managerId }: TeamManagementProps) => {
                         variant="outline"
                         onClick={() => handleStartEditing(team.id, team.name)}
                       >
-                        Edit
+                        Modifier
                       </Button>
                       <Button
                         variant="destructive"
                         onClick={() => deleteTeam(team.id)}
                       >
-                        Delete
+                        Supprimer
                       </Button>
                     </div>
                   </>

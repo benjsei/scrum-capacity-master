@@ -67,7 +67,7 @@ export const ManagerManagement = () => {
                     className="text-sm"
                   >
                     <Button variant="outline">
-                      Voir les équipes
+                      Équipes
                     </Button>
                   </Link>
                   <Button
