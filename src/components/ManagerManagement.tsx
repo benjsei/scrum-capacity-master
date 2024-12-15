@@ -20,8 +20,10 @@ import {
 
 export const ManagerManagement = () => {
   const [newManagerName, setNewManagerName] = useState("");
-  const [managerToDelete, setManagerToDelete] = useState(null);
-  const { managers, addManager } = useManagerStore();
+  const [managerToDelete, setManagerToDelete] = useState<any>(null);
+  const [editingManagerId, setEditingManagerId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const { managers, addManager, deleteManager, updateManagerName } = useManagerStore();
   const { teams } = useScrumTeamStore();
   const { getPracticesForTeam } = useAgilePracticesStore();
   const navigate = useNavigate();
@@ -30,6 +32,30 @@ export const ManagerManagement = () => {
     if (newManagerName.trim()) {
       addManager(newManagerName);
       setNewManagerName("");
+    }
+  };
+
+  const handleStartEditing = (manager: any) => {
+    setEditingManagerId(manager.id);
+    setEditingName(manager.name);
+  };
+
+  const handleSaveEdit = async (managerId: string) => {
+    if (editingName.trim()) {
+      await updateManagerName(managerId, editingName.trim());
+      setEditingManagerId(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingManagerId(null);
+    setEditingName("");
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (managerToDelete) {
+      await deleteManager(managerToDelete.id);
+      setManagerToDelete(null);
     }
   };
 
@@ -76,10 +102,20 @@ export const ManagerManagement = () => {
                   key={manager.id}
                   className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                 >
-                  <td className="p-4 align-middle">{manager.name}</td>
+                  <td className="p-4 align-middle">
+                    {editingManagerId === manager.id ? (
+                      <Input
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        className="max-w-sm"
+                      />
+                    ) : (
+                      manager.name
+                    )}
+                  </td>
                   <td className="p-4 align-middle">
                     <div className="flex items-center gap-2">
-                      <Progress value={getManagerProgress(manager.id)} className="w-[60%]" />
+                      <Progress value={getManagerProgress(manager.id)} className="w-[60%] h-2" />
                       <span className="text-sm text-muted-foreground">
                         {getManagerProgress(manager.id)}%
                       </span>
@@ -95,12 +131,32 @@ export const ManagerManagement = () => {
                         <Users className="h-4 w-4 mr-2" />
                         Équipes
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                      >
-                        Modifier
-                      </Button>
+                      {editingManagerId === manager.id ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSaveEdit(manager.id)}
+                          >
+                            Enregistrer
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCancelEdit}
+                          >
+                            Annuler
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleStartEditing(manager)}
+                        >
+                          Modifier
+                        </Button>
+                      )}
                       <Button
                         variant="destructive"
                         size="sm"
@@ -127,12 +183,7 @@ export const ManagerManagement = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                // handle delete manager logic
-                setManagerToDelete(null);
-              }}
-            >
+            <AlertDialogAction onClick={handleDeleteConfirm}>
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
