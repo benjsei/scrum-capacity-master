@@ -203,7 +203,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
         />
 
         <Button type="submit" className="w-full">
-          Create Sprint
+          Créer le sprint
         </Button>
       </form>
     </Card>

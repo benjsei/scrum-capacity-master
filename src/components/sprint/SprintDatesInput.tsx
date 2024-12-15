@@ -17,17 +17,18 @@ export const SprintDatesInput = ({
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
-        <Label htmlFor="startDate">Start Date</Label>
+        <Label htmlFor="startDate">Date de début</Label>
         <Input
           id="startDate"
           type="date"
           value={startDate}
           onChange={(e) => onStartDateChange(e.target.value)}
           required
+          min={new Date().toISOString().split('T')[0]} // Prevent past dates
         />
       </div>
       <div>
-        <Label htmlFor="duration">Duration (days)</Label>
+        <Label htmlFor="duration">Durée (jours)</Label>
         <Input
           id="duration"
           type="number"
