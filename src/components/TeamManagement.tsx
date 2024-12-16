@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,10 @@ import { toast } from "sonner";
 import { TeamProgressChart } from "./TeamProgressChart";
 import { TeamVelocityChart } from "./TeamVelocityChart";
 import { TeamsCommitmentChart } from "./TeamsCommitmentChart";
+import { TeamPodium } from "./TeamPodium";
 
-export const TeamManagement = ({ managerId: propManagerId }: { managerId: string | null }) => {
-  const { managerId: paramManagerId } = useParams();
-  const managerId = propManagerId || paramManagerId;
+export const TeamManagement = () => {
+  const { managerId } = useParams();
   const navigate = useNavigate();
   const [newTeamName, setNewTeamName] = useState("");
   const { managers } = useManagerStore();
@@ -170,7 +170,9 @@ export const TeamManagement = ({ managerId: propManagerId }: { managerId: string
           </div>
         </div>
 
-        <div className="space-y-6">
+        <TeamPodium />
+        
+        <div className="grid gap-6 mt-6">
           <TeamProgressChart />
           <TeamVelocityChart />
           <TeamsCommitmentChart />
