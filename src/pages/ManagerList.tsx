@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useManagerStore } from "../store/managerStore";
 import { useScrumTeamStore } from "../store/scrumTeamStore";
 import { useAgilePracticesStore } from "../store/agilePracticesStore";
+import { useSprintStore } from "../store/sprintStore";
 import { ManagerManagement } from "@/components/ManagerManagement";
 import { ManagerProgressChart } from "@/components/ManagerProgressChart";
 import { ManagerVelocityChart } from "@/components/ManagerVelocityChart";
@@ -11,12 +12,15 @@ const ManagerList = () => {
   const { loadManagers } = useManagerStore();
   const { loadTeams } = useScrumTeamStore();
   const { initializePractices } = useAgilePracticesStore();
+  const { loadSprints } = useSprintStore();
 
   useEffect(() => {
     const initializeData = async () => {
       await loadManagers();
       // Load teams once and store the result
       const teams = await loadTeams();
+      // Load sprints data
+      await loadSprints();
       // Initialize practices for each team
       for (const team of teams) {
         await initializePractices(team.id);
@@ -24,7 +28,7 @@ const ManagerList = () => {
     };
     
     initializeData();
-  }, [loadManagers, loadTeams, initializePractices]);
+  }, [loadManagers, loadTeams, loadSprints, initializePractices]);
 
   return (
     <div className="min-h-screen p-6 space-y-6">
