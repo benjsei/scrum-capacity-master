@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft } from "lucide-react";
@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DefaultPracticeForm } from "@/components/DefaultPracticeForm";
+import { IndexHeader } from "@/components/IndexHeader";
 
 export const DefaultPractices = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export const DefaultPractices = () => {
     setPractices(data || []);
   };
 
-  useState(() => {
+  useEffect(() => {
     loadPractices();
   }, []);
 
@@ -59,18 +60,22 @@ export const DefaultPractices = () => {
 
   return (
     <div className="min-h-screen p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+      <div className="flex items-center justify-between mb-8">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate(-1)} 
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
           Retour
         </Button>
-        <Button onClick={() => setIsFormOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={() => setIsFormOpen(true)} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
           Nouvelle pratique
         </Button>
       </div>
 
-      <h1 className="text-3xl font-bold text-primary">Pratiques par défaut</h1>
+      <IndexHeader />
 
       <div className="grid gap-4">
         {practices.map((practice) => (
@@ -78,14 +83,14 @@ export const DefaultPractices = () => {
             <div className="flex justify-between items-start">
               <div className="space-y-2">
                 <div className="font-medium">{practice.action}</div>
+                {practice.sub_actions && (
+                  <div className="text-sm text-muted-foreground">
+                    Sous-actions: {practice.sub_actions}
+                  </div>
+                )}
                 <div className="text-sm text-muted-foreground">
                   Jour {practice.day} • {practice.who} • {practice.type}
                 </div>
-                {practice.description && (
-                  <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
-                    {practice.description}
-                  </div>
-                )}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => handleEdit(practice)}>
