@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import TeamDetails from "./pages/TeamDetails";
 import TeamPractices from "./pages/TeamPractices";
@@ -11,7 +11,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Index />} />
+        <Route path="/" element={<Navigate to="/managers" replace />} />
         <Route path="/managers" element={<ManagerList />} />
         <Route path="/teams/:managerId" element={<TeamManagement managerId={null} />} />
         <Route path="/team/:teamId" element={<TeamDetails />} />
