@@ -2,6 +2,7 @@ import { TeamManagement } from "./TeamManagement";
 import { TeamPodium } from "./TeamPodium";
 import { TeamProgressChart } from "./TeamProgressChart";
 import { TeamVelocityChart } from "./TeamVelocityChart";
+import { TeamsCommitmentChart } from "./TeamsCommitmentChart";
 import { Button } from "./ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -64,6 +65,10 @@ export const IndexContent = () => {
       <div>
         <h2 className="text-xl font-semibold mb-4">Comparaison des équipes</h2>
         <TeamVelocityChart />
+      </div>
+
+      <div>
+        <TeamsCommitmentChart />
       </div>
     </div>
   );
