@@ -78,10 +78,6 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
     navigate(`/team/${team.id}/practices`);
   };
 
-  const handleBack = () => {
-    navigate('/managers');
-  };
-
   const getTeamProgress = (teamId: string) => {
     const practices = getPracticesForTeam(teamId);
     if (practices.length === 0) return 0;
@@ -91,9 +87,6 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
   return (
     <div className="min-h-screen p-6">
       <div className="mb-8">
-        <Button variant="outline" size="icon" onClick={handleBack} className="mb-4">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
         <Card className="p-6">
           <div className="space-y-6">
             <div className="space-y-4">
