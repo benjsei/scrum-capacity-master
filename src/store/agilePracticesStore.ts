@@ -36,13 +36,23 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
   
   initializePractices: async (teamId: string, practices?: AgilePractice[]) => {
     try {
-      // First, check if team already has practices
-      const { data: existingPractices } = await supabase
+      // First, check if team already has practices in the store
+      const existingPracticesInStore = get().getPracticesForTeam(teamId);
+      if (existingPracticesInStore.length > 0) {
+        console.log('Team already has practices in store, skipping initialization');
+        return;
+      }
+
+      // Then, check if team already has practices in the database
+      const { data: existingPractices, error: checkError } = await supabase
         .from('agile_practices')
         .select('*')
         .eq('team_id', teamId);
 
+      if (checkError) throw checkError;
+
       if (existingPractices && existingPractices.length > 0) {
+        console.log('Team already has practices in database, loading them');
         // If team has practices, use them
         const formattedPractices = existingPractices.map(p => ({
           id: p.id,
@@ -68,6 +78,7 @@ export const useAgilePracticesStore = create<AgilePracticesStore>((set, get) => 
         return;
       }
 
+      console.log('No practices found for team, initializing from default practices');
       // If no practices exist, get default practices
       const { data: defaultPractices, error: defaultError } = await supabase
         .from('default_practices')
