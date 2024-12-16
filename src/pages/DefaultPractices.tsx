@@ -25,7 +25,17 @@ export const DefaultPractices = () => {
       return;
     }
 
-    setPractices(data || []);
+    // Custom sort function for days (N, N+1, N+5, N+14)
+    const sortedData = [...(data || [])].sort((a, b) => {
+      const dayOrder = { "N": 0, "N+1": 1, "N+5": 2, "N+14": 3 };
+      const dayA = dayOrder[a.day as keyof typeof dayOrder] ?? 4;
+      const dayB = dayOrder[b.day as keyof typeof dayOrder] ?? 4;
+      
+      if (dayA !== dayB) return dayA - dayB;
+      return a.action.localeCompare(b.action);
+    });
+
+    setPractices(sortedData);
   };
 
   useEffect(() => {
@@ -60,22 +70,23 @@ export const DefaultPractices = () => {
 
   return (
     <div className="min-h-screen p-6 space-y-6">
-      <div className="flex items-center justify-between mb-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(-1)} 
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour
-        </Button>
+      <Button 
+        variant="ghost" 
+        onClick={() => navigate(-1)} 
+        className="flex items-center gap-2 mb-4"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Retour
+      </Button>
+
+      <IndexHeader />
+
+      <div className="flex justify-end mb-6">
         <Button onClick={() => setIsFormOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Nouvelle pratique
         </Button>
       </div>
-
-      <IndexHeader />
 
       <div className="grid gap-4">
         {practices.map((practice) => (
