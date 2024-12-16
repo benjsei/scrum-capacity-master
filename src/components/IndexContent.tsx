@@ -31,10 +31,8 @@ export const IndexContent = () => {
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-primary">Pratiques et Capacité Scrum</h1>
-        <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
-        <div className="mt-4">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
           <Button
             variant="outline"
             size="icon"
@@ -42,6 +40,9 @@ export const IndexContent = () => {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
+          <h2 className="text-xl font-semibold">
+            {pageTitle}
+          </h2>
         </div>
       </div>
 
