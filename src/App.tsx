@@ -11,9 +11,9 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Index />} />
+        <Route path="/" element={<ManagerList />} />
         <Route path="/managers" element={<ManagerList />} />
-        <Route path="/teams/:managerId" element={<TeamManagement managerId={null} />} />
+        <Route path="/teams/:managerId" element={<Index />} />
         <Route path="/team/:teamId" element={<TeamDetails />} />
         <Route path="/team/:teamId/practices" element={<TeamPractices />} />
         <Route path="/default-practices" element={<DefaultPractices />} />
