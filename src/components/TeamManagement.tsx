@@ -95,15 +95,15 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
 
   return (
     <div className="min-h-screen p-6 space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary mb-2">Pratiques et Capacité Scrum</h1>
-        <p className="text-muted-foreground mb-4">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
-        <div className="flex items-center justify-between">
+      <header className="text-center mb-8 relative">
+        <div className="absolute left-0 top-0">
           <Button variant="outline" size="icon" onClick={() => navigate('/managers')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </div>
-      </div>
+        <h1 className="text-3xl font-bold text-primary">Pratiques et Capacité Scrum</h1>
+        <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
+      </header>
 
       {manager && (
         <h2 className="text-2xl font-semibold mb-4">

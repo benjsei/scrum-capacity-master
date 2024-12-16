@@ -2,115 +2,78 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { DefaultPracticeForm } from "@/components/DefaultPracticeForm";
+import { toast } from "sonner";
+import DefaultPracticeForm from "@/components/DefaultPracticeForm";
 
-export const DefaultPractices = () => {
+const DefaultPractices = () => {
   const navigate = useNavigate();
   const [practices, setPractices] = useState<any[]>([]);
-  const [editingPractice, setEditingPractice] = useState<any | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
-  const loadPractices = async () => {
-    const { data, error } = await supabase
-      .from('default_practices')
-      .select('*')
-      .order('day', { ascending: true });
-
-    if (error) {
-      toast.error("Erreur lors du chargement des pratiques");
-      return;
-    }
-
-    setPractices(data || []);
-  };
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedPractice, setSelectedPractice] = useState<any>(null);
 
   useEffect(() => {
     loadPractices();
   }, []);
 
-  const handleEdit = (practice: any) => {
-    setEditingPractice(practice);
-    setIsFormOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase
-      .from('default_practices')
-      .delete()
-      .eq('id', id);
-
+  const loadPractices = async () => {
+    const { data, error } = await supabase.from('practices').select('*');
     if (error) {
-      toast.error("Erreur lors de la suppression");
+      toast.error("Erreur lors du chargement des pratiques");
       return;
     }
-
-    toast.success("Pratique supprimée avec succès");
-    loadPractices();
+    setPractices(data || []);
   };
 
-  const handleFormClose = () => {
-    setIsFormOpen(false);
-    setEditingPractice(null);
+  const handleEditPractice = (practice: any) => {
+    setSelectedPractice(practice);
+    setIsEditing(true);
+  };
+
+  const handleDeletePractice = async (practiceId: string) => {
+    const { error } = await supabase.from('practices').delete().eq('id', practiceId);
+    if (error) {
+      toast.error("Erreur lors de la suppression de la pratique");
+      return;
+    }
+    toast.success("Pratique supprimée avec succès");
     loadPractices();
   };
 
   return (
     <div className="min-h-screen p-6 space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary mb-2">Pratiques et Capacité Scrum</h1>
-        <p className="text-muted-foreground mb-4">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
-        <div className="flex items-center justify-between">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+      <header className="text-center mb-8 relative">
+        <div className="absolute left-0 top-0">
+          <Button variant="outline" size="icon" onClick={() => navigate('/managers')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle pratique
-          </Button>
         </div>
-      </div>
+        <h1 className="text-3xl font-bold text-primary">Pratiques et Capacité Scrum</h1>
+        <p className="text-muted-foreground">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
+      </header>
+
+      <DefaultPracticeForm 
+        practices={practices} 
+        isEditing={isEditing} 
+        selectedPractice={selectedPractice} 
+        onClose={() => {
+          setIsEditing(false);
+          setSelectedPractice(null);
+          loadPractices();
+        }} 
+      />
 
       <div className="grid gap-4">
         {practices.map((practice) => (
-          <Card key={practice.id} className="p-4">
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <div className="font-medium">{practice.action}</div>
-                <div className="text-sm text-muted-foreground">
-                  Jour {practice.day} • {practice.who} • {practice.type}
-                </div>
-                {practice.description && (
-                  <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
-                    {practice.description}
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(practice)}>
-                  Modifier
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={() => handleDelete(practice.id)}
-                >
-                  Supprimer
-                </Button>
-              </div>
+          <div key={practice.id} className="p-4 border rounded">
+            <h3 className="text-lg font-medium">{practice.name}</h3>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => handleEditPractice(practice)}>Modifier</Button>
+              <Button variant="destructive" onClick={() => handleDeletePractice(practice.id)}>Supprimer</Button>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
-
-      {isFormOpen && (
-        <DefaultPracticeForm
-          practice={editingPractice}
-          onClose={handleFormClose}
-        />
-      )}
     </div>
   );
 };
