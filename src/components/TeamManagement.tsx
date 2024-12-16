@@ -7,23 +7,27 @@ import { Progress } from "@/components/ui/progress";
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { ListTodo, SparklesIcon } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ListTodo, SparklesIcon, ArrowLeft } from 'lucide-react';
 
 interface TeamManagementProps {
   managerId: string | null;
 }
 
-export const TeamManagement = ({ managerId }: TeamManagementProps) => {
+export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps) => {
   const [newTeamName, setNewTeamName] = useState('');
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const { teams, addTeam, deleteTeam, setActiveTeam, updateTeamName } = useScrumTeamStore();
   const { getPracticesForTeam } = useAgilePracticesStore();
   const navigate = useNavigate();
+  const { managerId: urlManagerId } = useParams();
+  
+  // Use URL parameter if available, otherwise use prop
+  const effectiveManagerId = urlManagerId || propManagerId;
 
-  const filteredTeams = managerId 
-    ? teams.filter(team => team.managerId === managerId)
+  const filteredTeams = effectiveManagerId 
+    ? teams.filter(team => team.managerId === effectiveManagerId)
     : teams;
 
   const handleCreateTeam = (e?: React.FormEvent) => {
@@ -41,7 +45,7 @@ export const TeamManagement = ({ managerId }: TeamManagementProps) => {
       name: newTeamName.trim(),
       createdAt: new Date().toISOString(),
       resources: [],
-      managerId: managerId || undefined,
+      managerId: effectiveManagerId || undefined,
     };
 
     addTeam(newTeam);
@@ -56,12 +60,12 @@ export const TeamManagement = ({ managerId }: TeamManagementProps) => {
 
   const handleSaveEdit = (teamId: string) => {
     if (!editingName.trim()) {
-      toast.error('Team name cannot be empty');
+      toast.error('Le nom de l\'équipe ne peut pas être vide');
       return;
     }
     updateTeamName(teamId, editingName.trim());
     setEditingTeamId(null);
-    toast.success('Team name updated successfully!');
+    toast.success('Nom de l\'équipe mis à jour avec succès!');
   };
 
   const handleNavigateToSprints = (team: any) => {
@@ -74,6 +78,10 @@ export const TeamManagement = ({ managerId }: TeamManagementProps) => {
     navigate(`/team/${team.id}/practices`);
   };
 
+  const handleBack = () => {
+    navigate('/managers');
+  };
+
   const getTeamProgress = (teamId: string) => {
     const practices = getPracticesForTeam(teamId);
     if (practices.length === 0) return 0;
@@ -81,79 +89,86 @@ export const TeamManagement = ({ managerId }: TeamManagementProps) => {
   };
 
   return (
-    <Card className="p-6">
-      <div className="space-y-6">
-        <div className="space-y-4">
-          <Label htmlFor="teamName">Nouvelle équipe</Label>
-          <form onSubmit={handleCreateTeam} className="flex gap-2">
-            <Input
-              id="teamName"
-              value={newTeamName}
-              onChange={(e) => setNewTeamName(e.target.value)}
-              placeholder="Nom de l'équipe"
-            />
-            <Button type="submit">Créer</Button>
-          </form>
-        </div>
+    <div className="min-h-screen p-6">
+      <div className="mb-8">
+        <Button variant="outline" size="icon" onClick={handleBack} className="mb-4">
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <Card className="p-6">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Label htmlFor="teamName">Nouvelle équipe</Label>
+              <form onSubmit={handleCreateTeam} className="flex gap-2">
+                <Input
+                  id="teamName"
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  placeholder="Nom de l'équipe"
+                />
+                <Button type="submit">Créer</Button>
+              </form>
+            </div>
 
-        <div className="space-y-4">
-          <h3 className="font-semibold">Équipes</h3>
-          <div className="space-y-2">
-            {filteredTeams.map((team) => (
-              <div key={team.id} className="flex items-center justify-between p-2 border rounded">
-                {editingTeamId === team.id ? (
-                  <div className="flex gap-2 flex-1 mr-2">
-                    <Input
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      placeholder="Nouveau nom"
-                    />
-                    <Button onClick={() => handleSaveEdit(team.id)}>Enregistrer</Button>
-                    <Button variant="outline" onClick={() => setEditingTeamId(null)}>Annuler</Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex flex-col gap-2 flex-grow">
-                      <span>{team.name}</span>
-                      <div className="w-full max-w-xs">
-                        <Progress value={getTeamProgress(team.id)} className="h-2" />
+            <div className="space-y-4">
+              <h3 className="font-semibold">Équipes</h3>
+              <div className="space-y-2">
+                {filteredTeams.map((team) => (
+                  <div key={team.id} className="flex items-center justify-between p-2 border rounded">
+                    {editingTeamId === team.id ? (
+                      <div className="flex gap-2 flex-1 mr-2">
+                        <Input
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          placeholder="Nouveau nom"
+                        />
+                        <Button onClick={() => handleSaveEdit(team.id)}>Enregistrer</Button>
+                        <Button variant="outline" onClick={() => setEditingTeamId(null)}>Annuler</Button>
                       </div>
-                    </div>
-                    <div className="space-x-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => handleNavigateToSprints(team)}
-                      >
-                        <SparklesIcon className="w-4 h-4 mr-2" />
-                        Sprints
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleNavigateToPractices(team)}
-                      >
-                        <ListTodo className="w-4 h-4 mr-2" />
-                        Pratiques
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleStartEditing(team.id, team.name)}
-                      >
-                        Modifier
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => deleteTeam(team.id)}
-                      >
-                        Supprimer
-                      </Button>
-                    </div>
-                  </>
-                )}
+                    ) : (
+                      <>
+                        <div className="flex flex-col gap-2 flex-grow">
+                          <span>{team.name}</span>
+                          <div className="w-full max-w-xs">
+                            <Progress value={getTeamProgress(team.id)} className="h-2" />
+                          </div>
+                        </div>
+                        <div className="space-x-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => handleNavigateToSprints(team)}
+                          >
+                            <SparklesIcon className="w-4 h-4 mr-2" />
+                            Sprints
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => handleNavigateToPractices(team)}
+                          >
+                            <ListTodo className="w-4 h-4 mr-2" />
+                            Pratiques
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => handleStartEditing(team.id, team.name)}
+                          >
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => deleteTeam(team.id)}
+                          >
+                            Supprimer
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
+        </Card>
       </div>
-    </Card>
+    </div>
   );
 };
