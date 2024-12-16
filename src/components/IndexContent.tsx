@@ -32,14 +32,6 @@ export const IndexContent = () => {
   return (
     <div className="space-y-6">
       <div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => navigate("/managers")}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
         <TeamManagement managerId={managerId} />
       </div>
 
