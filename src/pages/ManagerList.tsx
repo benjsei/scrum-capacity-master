@@ -13,8 +13,10 @@ import { Download, Upload, FileInput } from "lucide-react";
 import { toast } from "sonner";
 import { importData, importPractices } from "@/utils/dataImport";
 import { parsePracticesCSV } from "@/utils/practicesImport";
+import { useNavigate } from "react-router-dom";
 
 const ManagerList = () => {
+  const navigate = useNavigate();
   const { loadManagers } = useManagerStore();
   const { loadTeams, teams } = useScrumTeamStore();
   const { initializePractices } = useAgilePracticesStore();
@@ -115,6 +117,15 @@ const ManagerList = () => {
             <PopoverContent className="w-80" align="end">
               <div className="space-y-4">
                 <div className="space-y-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={() => navigate("/default-practices")}
+                  >
+                    <FileInput className="w-4 h-4 mr-2" />
+                    Pratiques par défaut
+                  </Button>
                   <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleExport}>
                     <Download className="w-4 h-4 mr-2" />
                     Exporter
