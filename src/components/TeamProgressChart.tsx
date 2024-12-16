@@ -16,8 +16,10 @@ export const TeamProgressChart = () => {
 
   // Initialize with all manager's teams selected
   useEffect(() => {
-    setSelectedTeams(managerTeams.map(t => t.id));
-  }, [managerTeams]);
+    if (managerTeams.length > 0 && selectedTeams.length === 0) {
+      setSelectedTeams(managerTeams.map(t => t.id));
+    }
+  }, [managerTeams, selectedTeams.length]);
 
   const toggleTeam = (teamId: string) => {
     setSelectedTeams(prev =>
