@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft } from "lucide-react";
@@ -27,7 +27,7 @@ export const DefaultPractices = () => {
     setPractices(data || []);
   };
 
-  useState(() => {
+  useEffect(() => {
     loadPractices();
   }, []);
 
@@ -59,18 +59,19 @@ export const DefaultPractices = () => {
 
   return (
     <div className="min-h-screen p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour
-        </Button>
-        <Button onClick={() => setIsFormOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle pratique
-        </Button>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-primary mb-2">Pratiques et Capacité Scrum</h1>
+        <p className="text-muted-foreground mb-4">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <Button onClick={() => setIsFormOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle pratique
+          </Button>
+        </div>
       </div>
-
-      <h1 className="text-3xl font-bold text-primary">Pratiques par défaut</h1>
 
       <div className="grid gap-4">
         {practices.map((practice) => (

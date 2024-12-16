@@ -1,173 +1,151 @@
-import { useState } from 'react';
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { useScrumTeamStore } from '../store/scrumTeamStore';
-import { useAgilePracticesStore } from '../store/agilePracticesStore';
-import { toast } from 'sonner';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ListTodo, SparklesIcon, ArrowLeft } from 'lucide-react';
+import { Plus, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TeamManagementProps {
   managerId: string | null;
 }
 
 export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps) => {
-  const [newTeamName, setNewTeamName] = useState('');
-  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
-  const { teams, addTeam, deleteTeam, setActiveTeam, updateTeamName } = useScrumTeamStore();
-  const { getPracticesForTeam } = useAgilePracticesStore();
   const navigate = useNavigate();
   const { managerId: urlManagerId } = useParams();
+  const managerId = urlManagerId || propManagerId;
   
-  // Use URL parameter if available, otherwise use prop
-  const effectiveManagerId = urlManagerId || propManagerId;
+  const [teams, setTeams] = useState<any[]>([]);
+  const [newTeamName, setNewTeamName] = useState("");
+  const [manager, setManager] = useState<any>(null);
 
-  const filteredTeams = effectiveManagerId 
-    ? teams.filter(team => team.managerId === effectiveManagerId)
-    : teams;
-
-  const handleCreateTeam = (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
+  useEffect(() => {
+    if (managerId) {
+      loadTeams();
+      loadManager();
     }
-    
-    if (!newTeamName.trim()) {
-      toast.error('Veuillez entrer un nom d\'équipe');
+  }, [managerId]);
+
+  const loadManager = async () => {
+    if (!managerId) return;
+
+    const { data, error } = await supabase
+      .from('managers')
+      .select('*')
+      .eq('id', managerId)
+      .single();
+
+    if (error) {
+      toast.error("Erreur lors du chargement du manager");
       return;
     }
 
-    const newTeam = {
-      id: Date.now().toString(),
-      name: newTeamName.trim(),
-      createdAt: new Date().toISOString(),
-      resources: [],
-      managerId: effectiveManagerId || undefined,
-    };
-
-    addTeam(newTeam);
-    setNewTeamName('');
-    toast.success('Équipe créée avec succès!');
+    setManager(data);
   };
 
-  const handleStartEditing = (teamId: string, currentName: string) => {
-    setEditingTeamId(teamId);
-    setEditingName(currentName);
-  };
+  const loadTeams = async () => {
+    if (!managerId) return;
 
-  const handleSaveEdit = (teamId: string) => {
-    if (!editingName.trim()) {
-      toast.error('Le nom de l\'équipe ne peut pas être vide');
+    const { data, error } = await supabase
+      .from('teams')
+      .select('*')
+      .eq('manager_id', managerId);
+
+    if (error) {
+      toast.error("Erreur lors du chargement des équipes");
       return;
     }
-    updateTeamName(teamId, editingName.trim());
-    setEditingTeamId(null);
-    toast.success('Nom de l\'équipe mis à jour avec succès!');
+
+    setTeams(data || []);
   };
 
-  const handleNavigateToSprints = (team: any) => {
-    setActiveTeam(team);
-    navigate(`/team/${team.id}`);
+  const handleCreateTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTeamName.trim() || !managerId) return;
+
+    const { error } = await supabase
+      .from('teams')
+      .insert([{ name: newTeamName, manager_id: managerId }]);
+
+    if (error) {
+      toast.error("Erreur lors de la création de l'équipe");
+      return;
+    }
+
+    toast.success("Équipe créée avec succès");
+    setNewTeamName("");
+    loadTeams();
   };
 
-  const handleNavigateToPractices = (team: any) => {
-    setActiveTeam(team);
-    navigate(`/team/${team.id}/practices`);
-  };
+  const handleDeleteTeam = async (teamId: string) => {
+    const { error } = await supabase
+      .from('teams')
+      .delete()
+      .eq('id', teamId);
 
-  const handleBack = () => {
-    navigate('/managers');
-  };
+    if (error) {
+      toast.error("Erreur lors de la suppression de l'équipe");
+      return;
+    }
 
-  const getTeamProgress = (teamId: string) => {
-    const practices = getPracticesForTeam(teamId);
-    if (practices.length === 0) return 0;
-    return Math.round((practices.filter(p => p.isCompleted).length / practices.length) * 100);
+    toast.success("Équipe supprimée avec succès");
+    loadTeams();
   };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-6 space-y-6">
       <div className="mb-8">
-        <Button variant="outline" size="icon" onClick={handleBack} className="mb-4">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <Card className="p-6">
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <Label htmlFor="teamName">Nouvelle équipe</Label>
-              <form onSubmit={handleCreateTeam} className="flex gap-2">
-                <Input
-                  id="teamName"
-                  value={newTeamName}
-                  onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="Nom de l'équipe"
-                />
-                <Button type="submit">Créer</Button>
-              </form>
-            </div>
+        <h1 className="text-3xl font-bold text-primary mb-2">Pratiques et Capacité Scrum</h1>
+        <p className="text-muted-foreground mb-4">Gérez la capacité de votre équipe et suivez la performance des sprints</p>
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="icon" onClick={() => navigate('/managers')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
-            <div className="space-y-4">
-              <h3 className="font-semibold">Équipes</h3>
-              <div className="space-y-2">
-                {filteredTeams.map((team) => (
-                  <div key={team.id} className="flex items-center justify-between p-2 border rounded">
-                    {editingTeamId === team.id ? (
-                      <div className="flex gap-2 flex-1 mr-2">
-                        <Input
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          placeholder="Nouveau nom"
-                        />
-                        <Button onClick={() => handleSaveEdit(team.id)}>Enregistrer</Button>
-                        <Button variant="outline" onClick={() => setEditingTeamId(null)}>Annuler</Button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex flex-col gap-2 flex-grow">
-                          <span>{team.name}</span>
-                          <div className="w-full max-w-xs">
-                            <Progress value={getTeamProgress(team.id)} className="h-2" />
-                          </div>
-                        </div>
-                        <div className="space-x-2">
-                          <Button
-                            variant="outline"
-                            onClick={() => handleNavigateToSprints(team)}
-                          >
-                            <SparklesIcon className="w-4 h-4 mr-2" />
-                            Sprints
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => handleNavigateToPractices(team)}
-                          >
-                            <ListTodo className="w-4 h-4 mr-2" />
-                            Pratiques
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => handleStartEditing(team.id, team.name)}
-                          >
-                            Modifier
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => deleteTeam(team.id)}
-                          >
-                            Supprimer
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
+      {manager && (
+        <h2 className="text-2xl font-semibold mb-4">
+          Équipes de {manager.name}
+        </h2>
+      )}
+
+      <form onSubmit={handleCreateTeam} className="flex gap-4 mb-6">
+        <Input
+          placeholder="Nom de la nouvelle équipe"
+          value={newTeamName}
+          onChange={(e) => setNewTeamName(e.target.value)}
+          className="flex-1"
+        />
+        <Button type="submit">
+          <Plus className="h-4 w-4 mr-2" />
+          Ajouter
+        </Button>
+      </form>
+
+      <div className="grid gap-4">
+        {teams.map((team) => (
+          <Card key={team.id} className="p-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">{team.name}</h3>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate(`/team/${team.id}`)}
+                >
+                  Voir détails
+                </Button>
+                <Button 
+                  variant="destructive"
+                  onClick={() => handleDeleteTeam(team.id)}
+                >
+                  Supprimer
+                </Button>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        ))}
       </div>
     </div>
   );
