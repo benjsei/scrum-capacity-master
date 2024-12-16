@@ -19,7 +19,7 @@ export const DefaultPracticeForm = ({ practice, onClose }: DefaultPracticeFormPr
     who: practice?.who || "",
     type: practice?.type || "",
     action: practice?.action || "",
-    subActions: practice?.sub_actions || "",
+    sub_actions: practice?.sub_actions || "",
     format: practice?.format || "",
     duration: practice?.duration || "",
     description: practice?.description || "",
@@ -28,15 +28,10 @@ export const DefaultPracticeForm = ({ practice, onClose }: DefaultPracticeFormPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const data = {
-      ...formData,
-      sub_actions: formData.subActions,
-    };
-
     if (practice?.id) {
       const { error } = await supabase
         .from('default_practices')
-        .update(data)
+        .update(formData)
         .eq('id', practice.id);
 
       if (error) {
@@ -48,7 +43,7 @@ export const DefaultPracticeForm = ({ practice, onClose }: DefaultPracticeFormPr
     } else {
       const { error } = await supabase
         .from('default_practices')
-        .insert([data]);
+        .insert([formData]);
 
       if (error) {
         toast.error("Erreur lors de la création");
@@ -131,11 +126,11 @@ export const DefaultPracticeForm = ({ practice, onClose }: DefaultPracticeFormPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subActions">Sous-actions</Label>
+            <Label htmlFor="sub_actions">Sous-actions</Label>
             <Input
-              id="subActions"
-              value={formData.subActions}
-              onChange={(e) => setFormData({ ...formData, subActions: e.target.value })}
+              id="sub_actions"
+              value={formData.sub_actions}
+              onChange={(e) => setFormData({ ...formData, sub_actions: e.target.value })}
             />
           </div>
 
