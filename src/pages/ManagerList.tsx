@@ -15,9 +15,9 @@ const ManagerList = () => {
   useEffect(() => {
     const initializeData = async () => {
       await loadManagers();
-      await loadTeams();
-      // Initialize practices for each team
+      // Load teams once and store the result
       const teams = await loadTeams();
+      // Initialize practices for each team
       for (const team of teams) {
         await initializePractices(team.id);
       }

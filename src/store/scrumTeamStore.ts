@@ -9,7 +9,7 @@ interface ScrumTeamStore {
   activeTeam: ScrumTeam | null;
   setActiveTeam: (team: ScrumTeam | null) => void;
   setTeams: (teams: ScrumTeam[]) => void;
-  loadTeams: () => Promise<void>;
+  loadTeams: () => Promise<ScrumTeam[]>;
   addTeam: (team: ScrumTeam) => void;
   deleteTeam: (teamId: string) => void;
   updateTeamName: (teamId: string, newName: string) => void;
@@ -35,7 +35,7 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
 
       if (error) throw error;
 
-      set({ teams: teams.map(team => ({
+      const formattedTeams = teams.map(team => ({
         id: team.id,
         name: team.name,
         resources: team.resources.map(resource => ({
@@ -46,9 +46,13 @@ export const useScrumTeamStore = create<ScrumTeamStore>((set, get) => ({
         })) || [],
         createdAt: team.created_at,
         managerId: team.manager_id
-      })) });
+      }));
+
+      set({ teams: formattedTeams });
+      return formattedTeams; // Return the teams array
     } catch (error) {
       console.error('Error loading teams:', error);
+      return []; // Return empty array in case of error
     }
   },
 
