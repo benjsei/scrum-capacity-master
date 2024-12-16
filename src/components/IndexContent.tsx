@@ -32,23 +32,20 @@ export const IndexContent = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate("/managers")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h2 className="text-xl font-semibold">
-            {pageTitle}
-          </h2>
-        </div>
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => navigate("/managers")}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="text-xl font-semibold">
+          {pageTitle}
+        </h2>
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold mb-4">{pageTitle}</h2>
         <TeamManagement managerId={managerId} />
       </div>
 
