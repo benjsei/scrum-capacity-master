@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Download, Upload, FileInput } from "lucide-react";
 import { toast } from "sonner";
-import { importData, importPractices } from "@/utils/dataImport";
+import { importData, exportData } from "@/utils/dataImport";
 import { parsePracticesCSV } from "@/utils/practicesImport";
 import { useNavigate } from "react-router-dom";
 
@@ -25,11 +25,8 @@ const ManagerList = () => {
   useEffect(() => {
     const initializeData = async () => {
       await loadManagers();
-      // Load teams once and store the result
       const teams = await loadTeams();
-      // Load sprints data
       await loadSprints();
-      // Initialize practices for each team
       for (const team of teams) {
         await initializePractices(team.id);
       }
@@ -38,22 +35,12 @@ const ManagerList = () => {
     initializeData();
   }, [loadManagers, loadTeams, loadSprints, initializePractices]);
 
-  const handleExport = () => {
-    const data = {
-      version: 1,
-      teams,
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'scrum-data.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success("Export réussi !");
+  const handleExport = async () => {
+    try {
+      await exportData();
+    } catch (error) {
+      console.error('Error in handleExport:', error);
+    }
   };
 
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,12 +59,19 @@ const ManagerList = () => {
         switch (data.version) {
           case 1:
             await importData(data);
-            toast.success("Import réussi !");
+            // Reload all data after import
+            await loadManagers();
+            const teams = await loadTeams();
+            await loadSprints();
+            for (const team of teams) {
+              await initializePractices(team.id);
+            }
             break;
           default:
             throw new Error("Version non supportée");
         }
       } catch (error) {
+        console.error('Error in handleImport:', error);
         toast.error("Erreur lors de l'import: " + (error as Error).message);
       }
     };

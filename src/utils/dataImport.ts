@@ -1,102 +1,148 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Helper function to safely delete data from a table
+const safeDelete = async (tableName: string) => {
+  const { error } = await supabase
+    .from(tableName)
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+  
+  if (error) {
+    console.error(`Error deleting from ${tableName}:`, error);
+    throw error;
+  }
+};
+
+// Helper function to safely insert data into a table
+const safeInsert = async (tableName: string, data: any[]) => {
+  if (!data || data.length === 0) return [];
+  
+  const { data: inserted, error } = await supabase
+    .from(tableName)
+    .insert(data)
+    .select();
+  
+  if (error) {
+    console.error(`Error inserting into ${tableName}:`, error);
+    throw error;
+  }
+  
+  return inserted || [];
+};
+
 export const importData = async (data: any) => {
   try {
-    // First, delete all existing data in reverse order of dependencies
-    await supabase.from('sprint_resources').delete().neq('sprint_id', '00000000-0000-0000-0000-000000000000');
-    await supabase.from('sprints').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    await supabase.from('resources').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    await supabase.from('teams').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    console.log('Starting data import...');
+    
+    // Delete existing data in reverse order of dependencies
+    await safeDelete('sprint_resources');
+    await safeDelete('agile_practices');
+    await safeDelete('sprints');
+    await safeDelete('resources');
+    await safeDelete('teams');
+    await safeDelete('managers');
+    await safeDelete('default_practices');
+    
+    console.log('Existing data cleared successfully');
 
-    // Import teams first
-    const { data: insertedTeams, error: teamsError } = await supabase
-      .from('teams')
-      .insert(data.teams.map((team: any) => ({
-        name: team.name,
-        created_at: team.createdAt || new Date().toISOString()
-      })))
-      .select();
+    // Import managers first
+    const insertedManagers = await safeInsert('managers', data.managers?.map((manager: any) => ({
+      name: manager.name,
+      created_at: manager.created_at || new Date().toISOString()
+    })));
 
-    if (teamsError) throw teamsError;
-    if (!insertedTeams) throw new Error('No teams were inserted');
+    // Map old manager IDs to new UUIDs
+    const managerIdMap = new Map(data.managers?.map((oldManager: any, index: number) => 
+      [oldManager.id, insertedManagers[index].id]
+    ));
+
+    // Import teams with mapped manager IDs
+    const insertedTeams = await safeInsert('teams', data.teams?.map((team: any) => ({
+      name: team.name,
+      manager_id: managerIdMap.get(team.manager_id),
+      created_at: team.created_at || new Date().toISOString()
+    })));
 
     // Map old team IDs to new UUIDs
-    const teamIdMap = new Map(data.teams.map((oldTeam: any, index: number) => 
+    const teamIdMap = new Map(data.teams?.map((oldTeam: any, index: number) => 
       [oldTeam.id, insertedTeams[index].id]
     ));
 
     // Import resources with mapped team IDs
-    const { data: insertedResources, error: resourcesError } = await supabase
-      .from('resources')
-      .insert(data.resources.map((resource: any) => ({
-        name: resource.name,
-        capacity_per_day: resource.capacityPerDay,
-        team_id: teamIdMap.get(resource.teamId)
-      })))
-      .select();
-
-    if (resourcesError) throw resourcesError;
-    if (!insertedResources) throw new Error('No resources were inserted');
+    const insertedResources = await safeInsert('resources', data.resources?.map((resource: any) => ({
+      name: resource.name,
+      capacity_per_day: resource.capacity_per_day,
+      team_id: teamIdMap.get(resource.team_id)
+    })));
 
     // Map old resource IDs to new UUIDs
-    const resourceIdMap = new Map(data.resources.map((oldResource: any, index: number) => 
+    const resourceIdMap = new Map(data.resources?.map((oldResource: any, index: number) => 
       [oldResource.id, insertedResources[index].id]
     ));
 
-    // Import sprints with mapped team IDs
-    const { data: insertedSprints, error: sprintsError } = await supabase
-      .from('sprints')
-      .insert(data.sprints.map((sprint: any) => ({
-        team_id: teamIdMap.get(sprint.teamId),
-        start_date: sprint.startDate,
-        end_date: sprint.endDate,
-        duration: sprint.duration,
-        story_points_committed: sprint.storyPointsCommitted,
-        story_points_completed: sprint.storyPointsCompleted,
-        theoretical_capacity: sprint.theoreticalCapacity,
-        velocity_achieved: sprint.velocityAchieved,
-        commitment_respected: sprint.commitmentRespected,
-        objective: sprint.objective,
-        objective_achieved: sprint.objectiveAchieved,
-        created_at: sprint.createdAt || new Date().toISOString()
-      })))
-      .select();
+    // Import default practices
+    await safeInsert('default_practices', data.default_practices?.map((practice: any) => ({
+      day: practice.day,
+      who: practice.who,
+      type: practice.type,
+      action: practice.action,
+      sub_actions: practice.sub_actions,
+      format: practice.format,
+      duration: practice.duration,
+      description: practice.description,
+      created_at: practice.created_at || new Date().toISOString()
+    })));
 
-    if (sprintsError) throw sprintsError;
-    if (!insertedSprints) throw new Error('No sprints were inserted');
+    // Import sprints with mapped team IDs
+    const insertedSprints = await safeInsert('sprints', data.sprints?.map((sprint: any) => ({
+      team_id: teamIdMap.get(sprint.team_id),
+      start_date: sprint.start_date,
+      end_date: sprint.end_date,
+      duration: sprint.duration,
+      story_points_committed: sprint.story_points_committed,
+      story_points_completed: sprint.story_points_completed,
+      theoretical_capacity: sprint.theoretical_capacity,
+      velocity_achieved: sprint.velocity_achieved,
+      commitment_respected: sprint.commitment_respected,
+      objective: sprint.objective,
+      objective_achieved: sprint.objective_achieved,
+      is_successful: sprint.is_successful,
+      created_at: sprint.created_at || new Date().toISOString()
+    })));
 
     // Map old sprint IDs to new UUIDs
-    const sprintIdMap = new Map(data.sprints.map((oldSprint: any, index: number) => 
+    const sprintIdMap = new Map(data.sprints?.map((oldSprint: any, index: number) => 
       [oldSprint.id, insertedSprints[index].id]
     ));
 
-    // Prepare sprint resources data
-    for (const sprint of data.sprints) {
-      const newSprintId = sprintIdMap.get(sprint.id);
-      if (!newSprintId) continue;
+    // Import agile practices with mapped team IDs
+    await safeInsert('agile_practices', data.agile_practices?.map((practice: any) => ({
+      team_id: teamIdMap.get(practice.team_id),
+      day: practice.day,
+      who: practice.who,
+      type: practice.type,
+      action: practice.action,
+      sub_actions: practice.sub_actions,
+      format: practice.format,
+      duration: practice.duration,
+      is_completed: practice.is_completed,
+      completed_at: practice.completed_at,
+      url: practice.url,
+      description: practice.description
+    })));
 
-      const sprintResources = sprint.resources
-        .filter((resource: any) => resourceIdMap.has(resource.id))
-        .map((resource: any) => ({
-          sprint_id: newSprintId,
-          resource_id: resourceIdMap.get(resource.id),
-          daily_capacities: resource.dailyCapacities || []
-        }));
-
-      if (sprintResources.length > 0) {
-        const { error: sprintResourcesError } = await supabase
-          .from('sprint_resources')
-          .insert(sprintResources);
-
-        if (sprintResourcesError) {
-          console.error('Error inserting sprint resources:', sprintResourcesError);
-          throw sprintResourcesError;
-        }
-      }
+    // Import sprint resources with mapped IDs
+    if (data.sprint_resources && data.sprint_resources.length > 0) {
+      await safeInsert('sprint_resources', data.sprint_resources.map((sr: any) => ({
+        sprint_id: sprintIdMap.get(sr.sprint_id),
+        resource_id: resourceIdMap.get(sr.resource_id),
+        daily_capacities: sr.daily_capacities
+      })));
     }
 
-    toast.success("Import réussi avec écrasement des données existantes !");
+    console.log('Data import completed successfully');
+    toast.success("Import réussi !");
   } catch (error) {
     console.error('Error importing data:', error);
     toast.error("Erreur lors de l'import: " + (error as Error).message);
@@ -104,34 +150,57 @@ export const importData = async (data: any) => {
   }
 };
 
-export const importPractices = async (teamId: string, practices: any[]) => {
+export const exportData = async () => {
   try {
-    // Delete existing practices for the team
-    await supabase
-      .from('agile_practices')
-      .delete()
-      .eq('team_id', teamId);
+    console.log('Starting data export...');
+    
+    // Fetch all data from all tables
+    const [
+      { data: managers },
+      { data: teams },
+      { data: resources },
+      { data: defaultPractices },
+      { data: sprints },
+      { data: agilePractices },
+      { data: sprintResources }
+    ] = await Promise.all([
+      supabase.from('managers').select('*'),
+      supabase.from('teams').select('*'),
+      supabase.from('resources').select('*'),
+      supabase.from('default_practices').select('*'),
+      supabase.from('sprints').select('*'),
+      supabase.from('agile_practices').select('*'),
+      supabase.from('sprint_resources').select('*')
+    ]);
 
-    // Insert new practices
-    const { error: insertError } = await supabase
-      .from('agile_practices')
-      .insert(practices.map(practice => ({
-        team_id: teamId,
-        day: practice.day,
-        who: practice.who,
-        type: practice.type,
-        action: practice.action,
-        sub_actions: practice.subActions,
-        format: practice.format,
-        duration: practice.duration,
-        is_completed: practice.isCompleted || false,
-        completed_at: practice.completedAt,
-        url: practice.url
-      })));
+    const exportData = {
+      version: 1,
+      managers,
+      teams,
+      resources,
+      default_practices: defaultPractices,
+      sprints,
+      agile_practices: agilePractices,
+      sprint_resources: sprintResources
+    };
 
-    if (insertError) throw insertError;
+    // Create and download the JSON file
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `scrum-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    console.log('Data export completed successfully');
+    toast.success("Export réussi !");
+    return exportData;
   } catch (error) {
-    console.error('Error importing practices:', error);
+    console.error('Error exporting data:', error);
+    toast.error("Erreur lors de l'export: " + (error as Error).message);
     throw error;
   }
 };
