@@ -1,8 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
+
+type TableName = keyof Database['public']['Tables'];
 
 // Helper function to safely delete data from a table
-const safeDelete = async (tableName: string) => {
+const safeDelete = async (tableName: TableName) => {
   const { error } = await supabase
     .from(tableName)
     .delete()
@@ -15,7 +18,10 @@ const safeDelete = async (tableName: string) => {
 };
 
 // Helper function to safely insert data into a table
-const safeInsert = async (tableName: string, data: any[]) => {
+const safeInsert = async <T extends TableName>(
+  tableName: T,
+  data: Database['public']['Tables'][T]['Insert'][]
+): Promise<Database['public']['Tables'][T]['Row'][]> => {
   if (!data || data.length === 0) return [];
   
   const { data: inserted, error } = await supabase

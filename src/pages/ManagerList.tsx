@@ -86,7 +86,7 @@ const ManagerList = () => {
       const practices = await parsePracticesCSV(file);
       
       for (const team of teams) {
-        await importPractices(team.id, practices);
+        await initializePractices(team.id, practices);
       }
       
       toast.success(`${practices.length} pratiques importées avec succès pour ${teams.length} équipe(s) !`);
