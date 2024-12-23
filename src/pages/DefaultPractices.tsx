@@ -145,7 +145,15 @@ export const DefaultPractices = () => {
       // Update display_order in database
       const updates = practices.map((practice, index) => ({
         id: practice.id,
-        display_order: index
+        display_order: index,
+        action: practice.action,
+        day: practice.day,
+        type: practice.type,
+        who: practice.who,
+        sub_actions: practice.sub_actions,
+        format: practice.format,
+        duration: practice.duration,
+        description: practice.description
       }));
 
       const { error } = await supabase
