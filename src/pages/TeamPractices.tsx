@@ -111,7 +111,11 @@ const TeamPractices = () => {
               <DayProgressCard progress={getDayProgress(dayPractices)} small />
             </div>
             <AccordionContent>
-              <AgilePractices teamId={activeTeam.id} dayFilter={day} />
+              <AgilePractices 
+                teamId={activeTeam.id} 
+                dayFilter={day} 
+                firstIncompletePracticeId={firstIncompletePractice?.id}
+              />
             </AccordionContent>
           </AccordionItem>
         ))}

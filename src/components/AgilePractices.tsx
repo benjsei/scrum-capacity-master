@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 interface AgilePracticesProps {
   teamId: string;
   dayFilter?: string;
+  firstIncompletePracticeId?: string;
 }
 
 const getWhoIcon = (who: string) => {
@@ -26,7 +27,7 @@ const getWhoIcon = (who: string) => {
   }
 };
 
-const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
+const AgilePractices = ({ teamId, dayFilter, firstIncompletePracticeId }: AgilePracticesProps) => {
   const { teamPractices, initializePractices, togglePracticeCompletion, updatePracticeUrl } = useAgilePracticesStore();
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
   const [urlValue, setUrlValue] = useState('');
@@ -76,11 +77,6 @@ const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
     );
   };
 
-  const isFirstIncompletePractice = (practice, practices) => {
-    const firstIncomplete = practices.find(p => !p.isCompleted);
-    return firstIncomplete && firstIncomplete.id === practice.id;
-  };
-
   return (
     <div className="space-y-8">
       {Object.entries(practicesByType).map(([type, practices]) => (
@@ -88,7 +84,7 @@ const AgilePractices = ({ teamId, dayFilter }: AgilePracticesProps) => {
           <h3 className="text-lg font-semibold text-primary">{type}</h3>
           <div className="space-y-4">
             {practices.map((practice) => {
-              const isHighlighted = isFirstIncompletePractice(practice, filteredPractices);
+              const isHighlighted = practice.id === firstIncompletePracticeId;
               const isExpanded = isHighlighted || expandedPractices.includes(practice.id);
 
               return (
