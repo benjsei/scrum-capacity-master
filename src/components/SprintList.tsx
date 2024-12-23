@@ -129,42 +129,38 @@ export const SprintList = () => {
                   <TableCell className="py-2">{new Date(sprint.startDate).toLocaleDateString()}</TableCell>
                   <TableCell className="py-2">{sprint.duration} jours</TableCell>
                   <TableCell className="py-2">
-                    {sprint.storyPointsCompleted !== undefined ? 
+                    {sprint.storyPointsCompleted !== undefined && sprint.storyPointsCompleted !== null ? 
                       `${sprint.storyPointsCompleted}/${sprint.storyPointsCommitted}` :
-                      sprint.storyPointsCommitted
+                      `vide/${sprint.storyPointsCommitted}`
                     }
                   </TableCell>
                   <TableCell className="py-2">
-                    {sprint.theoreticalCapacity?.toFixed(1) || '0.0'}
+                    {sprint.theoreticalCapacity?.toFixed(1) || 'vide'}
                   </TableCell>
                   <TableCell className="py-2">
-                    {calculateTotalCapacity(sprint).toFixed(1)}
+                    {calculateTotalCapacity(sprint).toFixed(1) || 'vide'}
                   </TableCell>
                   <TableCell className="py-2">
                     {sprint.velocityAchieved !== undefined && sprint.velocityAchieved !== null ? (
                       <span>{sprint.velocityAchieved.toFixed(2)} SP/jour</span>
-                    ) : '-'}
+                    ) : 'vide'}
                   </TableCell>
                   <TableCell className="py-2">
-                    {sprint.storyPointsCompleted !== undefined && (
+                    {sprint.storyPointsCompleted !== undefined && sprint.storyPointsCompleted !== null && (
                       <div className="flex flex-col items-center gap-1">
                         <div className="w-[60px] bg-secondary rounded-full h-2 overflow-hidden">
-                          {sprint.storyPointsCompleted !== undefined && (
-                            <div
-                              className={cn(
-                                "h-full transition-all duration-300",
-                                getProgressColor((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
-                              )}
-                              style={{
-                                width: `${Math.min((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100, 100)}%`
-                              }}
-                            />
-                          )}
+                          <div
+                            className={cn(
+                              "h-full transition-all duration-300",
+                              getProgressColor((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
+                            )}
+                            style={{
+                              width: `${Math.min((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100, 100)}%`
+                            }}
+                          />
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {sprint.storyPointsCompleted !== undefined && 
-                            `${Math.round((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)}%`
-                          }
+                          {`${Math.round((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)}%`}
                         </span>
                       </div>
                     )}
@@ -221,7 +217,7 @@ export const SprintList = () => {
                           </Button>
                           {expandedObjectives[sprint.id] && (
                             <>
-                              <div className="text-sm mt-1">{sprint.objective}</div>
+                              <div className="text-sm mt-1">{sprint.objective || 'vide'}</div>
                               <div className={cn(
                                 "text-sm font-medium",
                                 sprint.objectiveAchieved ? "text-green-600" : "text-red-600"
