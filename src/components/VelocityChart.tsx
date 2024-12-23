@@ -7,11 +7,7 @@ export const VelocityChart = () => {
   const sprints = getActiveTeamSprints();
 
   const data = sprints
-    .filter(sprint => 
-      sprint.isSuccessful && 
-      sprint.storyPointsCompleted !== undefined && 
-      sprint.velocityAchieved !== undefined
-    )
+    .filter(sprint => sprint.velocityAchieved !== undefined)
     .map((sprint) => ({
       name: new Date(sprint.startDate).toLocaleDateString(),
       velocity: sprint.velocityAchieved || 0,
@@ -22,7 +18,7 @@ export const VelocityChart = () => {
 
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Velocity Trend (SP/JH)</h3>
+      <h3 className="text-lg font-semibold mb-4">Velocity Trend</h3>
       <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
@@ -34,8 +30,8 @@ export const VelocityChart = () => {
             <Line 
               type="monotone" 
               dataKey="velocity" 
-              stroke="#2563EB" 
-              name="Vélocité"
+              stroke="#1E40AF" 
+              name="Actual Velocity"
             />
           </LineChart>
         </ResponsiveContainer>

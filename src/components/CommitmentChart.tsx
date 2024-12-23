@@ -7,10 +7,7 @@ export const CommitmentChart = () => {
   const sprints = getActiveTeamSprints();
 
   const data = sprints
-    .filter(sprint => 
-      sprint.isSuccessful && 
-      sprint.storyPointsCompleted !== undefined
-    )
+    .filter(sprint => sprint.velocityAchieved !== undefined)
     .map((sprint) => ({
       name: new Date(sprint.startDate).toLocaleDateString(),
       percentage: sprint.storyPointsCompleted 
