@@ -1,26 +1,30 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import TeamDetails from "./pages/TeamDetails";
-import TeamPractices from "./pages/TeamPractices";
-import DefaultPractices from "./pages/DefaultPractices";
-import ManagerList from "./pages/ManagerList";
-import { Toaster } from "@/components/ui/sonner";
-import { TeamManagement } from "./components/TeamManagement";
+import { BrowserRouter } from "react-router-dom"
+import { ThemeProvider } from "next-themes"
+import { Routes, Route } from "react-router-dom"
+import { Toaster } from "@/components/ui/sonner"
+import Index from "@/pages/Index"
+import TeamDetails from "@/pages/TeamDetails"
+import DefaultPractices from "@/pages/DefaultPractices"
+import TeamPractices from "@/pages/TeamPractices"
+import ManagerList from "@/pages/ManagerList"
+
+import "./App.css"
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<ManagerList />} />
-        <Route path="/managers" element={<ManagerList />} />
-        <Route path="/teams/:managerId" element={<Index />} />
-        <Route path="/team/:teamId" element={<TeamDetails />} />
-        <Route path="/team/:teamId/practices" element={<TeamPractices />} />
-        <Route path="/default-practices" element={<DefaultPractices />} />
-      </Routes>
-      <Toaster />
-    </Router>
-  );
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/teams/:id" element={<TeamDetails />} />
+          <Route path="/default-practices" element={<DefaultPractices />} />
+          <Route path="/teams/:id/practices" element={<TeamPractices />} />
+          <Route path="/managers" element={<ManagerList />} />
+        </Routes>
+        <Toaster />
+      </BrowserRouter>
+    </ThemeProvider>
+  )
 }
 
-export default App;
+export default App
