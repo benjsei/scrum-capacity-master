@@ -80,7 +80,7 @@ export const SprintList = () => {
           <TableRow>
             <TableHead>Date de début</TableHead>
             <TableHead>Durée</TableHead>
-            <TableHead>Story Points engagés</TableHead>
+            <TableHead>Story Points</TableHead>
             <TableHead>Capacité théorique</TableHead>
             <TableHead>Jours/homme</TableHead>
             <TableHead>Respect engagement</TableHead>
@@ -101,7 +101,12 @@ export const SprintList = () => {
                 <>
                   <TableCell>{new Date(sprint.startDate).toLocaleDateString()}</TableCell>
                   <TableCell>{sprint.duration} jours</TableCell>
-                  <TableCell>{sprint.storyPointsCommitted}</TableCell>
+                  <TableCell>
+                    {sprint.storyPointsCompleted !== undefined ? 
+                      `${sprint.storyPointsCompleted}/${sprint.storyPointsCommitted}` :
+                      sprint.storyPointsCommitted
+                    }
+                  </TableCell>
                   <TableCell>{sprint.theoreticalCapacity.toFixed(1)}</TableCell>
                   <TableCell>{calculateTotalManDays(sprint).toFixed(1)}</TableCell>
                   <TableCell>
@@ -150,7 +155,6 @@ export const SprintList = () => {
                       )}
                       {sprint.storyPointsCompleted !== undefined && (
                         <div className="space-y-1">
-                          <div>{sprint.storyPointsCompleted}/{sprint.storyPointsCommitted} SP</div>
                           <div>Vélocité: {sprint.velocityAchieved?.toFixed(2)} SP/jour</div>
                           {sprint.objective && (
                             <div className="mt-2">
