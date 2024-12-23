@@ -62,6 +62,18 @@ export const SprintList = () => {
     }));
   };
 
+  const calculateTotalCapacity = (sprint: any) => {
+    if (!sprint.resources || !Array.isArray(sprint.resources)) return 0;
+    
+    return sprint.resources.reduce((total, resource) => {
+      if (!resource.dailyCapacities) return total;
+      const resourceTotal = resource.dailyCapacities.reduce((sum, dc) => {
+        return sum + (dc?.capacity || 0);
+      }, 0);
+      return total + (resourceTotal || 0);
+    }, 0);
+  };
+
   return (
     <Card className="p-6">
       <div className="overflow-x-auto">
@@ -98,16 +110,16 @@ export const SprintList = () => {
                       sprint.storyPointsCommitted
                     }
                   </TableCell>
-                  <TableCell className="py-2">{sprint.theoreticalCapacity.toFixed(1)}</TableCell>
                   <TableCell className="py-2">
-                    {sprint.resources.reduce((total, resource) => 
-                      total + (resource.dailyCapacities?.reduce((sum, dc) => sum + dc.capacity, 0) || 0), 0
-                    ).toFixed(1)}
+                    {sprint.theoreticalCapacity?.toFixed(1) || '0.0'}
                   </TableCell>
                   <TableCell className="py-2">
-                    {sprint.velocityAchieved !== undefined && (
+                    {calculateTotalCapacity(sprint).toFixed(1)}
+                  </TableCell>
+                  <TableCell className="py-2">
+                    {sprint.velocityAchieved !== undefined && sprint.velocityAchieved !== null ? (
                       <span>{sprint.velocityAchieved.toFixed(2)} SP/jour</span>
-                    )}
+                    ) : '-'}
                   </TableCell>
                   <TableCell className="py-2">
                     {sprint.storyPointsCompleted !== undefined && (

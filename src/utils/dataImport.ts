@@ -20,8 +20,8 @@ const safeDelete = async (tableName: TableName) => {
 // Helper function to safely insert data into a table
 const safeInsert = async <T extends TableName>(
   tableName: T,
-  data: Database['public']['Tables'][T]['Insert'][]
-): Promise<Database['public']['Tables'][T]['Row'][]> => {
+  data: any[]
+) => {
   if (!data || data.length === 0) return [];
   
   const { data: inserted, error } = await supabase
