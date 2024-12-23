@@ -135,15 +135,14 @@ export const DefaultPractices = () => {
     const { active, over } = event;
     
     if (active.id !== over.id) {
-      setPractices((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      const oldIndex = practices.findIndex((item) => item.id === active.id);
+      const newIndex = practices.findIndex((item) => item.id === over.id);
+      
+      const newPractices = arrayMove(practices, oldIndex, newIndex);
+      setPractices(newPractices);
 
-      // Update display_order in database
-      const updates = practices.map((practice, index) => ({
+      // Mettre à jour l'ordre dans la base de données
+      const updates = newPractices.map((practice, index) => ({
         id: practice.id,
         display_order: index,
         action: practice.action,
@@ -156,15 +155,20 @@ export const DefaultPractices = () => {
         description: practice.description
       }));
 
-      const { error } = await supabase
-        .from('default_practices')
-        .upsert(updates);
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('default_practices')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id);
 
-      if (error) {
-        toast.error("Erreur lors de la mise à jour de l'ordre");
-        loadPractices(); // Reload original order
-        return;
+        if (error) {
+          toast.error("Erreur lors de la mise à jour de l'ordre");
+          loadPractices(); // Recharger l'ordre original en cas d'erreur
+          return;
+        }
       }
+
+      toast.success("Ordre mis à jour avec succès");
     }
   };
 
