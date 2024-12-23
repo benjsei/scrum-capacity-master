@@ -75,20 +75,21 @@ export const SprintList = () => {
 
   return (
     <Card className="p-6">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date de début</TableHead>
-            <TableHead>Durée</TableHead>
-            <TableHead>Story Points</TableHead>
-            <TableHead>Capacité théorique</TableHead>
-            <TableHead>Jours/homme</TableHead>
-            <TableHead>Respect engagement</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+            <TableRow>
+              <TableHead>Date de début</TableHead>
+              <TableHead>Durée</TableHead>
+              <TableHead>Story Points</TableHead>
+              <TableHead>Capacité théorique</TableHead>
+              <TableHead>Jours/homme</TableHead>
+              <TableHead>Respect engagement</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
           {sprints.map((sprint) => (
             <TableRow key={sprint.id}>
               {editingSprint === sprint.id ? (
@@ -192,8 +193,9 @@ export const SprintList = () => {
               )}
             </TableRow>
           ))}
-        </TableBody>
-      </Table>
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 };
