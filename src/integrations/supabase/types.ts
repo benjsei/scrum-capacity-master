@@ -15,6 +15,7 @@ export type Database = {
           completed_at: string | null
           day: string
           description: string | null
+          display_order: number | null
           duration: string | null
           format: string | null
           id: string
@@ -30,6 +31,7 @@ export type Database = {
           completed_at?: string | null
           day: string
           description?: string | null
+          display_order?: number | null
           duration?: string | null
           format?: string | null
           id?: string
@@ -45,6 +47,7 @@ export type Database = {
           completed_at?: string | null
           day?: string
           description?: string | null
+          display_order?: number | null
           duration?: string | null
           format?: string | null
           id?: string
@@ -71,6 +74,7 @@ export type Database = {
           created_at: string | null
           day: string
           description: string | null
+          display_order: number | null
           duration: string | null
           format: string | null
           id: string
@@ -83,6 +87,7 @@ export type Database = {
           created_at?: string | null
           day: string
           description?: string | null
+          display_order?: number | null
           duration?: string | null
           format?: string | null
           id?: string
@@ -95,6 +100,7 @@ export type Database = {
           created_at?: string | null
           day?: string
           description?: string | null
+          display_order?: number | null
           duration?: string | null
           format?: string | null
           id?: string

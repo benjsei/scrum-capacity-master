@@ -1,12 +1,78 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, GripVertical } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DefaultPracticeForm } from "@/components/DefaultPracticeForm";
 import { IndexHeader } from "@/components/IndexHeader";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+const SortablePracticeCard = ({ practice, onEdit, onDelete }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: practice.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <Card ref={setNodeRef} style={style} className="p-4">
+      <div className="flex justify-between items-start">
+        <div className="flex items-start gap-2">
+          <button {...attributes} {...listeners} className="mt-1 cursor-grab hover:cursor-grabbing">
+            <GripVertical className="h-5 w-5 text-gray-400" />
+          </button>
+          <div className="space-y-2">
+            <div className="font-medium">{practice.action}</div>
+            {practice.sub_actions && (
+              <div className="text-sm text-muted-foreground">
+                Sous-actions: {practice.sub_actions}
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground">
+              Jour {practice.day} • {practice.who} • {practice.type}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => onEdit(practice)}>
+            Modifier
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={() => onDelete(practice.id)}
+          >
+            Supprimer
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+};
 
 export const DefaultPractices = () => {
   const navigate = useNavigate();
@@ -14,28 +80,25 @@ export const DefaultPractices = () => {
   const [editingPractice, setEditingPractice] = useState<any | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const loadPractices = async () => {
     const { data, error } = await supabase
       .from('default_practices')
       .select('*')
-      .order('day', { ascending: true });
+      .order('display_order', { ascending: true });
 
     if (error) {
       toast.error("Erreur lors du chargement des pratiques");
       return;
     }
 
-    // Custom sort function for days (N, N+1, N+5, N+14)
-    const sortedData = [...(data || [])].sort((a, b) => {
-      const dayOrder = { "N": 0, "N+1": 1, "N+5": 2, "N+14": 3 };
-      const dayA = dayOrder[a.day as keyof typeof dayOrder] ?? 4;
-      const dayB = dayOrder[b.day as keyof typeof dayOrder] ?? 4;
-      
-      if (dayA !== dayB) return dayA - dayB;
-      return a.action.localeCompare(b.action);
-    });
-
-    setPractices(sortedData);
+    setPractices(data || []);
   };
 
   useEffect(() => {
@@ -68,6 +131,35 @@ export const DefaultPractices = () => {
     loadPractices();
   };
 
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    
+    if (active.id !== over.id) {
+      setPractices((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        return arrayMove(items, oldIndex, newIndex);
+      });
+
+      // Update display_order in database
+      const updates = practices.map((practice, index) => ({
+        id: practice.id,
+        display_order: index
+      }));
+
+      const { error } = await supabase
+        .from('default_practices')
+        .upsert(updates);
+
+      if (error) {
+        toast.error("Erreur lors de la mise à jour de l'ordre");
+        loadPractices(); // Reload original order
+        return;
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 space-y-6">
       <Button 
@@ -88,37 +180,27 @@ export const DefaultPractices = () => {
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {practices.map((practice) => (
-          <Card key={practice.id} className="p-4">
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <div className="font-medium">{practice.action}</div>
-                {practice.sub_actions && (
-                  <div className="text-sm text-muted-foreground">
-                    Sous-actions: {practice.sub_actions}
-                  </div>
-                )}
-                <div className="text-sm text-muted-foreground">
-                  Jour {practice.day} • {practice.who} • {practice.type}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(practice)}>
-                  Modifier
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={() => handleDelete(practice.id)}
-                >
-                  Supprimer
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={practices.map(p => p.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="grid gap-4">
+            {practices.map((practice) => (
+              <SortablePracticeCard
+                key={practice.id}
+                practice={practice}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {isFormOpen && (
         <DefaultPracticeForm
