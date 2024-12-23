@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, XCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -40,18 +41,6 @@ export const SprintList = () => {
     toast.success("Sprint terminé avec succès!");
   };
 
-  const getCommitmentColor = (percentage: number) => {
-    if (percentage >= 90) return "text-green-600";
-    if (percentage >= 70) return "text-orange-500";
-    return "text-red-600";
-  };
-
-  const calculateTotalManDays = (sprint: any) => {
-    return sprint.resources.reduce((total: number, resource: any) => {
-      return total + (resource.dailyCapacities?.reduce((sum: number, dc: any) => sum + dc.capacity, 0) || 0);
-    }, 0);
-  };
-
   const getSprintStatus = (sprint: any) => {
     if (sprint.storyPointsCompleted === undefined) {
       return 'En cours';
@@ -84,14 +73,15 @@ export const SprintList = () => {
               <TableHead>Story Points</TableHead>
               <TableHead>Capacité théorique</TableHead>
               <TableHead>Jours/homme</TableHead>
-              <TableHead>Respect engagement</TableHead>
+              <TableHead>Vélocité</TableHead>
+              <TableHead>Engagement</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
           {sprints.map((sprint) => (
-            <TableRow key={sprint.id}>
+            <TableRow key={sprint.id} className="h-12">
               {editingSprint === sprint.id ? (
                 <SprintEditForm
                   sprint={sprint}
@@ -100,36 +90,50 @@ export const SprintList = () => {
                 />
               ) : (
                 <>
-                  <TableCell>{new Date(sprint.startDate).toLocaleDateString()}</TableCell>
-                  <TableCell>{sprint.duration} jours</TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">{new Date(sprint.startDate).toLocaleDateString()}</TableCell>
+                  <TableCell className="py-2">{sprint.duration} jours</TableCell>
+                  <TableCell className="py-2">
                     {sprint.storyPointsCompleted !== undefined ? 
                       `${sprint.storyPointsCompleted}/${sprint.storyPointsCommitted}` :
                       sprint.storyPointsCommitted
                     }
                   </TableCell>
-                  <TableCell>{sprint.theoreticalCapacity.toFixed(1)}</TableCell>
-                  <TableCell>{calculateTotalManDays(sprint).toFixed(1)}</TableCell>
-                  <TableCell>
-                    {sprint.storyPointsCompleted !== undefined && (
-                      <span className={cn(
-                        getCommitmentColor((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
-                      )}>
-                        {((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100).toFixed(0)}%
-                      </span>
+                  <TableCell className="py-2">{sprint.theoreticalCapacity.toFixed(1)}</TableCell>
+                  <TableCell className="py-2">
+                    {sprint.resources.reduce((total, resource) => 
+                      total + (resource.dailyCapacities?.reduce((sum, dc) => sum + dc.capacity, 0) || 0), 0
+                    ).toFixed(1)}
+                  </TableCell>
+                  <TableCell className="py-2">
+                    {sprint.velocityAchieved !== undefined && (
+                      <span>{sprint.velocityAchieved.toFixed(2)} SP/jour</span>
                     )}
                   </TableCell>
-                  <TableCell>
-                    {getSprintStatus(sprint)}
+                  <TableCell className="py-2">
+                    {sprint.storyPointsCompleted !== undefined && (
+                      <Progress 
+                        value={(sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100} 
+                        className="w-[60px]"
+                      />
+                    )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
+                    {getSprintStatus(sprint) === 'Succès' ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    ) : getSprintStatus(sprint) === 'Échec' ? (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    ) : (
+                      'En cours'
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2">
                     <div className="space-y-2">
                       <Button
                         onClick={() => setEditingSprint(sprint.id)}
                         variant="outline"
                         size="sm"
                       >
-                        Modifier le sprint
+                        Modifier
                       </Button>
                       
                       {sprint.storyPointsCompleted === undefined && (
@@ -150,40 +154,35 @@ export const SprintList = () => {
                             variant="outline"
                             size="sm"
                           >
-                            Terminer le sprint
+                            Terminer
                           </Button>
                         </div>
                       )}
-                      {sprint.storyPointsCompleted !== undefined && (
-                        <div className="space-y-1">
-                          <div>Vélocité: {sprint.velocityAchieved?.toFixed(2)} SP/jour</div>
-                          {sprint.objective && (
-                            <div className="mt-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleObjective(sprint.id)}
-                                className="flex items-center gap-1 p-0 h-auto"
-                              >
-                                {expandedObjectives[sprint.id] ? (
-                                  <ChevronUp className="h-4 w-4" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4" />
-                                )}
-                                <span>Objectif</span>
-                              </Button>
-                              {expandedObjectives[sprint.id] && (
-                                <>
-                                  <div className="text-sm mt-1">{sprint.objective}</div>
-                                  <div className={cn(
-                                    "text-sm font-medium",
-                                    sprint.objectiveAchieved ? "text-green-600" : "text-red-600"
-                                  )}>
-                                    {sprint.objectiveAchieved ? "Objectif atteint" : "Objectif non atteint"}
-                                  </div>
-                                </>
-                              )}
-                            </div>
+                      {sprint.objective && (
+                        <div className="mt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleObjective(sprint.id)}
+                            className="flex items-center gap-1 p-0 h-auto"
+                          >
+                            {expandedObjectives[sprint.id] ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                            <span>Objectif</span>
+                          </Button>
+                          {expandedObjectives[sprint.id] && (
+                            <>
+                              <div className="text-sm mt-1">{sprint.objective}</div>
+                              <div className={cn(
+                                "text-sm font-medium",
+                                sprint.objectiveAchieved ? "text-green-600" : "text-red-600"
+                              )}>
+                                {sprint.objectiveAchieved ? "Objectif atteint" : "Objectif non atteint"}
+                              </div>
+                            </>
                           )}
                         </div>
                       )}

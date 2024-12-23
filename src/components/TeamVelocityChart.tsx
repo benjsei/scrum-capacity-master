@@ -14,7 +14,6 @@ export const TeamVelocityChart = () => {
 
   const managerTeams = teams.filter(team => team.managerId === managerId);
 
-  // Initialize with all manager's teams selected
   useEffect(() => {
     if (managerTeams.length > 0) {
       setSelectedTeams(managerTeams.map(t => t.id));
