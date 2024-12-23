@@ -6,6 +6,8 @@ export interface ScrumTeam {
   resources: Resource[];
 }
 
+export type Team = ScrumTeam;
+
 export interface Resource {
   id: string;
   name: string;

@@ -8,7 +8,7 @@ import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ListTodo, SparklesIcon, ArrowLeft } from 'lucide-react';
+import { ListTodo, SparklesIcon } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,6 +90,16 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
       console.error('Error deleting team:', error);
       toast.error("Erreur lors de la suppression de l'équipe");
     }
+  };
+
+  const handleNavigateToSprints = (team: Team) => {
+    setActiveTeam(team);
+    navigate(`/team/${team.id}`);
+  };
+
+  const handleNavigateToPractices = (team: Team) => {
+    setActiveTeam(team);
+    navigate(`/team/${team.id}/practices`);
   };
 
   const getTeamProgress = (teamId: string) => {
