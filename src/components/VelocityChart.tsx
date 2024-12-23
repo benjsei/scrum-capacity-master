@@ -7,7 +7,7 @@ export const VelocityChart = () => {
   const sprints = getActiveTeamSprints();
 
   const data = sprints
-    .filter(sprint => sprint.velocityAchieved !== undefined)
+    .filter(sprint => sprint.storyPointsCompleted !== undefined && sprint.storyPointsCompleted !== null)
     .map((sprint) => ({
       name: new Date(sprint.startDate).toLocaleDateString(),
       velocity: sprint.velocityAchieved || 0,

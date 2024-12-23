@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp, CheckCircle2, XCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SprintEditForm } from "./SprintEditForm";
+import { Badge } from "@/components/ui/badge";
 
 export const SprintList = () => {
   const { getActiveTeamSprints, completeSprint, loadSprints } = useSprintStore();
@@ -42,7 +43,7 @@ export const SprintList = () => {
   };
 
   const getSprintStatus = (sprint: any) => {
-    if (sprint.storyPointsCompleted === undefined) {
+    if (sprint.storyPointsCompleted === undefined || sprint.storyPointsCompleted === null) {
       return 'En cours';
     }
     if (sprint.isSuccessful === true) {
@@ -79,6 +80,22 @@ export const SprintList = () => {
     if (percentage >= 90) return "bg-emerald-500";
     if (percentage >= 70) return "bg-orange-500";
     return "bg-red-500";
+  };
+
+  const getStatusBadge = (sprint: any) => {
+    const status = getSprintStatus(sprint);
+    if (status === 'En cours') {
+      return (
+        <Badge variant="secondary" className="flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          En cours
+        </Badge>
+      );
+    }
+    if (status === 'Succès') {
+      return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+    }
+    return <XCircle className="h-5 w-5 text-red-500" />;
   };
 
   return (
@@ -153,13 +170,7 @@ export const SprintList = () => {
                     )}
                   </TableCell>
                   <TableCell className="py-2">
-                    {getSprintStatus(sprint) === 'Succès' ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    ) : getSprintStatus(sprint) === 'Échec' ? (
-                      <XCircle className="h-5 w-5 text-red-500" />
-                    ) : (
-                      'En cours'
-                    )}
+                    {getStatusBadge(sprint)}
                   </TableCell>
                   <TableCell className="py-2">
                     <div className="space-y-2">
