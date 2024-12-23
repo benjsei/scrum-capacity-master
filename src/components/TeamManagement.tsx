@@ -9,6 +9,17 @@ import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ListTodo, SparklesIcon, ArrowLeft } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import type { Team } from '../types/scrumTeam';
 
 interface TeamManagementProps {
   managerId: string | null;
@@ -18,12 +29,12 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
   const [newTeamName, setNewTeamName] = useState('');
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   const { teams, addTeam, deleteTeam, setActiveTeam, updateTeamName } = useScrumTeamStore();
   const { getPracticesForTeam } = useAgilePracticesStore();
   const navigate = useNavigate();
   const { managerId: urlManagerId } = useParams();
   
-  // Use URL parameter if available, otherwise use prop
   const effectiveManagerId = urlManagerId || propManagerId;
 
   const filteredTeams = effectiveManagerId 
@@ -68,14 +79,17 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
     toast.success('Nom de l\'équipe mis à jour avec succès!');
   };
 
-  const handleNavigateToSprints = (team: any) => {
-    setActiveTeam(team);
-    navigate(`/team/${team.id}`);
-  };
-
-  const handleNavigateToPractices = (team: any) => {
-    setActiveTeam(team);
-    navigate(`/team/${team.id}/practices`);
+  const handleDeleteTeam = async () => {
+    if (!teamToDelete) return;
+    
+    try {
+      await deleteTeam(teamToDelete.id);
+      toast.success('Équipe supprimée avec succès!');
+      setTeamToDelete(null);
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      toast.error("Erreur lors de la suppression de l'équipe");
+    }
   };
 
   const getTeamProgress = (teamId: string) => {
@@ -148,7 +162,7 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
                           </Button>
                           <Button
                             variant="destructive"
-                            onClick={() => deleteTeam(team.id)}
+                            onClick={() => setTeamToDelete(team)}
                           >
                             Supprimer
                           </Button>
@@ -162,6 +176,23 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
           </div>
         </Card>
       </div>
+
+      <AlertDialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer l'équipe</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cette équipe ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTeam}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

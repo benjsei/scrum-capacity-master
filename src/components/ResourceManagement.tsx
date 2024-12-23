@@ -4,12 +4,24 @@ import { useResourceStore } from "../store/resourceStore";
 import { useScrumTeamStore } from "../store/scrumTeamStore";
 import { toast } from "sonner";
 import { Trash2, Plus } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import type { Resource } from "@/types/sprint";
 
 export const ResourceManagement = () => {
   const { resources, setResources, updateResource, deleteResource, addResource } = useResourceStore();
   const { activeTeam, loadTeams } = useScrumTeamStore();
+  const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
 
   useEffect(() => {
     const loadResources = async () => {
@@ -68,15 +80,16 @@ export const ResourceManagement = () => {
     }
   };
 
-  const handleDeleteResource = async (id: string) => {
-    if (!activeTeam) {
+  const handleDeleteResource = async () => {
+    if (!resourceToDelete || !activeTeam) {
       toast.error("Veuillez sélectionner une équipe");
       return;
     }
 
     try {
-      await deleteResource(id);
+      await deleteResource(resourceToDelete.id);
       await loadTeams();
+      setResourceToDelete(null);
       toast.success("Ressource supprimée");
     } catch (error) {
       console.error('Error deleting resource:', error);
@@ -144,7 +157,7 @@ export const ResourceManagement = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleDeleteResource(resource.id)}
+              onClick={() => setResourceToDelete(resource)}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -154,6 +167,23 @@ export const ResourceManagement = () => {
           <p className="text-sm text-muted-foreground">Aucune ressource</p>
         )}
       </div>
+
+      <AlertDialog open={!!resourceToDelete} onOpenChange={() => setResourceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer la ressource</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cette ressource ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteResource}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
