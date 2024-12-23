@@ -74,6 +74,13 @@ export const SprintList = () => {
     }, 0);
   };
 
+  const getProgressColor = (percentage: number) => {
+    if (percentage > 100) return "bg-emerald-700";
+    if (percentage >= 90) return "bg-emerald-500";
+    if (percentage >= 70) return "bg-orange-500";
+    return "bg-red-500";
+  };
+
   return (
     <Card className="p-6">
       <div className="overflow-x-auto">
@@ -123,10 +130,19 @@ export const SprintList = () => {
                   </TableCell>
                   <TableCell className="py-2">
                     {sprint.storyPointsCompleted !== undefined && (
-                      <Progress 
-                        value={(sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100} 
-                        className="w-[60px]"
-                      />
+                      <div className="w-[60px] bg-secondary rounded-full h-2 overflow-hidden">
+                        {sprint.storyPointsCompleted !== undefined && (
+                          <div
+                            className={cn(
+                              "h-full transition-all duration-300",
+                              getProgressColor((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
+                            )}
+                            style={{
+                              width: `${Math.min((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100, 100)}%`
+                            }}
+                          />
+                        )}
+                      </div>
                     )}
                   </TableCell>
                   <TableCell className="py-2">
