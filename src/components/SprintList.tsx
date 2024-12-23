@@ -130,18 +130,25 @@ export const SprintList = () => {
                   </TableCell>
                   <TableCell className="py-2">
                     {sprint.storyPointsCompleted !== undefined && (
-                      <div className="w-[60px] bg-secondary rounded-full h-2 overflow-hidden">
-                        {sprint.storyPointsCompleted !== undefined && (
-                          <div
-                            className={cn(
-                              "h-full transition-all duration-300",
-                              getProgressColor((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
-                            )}
-                            style={{
-                              width: `${Math.min((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100, 100)}%`
-                            }}
-                          />
-                        )}
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-[60px] bg-secondary rounded-full h-2 overflow-hidden">
+                          {sprint.storyPointsCompleted !== undefined && (
+                            <div
+                              className={cn(
+                                "h-full transition-all duration-300",
+                                getProgressColor((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
+                              )}
+                              style={{
+                                width: `${Math.min((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100, 100)}%`
+                              }}
+                            />
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {sprint.storyPointsCompleted !== undefined && 
+                            `${Math.round((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)}%`
+                          }
+                        </span>
                       </div>
                     )}
                   </TableCell>
