@@ -150,7 +150,7 @@ export const SprintList = () => {
                       )}
                       {sprint.storyPointsCompleted !== undefined && (
                         <div className="space-y-1">
-                          <div>Réalisé: {sprint.storyPointsCompleted} SP</div>
+                          <div>{sprint.storyPointsCompleted}/{sprint.storyPointsCommitted} SP</div>
                           <div>Vélocité: {sprint.velocityAchieved?.toFixed(2)} SP/jour</div>
                           {sprint.objective && (
                             <div className="mt-2">
