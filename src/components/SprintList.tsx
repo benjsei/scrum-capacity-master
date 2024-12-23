@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -19,6 +20,7 @@ export const SprintList = () => {
   const { getActiveTeamSprints, completeSprint, loadSprints } = useSprintStore();
   const [completionData, setCompletionData] = useState<{ [key: string]: number }>({});
   const [editingSprint, setEditingSprint] = useState<string | null>(null);
+  const [expandedObjectives, setExpandedObjectives] = useState<{ [key: string]: boolean }>({});
   
   useEffect(() => {
     loadSprints();
@@ -60,10 +62,15 @@ export const SprintList = () => {
     if (sprint.isSuccessful === false) {
       return 'Échec';
     }
-    // Si isSuccessful n'est pas défini mais que le sprint est terminé,
-    // on considère que c'est un succès si on a atteint 80% de l'engagement
     const commitmentPercentage = (sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100;
     return commitmentPercentage >= 80 ? 'Succès' : 'Échec';
+  };
+
+  const toggleObjective = (sprintId: string) => {
+    setExpandedObjectives(prev => ({
+      ...prev,
+      [sprintId]: !prev[sprintId]
+    }));
   };
 
   return (
@@ -147,14 +154,30 @@ export const SprintList = () => {
                           <div>Vélocité: {sprint.velocityAchieved?.toFixed(2)} SP/jour</div>
                           {sprint.objective && (
                             <div className="mt-2">
-                              <div className="font-semibold">Objectif:</div>
-                              <div className="text-sm">{sprint.objective}</div>
-                              <div className={cn(
-                                "text-sm font-medium",
-                                sprint.objectiveAchieved ? "text-green-600" : "text-red-600"
-                              )}>
-                                {sprint.objectiveAchieved ? "Objectif atteint" : "Objectif non atteint"}
-                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleObjective(sprint.id)}
+                                className="flex items-center gap-1 p-0 h-auto"
+                              >
+                                {expandedObjectives[sprint.id] ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                                <span>Objectif</span>
+                              </Button>
+                              {expandedObjectives[sprint.id] && (
+                                <>
+                                  <div className="text-sm mt-1">{sprint.objective}</div>
+                                  <div className={cn(
+                                    "text-sm font-medium",
+                                    sprint.objectiveAchieved ? "text-green-600" : "text-red-600"
+                                  )}>
+                                    {sprint.objectiveAchieved ? "Objectif atteint" : "Objectif non atteint"}
+                                  </div>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
