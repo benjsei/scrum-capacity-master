@@ -3,8 +3,6 @@ import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 
 type TableName = keyof Database['public']['Tables'];
-type TableRow<T extends TableName> = Database['public']['Tables'][T]['Row'];
-type TableInsert<T extends TableName> = Database['public']['Tables'][T]['Insert'];
 
 // Helper function to safely delete data from a table
 const safeDelete = async (tableName: TableName) => {
@@ -22,8 +20,8 @@ const safeDelete = async (tableName: TableName) => {
 // Helper function to safely insert data into a table
 const safeInsert = async <T extends TableName>(
   tableName: T,
-  data: TableInsert<T>[]
-): Promise<TableRow<T>[]> => {
+  data: Database['public']['Tables'][T]['Insert'][]
+): Promise<Database['public']['Tables'][T]['Row'][]> => {
   if (!data || data.length === 0) return [];
   
   const { data: inserted, error } = await supabase
@@ -39,15 +37,7 @@ const safeInsert = async <T extends TableName>(
   return inserted || [];
 };
 
-export const importData = async (data: {
-  managers?: TableInsert<'managers'>[],
-  teams?: TableInsert<'teams'>[],
-  resources?: TableInsert<'resources'>[],
-  default_practices?: TableInsert<'default_practices'>[],
-  sprints?: TableInsert<'sprints'>[],
-  agile_practices?: TableInsert<'agile_practices'>[],
-  sprint_resources?: TableInsert<'sprint_resources'>[]
-}) => {
+export const importData = async (data: any) => {
   try {
     console.log('Starting data import...');
     
@@ -63,65 +53,97 @@ export const importData = async (data: {
     console.log('Existing data cleared successfully');
 
     // Import managers first
-    const insertedManagers = await safeInsert('managers', data.managers || []);
+    const insertedManagers = await safeInsert('managers', data.managers?.map((manager: any) => ({
+      name: manager.name,
+      created_at: manager.created_at || new Date().toISOString()
+    })));
 
     // Map old manager IDs to new UUIDs
-    const managerIdMap = new Map(data.managers?.map((oldManager, index) => 
+    const managerIdMap = new Map(data.managers?.map((oldManager: any, index: number) => 
       [oldManager.id, insertedManagers[index].id]
     ));
 
     // Import teams with mapped manager IDs
-    const insertedTeams = await safeInsert('teams', (data.teams || []).map(team => ({
-      ...team,
-      manager_id: team.manager_id ? managerIdMap.get(team.manager_id) : null
+    const insertedTeams = await safeInsert('teams', data.teams?.map((team: any) => ({
+      name: team.name,
+      manager_id: managerIdMap.get(team.manager_id),
+      created_at: team.created_at || new Date().toISOString()
     })));
 
     // Map old team IDs to new UUIDs
-    const teamIdMap = new Map(data.teams?.map((oldTeam, index) => 
+    const teamIdMap = new Map(data.teams?.map((oldTeam: any, index: number) => 
       [oldTeam.id, insertedTeams[index].id]
     ));
 
     // Import resources with mapped team IDs
-    const insertedResources = await safeInsert('resources', (data.resources || []).map(resource => ({
-      ...resource,
-      team_id: resource.team_id ? teamIdMap.get(resource.team_id) : null
+    const insertedResources = await safeInsert('resources', data.resources?.map((resource: any) => ({
+      name: resource.name,
+      capacity_per_day: resource.capacity_per_day,
+      team_id: teamIdMap.get(resource.team_id)
     })));
 
     // Map old resource IDs to new UUIDs
-    const resourceIdMap = new Map(data.resources?.map((oldResource, index) => 
+    const resourceIdMap = new Map(data.resources?.map((oldResource: any, index: number) => 
       [oldResource.id, insertedResources[index].id]
     ));
 
     // Import default practices
-    if (data.default_practices) {
-      await safeInsert('default_practices', data.default_practices);
-    }
+    await safeInsert('default_practices', data.default_practices?.map((practice: any) => ({
+      day: practice.day,
+      who: practice.who,
+      type: practice.type,
+      action: practice.action,
+      sub_actions: practice.sub_actions,
+      format: practice.format,
+      duration: practice.duration,
+      description: practice.description,
+      created_at: practice.created_at || new Date().toISOString()
+    })));
 
     // Import sprints with mapped team IDs
-    const insertedSprints = await safeInsert('sprints', (data.sprints || []).map(sprint => ({
-      ...sprint,
-      team_id: sprint.team_id ? teamIdMap.get(sprint.team_id) : null
+    const insertedSprints = await safeInsert('sprints', data.sprints?.map((sprint: any) => ({
+      team_id: teamIdMap.get(sprint.team_id),
+      start_date: sprint.start_date,
+      end_date: sprint.end_date,
+      duration: sprint.duration,
+      story_points_committed: sprint.story_points_committed,
+      story_points_completed: sprint.story_points_completed,
+      theoretical_capacity: sprint.theoretical_capacity,
+      velocity_achieved: sprint.velocity_achieved,
+      commitment_respected: sprint.commitment_respected,
+      objective: sprint.objective,
+      objective_achieved: sprint.objective_achieved,
+      is_successful: sprint.is_successful,
+      created_at: sprint.created_at || new Date().toISOString()
     })));
 
     // Map old sprint IDs to new UUIDs
-    const sprintIdMap = new Map(data.sprints?.map((oldSprint, index) => 
+    const sprintIdMap = new Map(data.sprints?.map((oldSprint: any, index: number) => 
       [oldSprint.id, insertedSprints[index].id]
     ));
 
     // Import agile practices with mapped team IDs
-    if (data.agile_practices) {
-      await safeInsert('agile_practices', data.agile_practices.map(practice => ({
-        ...practice,
-        team_id: practice.team_id ? teamIdMap.get(practice.team_id) : null
-      })));
-    }
+    await safeInsert('agile_practices', data.agile_practices?.map((practice: any) => ({
+      team_id: teamIdMap.get(practice.team_id),
+      day: practice.day,
+      who: practice.who,
+      type: practice.type,
+      action: practice.action,
+      sub_actions: practice.sub_actions,
+      format: practice.format,
+      duration: practice.duration,
+      is_completed: practice.is_completed,
+      completed_at: practice.completed_at,
+      url: practice.url,
+      description: practice.description
+    })));
 
     // Import sprint resources with mapped IDs
-    if (data.sprint_resources) {
-      await safeInsert('sprint_resources', data.sprint_resources.map(sr => ({
-        ...sr,
-        sprint_id: sprintIdMap.get(sr.sprint_id)!,
-        resource_id: resourceIdMap.get(sr.resource_id)!
+    if (data.sprint_resources && data.sprint_resources.length > 0) {
+      await safeInsert('sprint_resources', data.sprint_resources.map((sr: any) => ({
+        sprint_id: sprintIdMap.get(sr.sprint_id),
+        resource_id: resourceIdMap.get(sr.resource_id),
+        daily_capacities: sr.daily_capacities
       })));
     }
 
