@@ -279,6 +279,11 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
   calculateTheoreticalCapacity: (resources: Resource[], duration: number) => {
     const averageVelocity = get().getAverageVelocity();
     
+    if (resources.length === 0) {
+      // Si pas de ressources, on utilise le nombre de jours/homme total
+      return averageVelocity;
+    }
+
     const totalResourceCapacity = resources.reduce((acc, resource) => {
       if (resource.dailyCapacities && resource.dailyCapacities.length > 0) {
         return acc + resource.dailyCapacities.reduce((sum, dc) => sum + dc.capacity, 0);
@@ -286,7 +291,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       return acc + (resource.capacityPerDay * duration);
     }, 0);
 
-    // Round to 2 decimal places to stay within the database field's precision
     return Number((averageVelocity * totalResourceCapacity).toFixed(2));
   },
 

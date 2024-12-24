@@ -169,6 +169,22 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     }));
   };
 
+  useEffect(() => {
+    if (editedSprint.duration && editedSprint.resources.length > 0) {
+      const capacity = calculateTheoreticalCapacity(editedSprint.resources, editedSprint.duration);
+      setEditedSprint(prev => ({
+        ...prev,
+        theoreticalCapacity: capacity
+      }));
+    } else if (editedSprint.duration && editedSprint.totalPersonDays) {
+      const capacity = averageVelocity * editedSprint.totalPersonDays;
+      setEditedSprint(prev => ({
+        ...prev,
+        theoreticalCapacity: capacity
+      }));
+    }
+  }, [editedSprint.duration, editedSprint.resources, editedSprint.totalPersonDays, calculateTheoreticalCapacity, averageVelocity]);
+
   return (
     <>
       <TableCell colSpan={8}>
