@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useSprintStore } from '../store/sprintStore';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Area } from 'recharts';
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Area } from 'recharts';
 
 export const CommitmentChart = () => {
   const { getActiveTeamSprints } = useSprintStore();
@@ -20,8 +20,8 @@ export const CommitmentChart = () => {
       name, 
       percentage,
       // Add these fields for the areas
-      aboveHundred: percentage > 100 ? percentage : 100,
-      belowHundred: percentage < 100 ? percentage : 100
+      aboveArea: percentage >= 100 ? percentage : null,
+      belowArea: percentage < 100 ? percentage : null
     }));
 
   return (
@@ -29,7 +29,7 @@ export const CommitmentChart = () => {
       <h3 className="text-lg font-semibold mb-4">Respect des engagements</h3>
       <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart 
+          <ComposedChart 
             data={data}
             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           >
@@ -45,20 +45,20 @@ export const CommitmentChart = () => {
             {/* Area below 100% */}
             <Area
               type="monotone"
-              dataKey="belowHundred"
-              stroke="none"
+              dataKey="belowArea"
               fill="#ef4444"
               fillOpacity={0.3}
+              stroke="none"
               isAnimationActive={false}
             />
             
             {/* Area above 100% */}
             <Area
               type="monotone"
-              dataKey="aboveHundred"
-              stroke="none"
+              dataKey="aboveArea"
               fill="#22c55e"
               fillOpacity={0.3}
+              stroke="none"
               isAnimationActive={false}
             />
             
@@ -71,7 +71,7 @@ export const CommitmentChart = () => {
               strokeWidth={2}
               isAnimationActive={false}
             />
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </Card>
