@@ -64,10 +64,6 @@ export const SprintList = () => {
   };
 
   const calculateTotalCapacity = (sprint: any) => {
-    if (sprint.totalPersonDays) {
-      return sprint.totalPersonDays;
-    }
-    
     if (!sprint.resources || !Array.isArray(sprint.resources)) return 0;
     
     return sprint.resources.reduce((total, resource) => {

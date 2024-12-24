@@ -109,8 +109,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           duration: sprint.duration,
           story_points_committed: sprint.storyPointsCommitted,
           theoretical_capacity: sprint.theoreticalCapacity,
-          objective: sprint.objective,
-          total_person_days: sprint.totalPersonDays
+          objective: sprint.objective
         })
         .select()
         .single();
@@ -122,35 +121,33 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       console.log('Sprint created successfully:', sprintData);
 
-      if (sprint.resources && sprint.resources.length > 0) {
-        // Prepare sprint_resources data
-        const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
-          sprint_id: sprintData.id,
-          resource_id: resource.id,
-          daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
-        }));
+      // Prepare sprint_resources data
+      const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
+        sprint_id: sprintData.id,
+        resource_id: resource.id,
+        daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
+      }));
 
-        console.log('Inserting sprint resources:', sprintResourcesData);
+      console.log('Inserting sprint resources:', sprintResourcesData);
 
-        // Insert sprint_resources one by one to better handle errors
-        for (const resourceData of sprintResourcesData) {
-          try {
-            const { error: resourceError } = await supabase
-              .from('sprint_resources')
-              .insert(resourceData);
+      // Insert sprint_resources one by one to better handle errors
+      for (const resourceData of sprintResourcesData) {
+        try {
+          const { error: resourceError } = await supabase
+            .from('sprint_resources')
+            .insert(resourceData);
 
-            if (resourceError) {
-              console.error('Error inserting sprint resource:', resourceError);
-              throw resourceError;
-            }
-          } catch (error) {
-            console.error('Failed to insert sprint resource:', error);
-            throw error;
+          if (resourceError) {
+            console.error('Error inserting sprint resource:', resourceError);
+            throw resourceError;
           }
+        } catch (error) {
+          console.error('Failed to insert sprint resource:', error);
+          throw error;
         }
-
-        console.log('Sprint resources inserted successfully');
       }
+
+      console.log('Sprint resources inserted successfully');
 
       const newSprint = {
         ...sprint,
@@ -189,8 +186,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           objective_achieved: updatedFields.objectiveAchieved,
           velocity_achieved: updatedFields.velocityAchieved,
           commitment_respected: updatedFields.commitmentRespected,
-          is_successful: updatedFields.isSuccessful,
-          total_person_days: updatedFields.totalPersonDays
+          is_successful: updatedFields.isSuccessful
         })
         .eq('id', sprintId);
 
@@ -279,11 +275,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
   calculateTheoreticalCapacity: (resources: Resource[], duration: number) => {
     const averageVelocity = get().getAverageVelocity();
     
-    if (resources.length === 0) {
-      // Si pas de ressources, on utilise le nombre de jours/homme total
-      return averageVelocity;
-    }
-
     const totalResourceCapacity = resources.reduce((acc, resource) => {
       if (resource.dailyCapacities && resource.dailyCapacities.length > 0) {
         return acc + resource.dailyCapacities.reduce((sum, dc) => sum + dc.capacity, 0);
@@ -291,6 +282,7 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       return acc + (resource.capacityPerDay * duration);
     }, 0);
 
+    // Round to 2 decimal places to stay within the database field's precision
     return Number((averageVelocity * totalResourceCapacity).toFixed(2));
   },
 
