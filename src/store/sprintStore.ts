@@ -109,7 +109,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           duration: sprint.duration,
           story_points_committed: sprint.storyPointsCommitted,
           theoretical_capacity: sprint.theoreticalCapacity,
-          objective: sprint.objective
+          objective: sprint.objective,
+          total_person_days: sprint.totalPersonDays
         })
         .select()
         .single();
@@ -121,33 +122,35 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
       console.log('Sprint created successfully:', sprintData);
 
-      // Prepare sprint_resources data
-      const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
-        sprint_id: sprintData.id,
-        resource_id: resource.id,
-        daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
-      }));
+      if (sprint.resources && sprint.resources.length > 0) {
+        // Prepare sprint_resources data
+        const sprintResourcesData: SprintResourceData[] = sprint.resources.map(resource => ({
+          sprint_id: sprintData.id,
+          resource_id: resource.id,
+          daily_capacities: mapDailyCapacitiesToJson(resource.dailyCapacities || [])
+        }));
 
-      console.log('Inserting sprint resources:', sprintResourcesData);
+        console.log('Inserting sprint resources:', sprintResourcesData);
 
-      // Insert sprint_resources one by one to better handle errors
-      for (const resourceData of sprintResourcesData) {
-        try {
-          const { error: resourceError } = await supabase
-            .from('sprint_resources')
-            .insert(resourceData);
+        // Insert sprint_resources one by one to better handle errors
+        for (const resourceData of sprintResourcesData) {
+          try {
+            const { error: resourceError } = await supabase
+              .from('sprint_resources')
+              .insert(resourceData);
 
-          if (resourceError) {
-            console.error('Error inserting sprint resource:', resourceError);
-            throw resourceError;
+            if (resourceError) {
+              console.error('Error inserting sprint resource:', resourceError);
+              throw resourceError;
+            }
+          } catch (error) {
+            console.error('Failed to insert sprint resource:', error);
+            throw error;
           }
-        } catch (error) {
-          console.error('Failed to insert sprint resource:', error);
-          throw error;
         }
-      }
 
-      console.log('Sprint resources inserted successfully');
+        console.log('Sprint resources inserted successfully');
+      }
 
       const newSprint = {
         ...sprint,
@@ -186,7 +189,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
           objective_achieved: updatedFields.objectiveAchieved,
           velocity_achieved: updatedFields.velocityAchieved,
           commitment_respected: updatedFields.commitmentRespected,
-          is_successful: updatedFields.isSuccessful
+          is_successful: updatedFields.isSuccessful,
+          total_person_days: updatedFields.totalPersonDays
         })
         .eq('id', sprintId);
 

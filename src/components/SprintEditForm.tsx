@@ -11,6 +11,7 @@ import { TableCell } from "./ui/table";
 import { SprintObjectiveSection } from "./sprint/SprintObjectiveSection";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeDailyCapacities } from "@/utils/sprintUtils";
+import { SprintPersonDaysInput } from "./sprint/SprintPersonDaysInput";
 
 interface SprintEditFormProps {
   sprint: Sprint;
@@ -161,6 +162,13 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
     }));
   };
 
+  const handleTotalPersonDaysChange = (value: number) => {
+    setEditedSprint(prev => ({
+      ...prev,
+      totalPersonDays: value
+    }));
+  };
+
   return (
     <>
       <TableCell colSpan={8}>
@@ -232,28 +240,35 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
             isCompleted={editedSprint.storyPointsCompleted !== undefined}
           />
 
-          <div className="space-y-4">
-            <Label className="block text-sm font-medium">Ressources</Label>
-            {editedSprint.resources.map((resource) => (
-              <div key={resource.id} className="space-y-2 p-4 border rounded-lg">
-                <ResourceInput
-                  resource={resource}
-                  onResourceChange={handleResourceChange}
-                  onDailyCapacityChange={handleDailyCapacityChange}
-                  showDailyCapacities={showDailyCapacities}
-                  onToggleDailyCapacities={() => setShowDailyCapacities(!showDailyCapacities)}
-                  totalPresenceDays={resource.dailyCapacities?.reduce((sum, dc) => sum + dc.capacity, 0) || 0}
-                />
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => handleDeleteResource(resource.id)}
-                >
-                  Supprimer la ressource
-                </Button>
-              </div>
-            ))}
-          </div>
+          {editedSprint.resources.length > 0 ? (
+            <div className="space-y-4">
+              <Label className="block text-sm font-medium">Ressources</Label>
+              {editedSprint.resources.map((resource) => (
+                <div key={resource.id} className="space-y-2 p-4 border rounded-lg">
+                  <ResourceInput
+                    resource={resource}
+                    onResourceChange={handleResourceChange}
+                    onDailyCapacityChange={handleDailyCapacityChange}
+                    showDailyCapacities={showDailyCapacities}
+                    onToggleDailyCapacities={() => setShowDailyCapacities(!showDailyCapacities)}
+                    totalPresenceDays={resource.dailyCapacities?.reduce((sum, dc) => sum + dc.capacity, 0) || 0}
+                  />
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => handleDeleteResource(resource.id)}
+                  >
+                    Supprimer la ressource
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <SprintPersonDaysInput
+              totalPersonDays={editedSprint.totalPersonDays}
+              onTotalPersonDaysChange={handleTotalPersonDaysChange}
+            />
+          )}
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={onCancel}>

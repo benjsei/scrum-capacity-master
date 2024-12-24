@@ -205,6 +205,7 @@ export type Database = {
           story_points_completed: number | null
           team_id: string | null
           theoretical_capacity: number
+          total_person_days: number | null
           velocity_achieved: number | null
         }
         Insert: {
@@ -221,6 +222,7 @@ export type Database = {
           story_points_completed?: number | null
           team_id?: string | null
           theoretical_capacity: number
+          total_person_days?: number | null
           velocity_achieved?: number | null
         }
         Update: {
@@ -237,6 +239,7 @@ export type Database = {
           story_points_completed?: number | null
           team_id?: string | null
           theoretical_capacity?: number
+          total_person_days?: number | null
           velocity_achieved?: number | null
         }
         Relationships: [
