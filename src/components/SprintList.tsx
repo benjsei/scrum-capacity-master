@@ -38,7 +38,7 @@ export const SprintList = () => {
       toast.error("Veuillez saisir le nombre de story points réalisés");
       return;
     }
-    completeSprint(sprintId, { storyPointsCompleted: storyPoints });
+    completeSprint(sprintId, storyPoints);
     toast.success("Sprint terminé avec succès!");
   };
 
