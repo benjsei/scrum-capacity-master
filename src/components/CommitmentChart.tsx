@@ -26,7 +26,7 @@ export const CommitmentChart = () => {
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis domain={[0, 'dataMax']} />
             <Tooltip />
             <Legend />
             
@@ -39,9 +39,15 @@ export const CommitmentChart = () => {
               dataKey="percentage"
               fill="#ef4444"
               stroke="none"
-              baseValue={100}
+              yAxisId={0}
               fillOpacity={0.3}
-            />
+            >
+              <defs>
+                <clipPath id="clipBelow">
+                  <rect x="0" y="0" width="100%" height="100" />
+                </clipPath>
+              </defs>
+            </Area>
             
             {/* Area above 100% (green) */}
             <Area
@@ -49,9 +55,15 @@ export const CommitmentChart = () => {
               dataKey="percentage"
               fill="#22c55e"
               stroke="none"
-              baseValue={100}
+              yAxisId={0}
               fillOpacity={0.3}
-            />
+            >
+              <defs>
+                <clipPath id="clipAbove">
+                  <rect x="0" y="100" width="100%" height="100%" />
+                </clipPath>
+              </defs>
+            </Area>
             
             {/* Main line */}
             <Line 
@@ -60,6 +72,7 @@ export const CommitmentChart = () => {
               stroke="#EA580C" 
               name="% Réalisation"
               strokeWidth={2}
+              yAxisId={0}
             />
           </LineChart>
         </ResponsiveContainer>
