@@ -24,7 +24,8 @@ const TeamPractices = () => {
   } = useAgilePracticesStore();
   const navigate = useNavigate();
   const [expandedDays, setExpandedDays] = useState<string[]>([]);
-
+  const [currentIncompleteIndex, setCurrentIncompleteIndex] = useState(0);
+  
   useEffect(() => {
     if (activeTeam) {
       initializePractices(activeTeam.id);
@@ -73,6 +74,20 @@ const TeamPractices = () => {
     : 0;
 
   const firstIncompletePractice = practices.find(p => !p.isCompleted);
+  const incompletePractices = practices.filter(p => !p.isCompleted);
+  const currentIncompletePractice = incompletePractices[currentIncompleteIndex];
+
+  const handlePreviousIncompletePractice = () => {
+    if (currentIncompleteIndex > 0) {
+      setCurrentIncompleteIndex(prev => prev - 1);
+    }
+  };
+
+  const handleNextIncompletePractice = () => {
+    if (currentIncompleteIndex < incompletePractices.length - 1) {
+      setCurrentIncompleteIndex(prev => prev + 1);
+    }
+  };
 
   return (
     <div className="min-h-screen p-6">
@@ -87,12 +102,16 @@ const TeamPractices = () => {
         </div>
       </div>
 
-      {firstIncompletePractice && (
+      {currentIncompletePractice && (
         <NextPracticeCard
-          practice={firstIncompletePractice}
+          practice={currentIncompletePractice}
           teamId={activeTeam.id}
           onToggleCompletion={togglePracticeCompletion}
           onUpdateUrl={updatePracticeUrl}
+          onPrevious={handlePreviousIncompletePractice}
+          onNext={handleNextIncompletePractice}
+          hasPrevious={currentIncompleteIndex > 0}
+          hasNext={currentIncompleteIndex < incompletePractices.length - 1}
         />
       )}
 

@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { AlertCircle, Link as LinkIcon, User, Users, UserCheck, UserPlus, UsersRound } from "lucide-react";
+import { AlertCircle, Link as LinkIcon, User, Users, UserCheck, UserPlus, UsersRound, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +11,10 @@ interface NextPracticeCardProps {
   teamId: string;
   onToggleCompletion: (teamId: string, practiceId: string) => void;
   onUpdateUrl: (teamId: string, practiceId: string, url: string) => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }
 
 const getWhoIcon = (who: string) => {
@@ -28,7 +32,16 @@ const getWhoIcon = (who: string) => {
   }
 };
 
-const NextPracticeCard = ({ practice, teamId, onToggleCompletion, onUpdateUrl }: NextPracticeCardProps) => {
+const NextPracticeCard = ({ 
+  practice, 
+  teamId, 
+  onToggleCompletion, 
+  onUpdateUrl,
+  onPrevious,
+  onNext,
+  hasPrevious,
+  hasNext 
+}: NextPracticeCardProps) => {
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
   const [urlValue, setUrlValue] = useState('');
 
@@ -42,9 +55,31 @@ const NextPracticeCard = ({ practice, teamId, onToggleCompletion, onUpdateUrl }:
 
   return (
     <Card className="p-6 border-2 border-primary">
-      <div className="flex items-center gap-2 text-primary mb-6">
-        <AlertCircle className="h-5 w-5" />
-        <h2 className="text-lg font-semibold">Prochaine pratique à réaliser</h2>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2 text-primary">
+          <AlertCircle className="h-5 w-5" />
+          <h2 className="text-lg font-semibold">Prochaine pratique à réaliser</h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onPrevious}
+            disabled={!hasPrevious}
+            className="h-8 w-8"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onNext}
+            disabled={!hasNext}
+            className="h-8 w-8"
+          >
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-6">
