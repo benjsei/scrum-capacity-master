@@ -18,7 +18,7 @@ export const VelocityChart = () => {
 
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Velocity Trend</h3>
+      <h3 className="text-lg font-semibold mb-4">Tendance de la vélocité</h3>
       <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
@@ -31,7 +31,7 @@ export const VelocityChart = () => {
               type="monotone" 
               dataKey="velocity" 
               stroke="#1E40AF" 
-              name="Actual Velocity"
+              name="Vélocité réelle"
             />
           </LineChart>
         </ResponsiveContainer>
