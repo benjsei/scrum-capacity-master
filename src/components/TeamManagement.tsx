@@ -9,6 +9,7 @@ import { useAgilePracticesStore } from '../store/agilePracticesStore';
 import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ListTodo, SparklesIcon } from 'lucide-react';
+import { MiniCommitmentChart } from './MiniCommitmentChart';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -148,6 +149,7 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
                           <div className="w-full max-w-xs">
                             <Progress value={getTeamProgress(team.id)} className="h-2" />
                           </div>
+                          <MiniCommitmentChart teamId={team.id} />
                         </div>
                         <div className="space-x-2">
                           <Button
