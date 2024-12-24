@@ -24,6 +24,14 @@ export const CommitmentChart = () => {
       <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
+            <defs>
+              <clipPath id="clipAbove">
+                <rect x="0" y="0" width="100%" height="100" />
+              </clipPath>
+              <clipPath id="clipBelow">
+                <rect x="0" y="100" width="100%" height="100%" />
+              </clipPath>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis domain={[0, 'dataMax']} />
@@ -39,15 +47,8 @@ export const CommitmentChart = () => {
               dataKey="percentage"
               fill="#ef4444"
               stroke="none"
-              yAxisId={0}
-              fillOpacity={0.3}
-            >
-              <defs>
-                <clipPath id="clipBelow">
-                  <rect x="0" y="0" width="100%" height="100" />
-                </clipPath>
-              </defs>
-            </Area>
+              clipPath="url(#clipBelow)"
+            />
             
             {/* Area above 100% (green) */}
             <Area
@@ -55,15 +56,8 @@ export const CommitmentChart = () => {
               dataKey="percentage"
               fill="#22c55e"
               stroke="none"
-              yAxisId={0}
-              fillOpacity={0.3}
-            >
-              <defs>
-                <clipPath id="clipAbove">
-                  <rect x="0" y="100" width="100%" height="100%" />
-                </clipPath>
-              </defs>
-            </Area>
+              clipPath="url(#clipAbove)"
+            />
             
             {/* Main line */}
             <Line 
@@ -72,7 +66,6 @@ export const CommitmentChart = () => {
               stroke="#EA580C" 
               name="% Réalisation"
               strokeWidth={2}
-              yAxisId={0}
             />
           </LineChart>
         </ResponsiveContainer>
