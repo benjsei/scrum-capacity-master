@@ -10,7 +10,6 @@ import { initializeDailyCapacities } from "@/utils/sprintUtils";
 interface SprintResourcesSectionProps {
   resources: Resource[];
   showDailyCapacities: boolean;
-  resourcePresenceDays: { [key: string]: number };
   onResourceChange: (id: string, field: keyof Resource, value: string | number) => void;
   onDailyCapacityChange: (resourceId: string, date: string, capacity: number) => void;
   onToggleDailyCapacities: () => void;
@@ -22,7 +21,6 @@ interface SprintResourcesSectionProps {
 export const SprintResourcesSection = ({
   resources,
   showDailyCapacities,
-  resourcePresenceDays,
   onResourceChange,
   onDailyCapacityChange,
   onToggleDailyCapacities,
@@ -32,6 +30,14 @@ export const SprintResourcesSection = ({
 }: SprintResourcesSectionProps) => {
   const [selectedResource, setSelectedResource] = useState<string>('');
   const { activeTeam } = useScrumTeamStore();
+
+  const resourcePresenceDays: { [key: string]: number } = {};
+  resources.forEach(resource => {
+    if (resource.dailyCapacities) {
+      resourcePresenceDays[resource.id] = resource.dailyCapacities.reduce((sum, dc) => sum + dc.capacity, 0);
+    }
+  });
+
   const totalTeamDays = Object.values(resourcePresenceDays).reduce((sum, days) => sum + days, 0);
 
   const handleAddResource = () => {
