@@ -46,19 +46,24 @@ export const CommitmentChart = () => {
               type="monotone"
               dataKey="percentage"
               baseValue={100}
-              fill={`url(#colorGradient)`}
+              fill="#22c55e"
               stroke="none"
               fillOpacity={0.6}
+              isAnimationActive={false}
             />
             
-            {/* Define gradient with more saturated colors */}
-            <defs>
-              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.9} />
-                <stop offset="50%" stopColor="#F97316" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#ef4444" stopOpacity={0.9} />
-              </linearGradient>
-            </defs>
+            {/* Area below reference line */}
+            <Area
+              type="monotone"
+              dataKey="percentage"
+              fill="#ef4444"
+              stroke="none"
+              fillOpacity={0.6}
+              isAnimationActive={false}
+              baseValue={0}
+              yAxisId={0}
+              activeDot={false}
+            />
             
             {/* Main line */}
             <Line 
