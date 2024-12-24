@@ -11,6 +11,9 @@ interface SprintStore {
   getActiveTeamSprints: () => Sprint[];
   getTeamSprints: (teamId: string) => Sprint[];
   canCreateNewSprint: () => boolean;
+  calculateTheoreticalCapacity: (resources: any[], startDate: string, endDate: string) => number;
+  getAverageVelocity: (teamId: string) => number;
+  completeSprint: (sprintId: string, data: Partial<Sprint>) => void;
 }
 
 export const useSprintStore = create<SprintStore>()(
@@ -70,6 +73,24 @@ export const useSprintStore = create<SprintStore>()(
         });
         
         return new Date(lastSprint.endDate) < new Date();
+      },
+
+      calculateTheoreticalCapacity: (resources, startDate, endDate) => {
+        // Implementation of theoretical capacity calculation
+        return 0;
+      },
+
+      getAverageVelocity: (teamId: string) => {
+        // Implementation of average velocity calculation
+        return 0;
+      },
+
+      completeSprint: (sprintId: string, data: Partial<Sprint>) => {
+        set((state) => ({
+          sprints: state.sprints.map((sprint) =>
+            sprint.id === sprintId ? { ...sprint, ...data } : sprint
+          ),
+        }));
       },
     }),
     {
