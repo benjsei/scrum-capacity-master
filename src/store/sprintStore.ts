@@ -34,7 +34,7 @@ interface SprintStore {
   updateSprint: (sprintId: string, sprint: Partial<Sprint>) => Promise<void>;
   deleteSprint: (sprintId: string) => Promise<void>;
   completeSprint: (sprintId: string, storyPointsCompleted: number) => Promise<void>;
-  calculateTheoreticalCapacity: (resources: Resource[], duration: number, totalManDays?: number) => number;
+  calculateTheoreticalCapacity: (resources: Resource[], duration: number) => number;
   getAverageVelocity: () => number;
   getActiveTeamSprints: () => Sprint[];
   canCreateNewSprint: () => boolean;
@@ -272,21 +272,17 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }
   },
 
-  calculateTheoreticalCapacity: (resources: Resource[], duration: number, totalManDays?: number) => {
+  calculateTheoreticalCapacity: (resources: Resource[], duration: number) => {
     const averageVelocity = get().getAverageVelocity();
     
-    let totalResourceCapacity;
-    if (totalManDays !== undefined) {
-      totalResourceCapacity = totalManDays;
-    } else {
-      totalResourceCapacity = resources.reduce((acc, resource) => {
-        if (resource.dailyCapacities && resource.dailyCapacities.length > 0) {
-          return acc + resource.dailyCapacities.reduce((sum, dc) => sum + dc.capacity, 0);
-        }
-        return acc + (resource.capacityPerDay * duration);
-      }, 0);
-    }
+    const totalResourceCapacity = resources.reduce((acc, resource) => {
+      if (resource.dailyCapacities && resource.dailyCapacities.length > 0) {
+        return acc + resource.dailyCapacities.reduce((sum, dc) => sum + dc.capacity, 0);
+      }
+      return acc + (resource.capacityPerDay * duration);
+    }, 0);
 
+    // Round to 2 decimal places to stay within the database field's precision
     return Number((averageVelocity * totalResourceCapacity).toFixed(2));
   },
 

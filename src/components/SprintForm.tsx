@@ -25,7 +25,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
   const [showDailyCapacities, setShowDailyCapacities] = useState(false);
   const [theoreticalCapacity, setTheoreticalCapacity] = useState(0);
   const [resourcePresenceDays, setResourcePresenceDays] = useState<{ [key: string]: number }>({});
-  const [totalManDays, setTotalManDays] = useState<number | null>(null);
 
   const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, loadSprints, getActiveTeamSprints } = useSprintStore();
   const { activeTeam } = useScrumTeamStore();
@@ -36,6 +35,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     loadSprints();
   }, [loadSprints]);
 
+  // Initialize form with team resources when activeTeam changes
   useEffect(() => {
     if (activeTeam?.resources) {
       const tomorrow = new Date();
@@ -54,26 +54,22 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
     }
   }, [activeTeam]);
 
+  // Update daily capacities when start date or duration changes
   useEffect(() => {
     if (startDate && duration && resources.length > 0) {
       const updatedResources = initializeSprintResources(
         resources,
         startDate,
         parseInt(duration),
-        true
+        true // Force recalculation of daily capacities
       );
       setResources(updatedResources);
     }
   }, [startDate, duration]);
 
   useEffect(() => {
-    if (duration && (resources.length > 0 || totalManDays !== null)) {
-      let capacity;
-      if (totalManDays !== null) {
-        capacity = calculateTheoreticalCapacity([], Number(duration), totalManDays);
-      } else {
-        capacity = calculateTheoreticalCapacity(resources, Number(duration));
-      }
+    if (duration && resources.length > 0) {
+      const capacity = calculateTheoreticalCapacity(resources, Number(duration));
       setTheoreticalCapacity(capacity);
 
       const presenceDays = resources.reduce((acc, resource) => {
@@ -82,7 +78,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
       }, {});
       setResourcePresenceDays(presenceDays);
     }
-  }, [duration, resources, calculateTheoreticalCapacity, totalManDays]);
+  }, [duration, resources, calculateTheoreticalCapacity]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,11 +115,10 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
       startDate,
       endDate: endDate.toISOString().split('T')[0],
       duration: Number(duration),
-      resources: totalManDays !== null ? [] : resources,
+      resources,
       storyPointsCommitted: Number(storyPoints),
       theoreticalCapacity,
       objective,
-      totalManDays: totalManDays
     };
 
     try {
@@ -181,10 +176,6 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
           onToggleDailyCapacities={() => setShowDailyCapacities(!showDailyCapacities)}
           onDeleteResource={(resourceId) => {
             setResources(resources.filter(r => r.id !== resourceId));
-          }}
-          onTotalDaysChange={(days) => {
-            setTotalManDays(days);
-            setResources([]);
           }}
           startDate={startDate}
           duration={Number(duration)}
