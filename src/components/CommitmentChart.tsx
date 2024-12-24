@@ -10,15 +10,15 @@ export const CommitmentChart = () => {
     .filter(sprint => sprint.storyPointsCompleted !== undefined && sprint.storyPointsCompleted !== null)
     .map((sprint) => ({
       name: new Date(sprint.startDate).toLocaleDateString(),
-      percentage: sprint.storyPointsCompleted 
+      engagement: sprint.storyPointsCompleted 
         ? Math.round((sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100)
         : 0,
       date: new Date(sprint.startDate), // Used for sorting
     }))
     .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .map(({ name, percentage }) => ({ 
+    .map(({ name, engagement }) => ({ 
       name, 
-      percentage,
+      engagement,
       // Add a base value for the area
       areaBase: 100
     }));
@@ -44,7 +44,7 @@ export const CommitmentChart = () => {
             {/* Area between curve and reference line */}
             <Area
               type="monotone"
-              dataKey="percentage"
+              dataKey="engagement"
               baseValue={100}
               fill={`url(#colorGradient)`}
               stroke="none"
@@ -66,7 +66,7 @@ export const CommitmentChart = () => {
             {/* Main line */}
             <Line 
               type="monotone" 
-              dataKey="percentage" 
+              dataKey="engagement" 
               stroke="#EA580C" 
               name="Taux de réalisation"
               strokeWidth={2}
