@@ -19,9 +19,8 @@ export const CommitmentChart = () => {
     .map(({ name, percentage }) => ({ 
       name, 
       percentage,
-      // Add these fields for the areas
-      aboveArea: percentage >= 100 ? percentage : null,
-      belowArea: percentage < 100 ? percentage : null
+      // Add a base value for the area
+      areaBase: 100
     }));
 
   return (
@@ -42,25 +41,23 @@ export const CommitmentChart = () => {
             {/* Reference line at 100% */}
             <ReferenceLine y={100} stroke="#666" strokeDasharray="3 3" />
             
-            {/* Area below 100% */}
+            {/* Area between curve and reference line */}
             <Area
               type="monotone"
-              dataKey="belowArea"
-              fill="#ef4444"
-              fillOpacity={0.3}
+              dataKey="percentage"
+              baseValue={100}
+              fill={`url(#colorGradient)`}
               stroke="none"
-              isAnimationActive={false}
+              fillOpacity={0.3}
             />
             
-            {/* Area above 100% */}
-            <Area
-              type="monotone"
-              dataKey="aboveArea"
-              fill="#22c55e"
-              fillOpacity={0.3}
-              stroke="none"
-              isAnimationActive={false}
-            />
+            {/* Define gradient */}
+            <defs>
+              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#ef4444" />
+              </linearGradient>
+            </defs>
             
             {/* Main line */}
             <Line 
