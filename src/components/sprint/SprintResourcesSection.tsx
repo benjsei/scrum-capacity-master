@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Resource } from "@/types/sprint";
 import { ResourceInput } from "../ResourceInput";
 import { ResourceAutocompleteInput } from "../ResourceAutocompleteInput";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useScrumTeamStore } from "@/store/scrumTeamStore";
 import { initializeDailyCapacities } from "@/utils/sprintUtils";
 import { Input } from "../ui/input";
@@ -20,6 +20,7 @@ interface SprintResourcesSectionProps {
   onTotalDaysChange?: (days: number) => void;
   startDate?: string;
   duration?: number;
+  totalManDays?: number;
 }
 
 export const SprintResourcesSection = ({
@@ -33,12 +34,19 @@ export const SprintResourcesSection = ({
   onTotalDaysChange,
   startDate,
   duration,
+  totalManDays,
 }: SprintResourcesSectionProps) => {
   const [selectedResource, setSelectedResource] = useState<string>('');
-  const [useSimpleMode, setUseSimpleMode] = useState(false);
-  const [totalDays, setTotalDays] = useState('');
+  const [useSimpleMode, setUseSimpleMode] = useState(resources.length === 0);
+  const [totalDays, setTotalDays] = useState(totalManDays?.toString() || '');
   const { activeTeam } = useScrumTeamStore();
   const totalTeamDays = Object.values(resourcePresenceDays).reduce((sum, days) => sum + days, 0);
+
+  useEffect(() => {
+    if (totalManDays !== undefined) {
+      setTotalDays(totalManDays.toString());
+    }
+  }, [totalManDays]);
 
   const handleAddResource = () => {
     if (!selectedResource || !activeTeam || !startDate || !duration) return;
@@ -75,9 +83,11 @@ export const SprintResourcesSection = ({
             />
             <Label htmlFor="simple-mode">Mode simplifié</Label>
           </div>
-          <div className="text-sm text-muted-foreground">
-            Total jours/homme : {totalTeamDays.toFixed(1)}
-          </div>
+          {!useSimpleMode && (
+            <div className="text-sm text-muted-foreground">
+              Total jours/homme : {totalTeamDays.toFixed(1)}
+            </div>
+          )}
         </div>
       </div>
       
