@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useSprintStore } from '../store/sprintStore';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Area } from 'recharts';
 
 export const CommitmentChart = () => {
   const { getActiveTeamSprints } = useSprintStore();
@@ -16,7 +16,7 @@ export const CommitmentChart = () => {
       date: new Date(sprint.startDate), // Used for sorting
     }))
     .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .map(({ name, percentage }) => ({ name, percentage })); // Remove date after sorting
+    .map(({ name, percentage }) => ({ name, percentage }));
 
   return (
     <Card className="p-6">
@@ -29,11 +29,37 @@ export const CommitmentChart = () => {
             <YAxis />
             <Tooltip />
             <Legend />
+            
+            {/* Reference line at 100% */}
+            <ReferenceLine y={100} stroke="#666" strokeDasharray="3 3" />
+            
+            {/* Area below 100% (red) */}
+            <Area
+              type="monotone"
+              dataKey="percentage"
+              fill="#ef4444"
+              stroke="none"
+              baseValue={100}
+              fillOpacity={0.3}
+            />
+            
+            {/* Area above 100% (green) */}
+            <Area
+              type="monotone"
+              dataKey="percentage"
+              fill="#22c55e"
+              stroke="none"
+              baseValue={100}
+              fillOpacity={0.3}
+            />
+            
+            {/* Main line */}
             <Line 
               type="monotone" 
               dataKey="percentage" 
               stroke="#EA580C" 
               name="% Réalisation"
+              strokeWidth={2}
             />
           </LineChart>
         </ResponsiveContainer>
