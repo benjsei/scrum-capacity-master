@@ -16,7 +16,12 @@ export const CommitmentChart = () => {
       date: new Date(sprint.startDate), // Used for sorting
     }))
     .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .map(({ name, percentage }) => ({ name, percentage }));
+    .map(({ name, percentage }) => ({ 
+      name, 
+      percentage,
+      // Add a base value for the area
+      areaBase: 100
+    }));
 
   return (
     <Card className="p-6">
@@ -36,15 +41,24 @@ export const CommitmentChart = () => {
             {/* Reference line at 100% */}
             <ReferenceLine y={100} stroke="#666" strokeDasharray="3 3" />
             
-            {/* Single area with solid color */}
+            {/* Area between curve and reference line */}
             <Area
               type="monotone"
               dataKey="percentage"
-              fill="#EA580C"
+              baseValue={100}
+              fill={`url(#colorGradient)`}
               stroke="none"
               fillOpacity={0.6}
-              isAnimationActive={false}
             />
+            
+            {/* Define gradient with more saturated colors */}
+            <defs>
+              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.9} />
+                <stop offset="50%" stopColor="#F97316" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity={0.9} />
+              </linearGradient>
+            </defs>
             
             {/* Main line */}
             <Line 
