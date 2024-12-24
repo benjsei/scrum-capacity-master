@@ -55,10 +55,10 @@ export const CommitmentChart = () => {
             <defs>
               <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#22c55e" stopOpacity={0.9} />
-                <stop offset="25%" stopColor="#22c55e" stopOpacity={0.9} />
-                <stop offset="28%" stopColor="#F97316" stopOpacity={0.8} />
-                <stop offset="32%" stopColor="#F97316" stopOpacity={0.8} />
-                <stop offset="35%" stopColor="#ef4444" stopOpacity={0.9} />
+                <stop offset="35%" stopColor="#22c55e" stopOpacity={0.9} />
+                <stop offset="38%" stopColor="#F97316" stopOpacity={0.8} />
+                <stop offset="42%" stopColor="#F97316" stopOpacity={0.8} />
+                <stop offset="45%" stopColor="#ef4444" stopOpacity={0.9} />
                 <stop offset="100%" stopColor="#ef4444" stopOpacity={0.9} />
               </linearGradient>
             </defs>
