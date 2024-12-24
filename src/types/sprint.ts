@@ -29,6 +29,7 @@ export interface Sprint {
   commitmentRespected?: number;
   objective?: string;
   objectiveAchieved?: boolean;
+  totalManDays?: number;
 }
 
 export interface SprintResourceData {
