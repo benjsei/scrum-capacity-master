@@ -48,14 +48,15 @@ export const CommitmentChart = () => {
               baseValue={100}
               fill={`url(#colorGradient)`}
               stroke="none"
-              fillOpacity={0.3}
+              fillOpacity={0.6}
             />
             
-            {/* Define gradient */}
+            {/* Define gradient with more saturated colors */}
             <defs>
               <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22c55e" />
-                <stop offset="100%" stopColor="#ef4444" />
+                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.9} />
+                <stop offset="50%" stopColor="#F97316" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity={0.9} />
               </linearGradient>
             </defs>
             
