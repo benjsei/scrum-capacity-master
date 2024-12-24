@@ -51,14 +51,14 @@ export const CommitmentChart = () => {
               fillOpacity={0.6}
             />
             
-            {/* Define gradient with more abrupt transition around 100% */}
+            {/* Define gradient with more abrupt transition around 80% */}
             <defs>
               <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#22c55e" stopOpacity={0.9} />
-                <stop offset="45%" stopColor="#22c55e" stopOpacity={0.9} />
-                <stop offset="48%" stopColor="#F97316" stopOpacity={0.8} />
-                <stop offset="52%" stopColor="#F97316" stopOpacity={0.8} />
-                <stop offset="55%" stopColor="#ef4444" stopOpacity={0.9} />
+                <stop offset="25%" stopColor="#22c55e" stopOpacity={0.9} />
+                <stop offset="28%" stopColor="#F97316" stopOpacity={0.8} />
+                <stop offset="32%" stopColor="#F97316" stopOpacity={0.8} />
+                <stop offset="35%" stopColor="#ef4444" stopOpacity={0.9} />
                 <stop offset="100%" stopColor="#ef4444" stopOpacity={0.9} />
               </linearGradient>
             </defs>
