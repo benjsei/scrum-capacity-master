@@ -36,6 +36,7 @@ export const CommitmentChart = () => {
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
+            <Legend />
             
             {/* Reference line at 100% */}
             <ReferenceLine y={100} stroke="#666" strokeDasharray="3 3" />
@@ -67,9 +68,9 @@ export const CommitmentChart = () => {
               type="monotone" 
               dataKey="percentage" 
               stroke="#EA580C" 
+              name="Taux de réalisation"
               strokeWidth={2}
               isAnimationActive={false}
-              hide={true}
             />
           </ComposedChart>
         </ResponsiveContainer>
