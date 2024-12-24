@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useSprintStore } from '../store/sprintStore';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 export const CommitmentChart = () => {
   const { getActiveTeamSprints } = useSprintStore();
@@ -27,6 +27,12 @@ export const CommitmentChart = () => {
             data={data}
             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           >
+            <defs>
+              <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3} />
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
@@ -36,36 +42,15 @@ export const CommitmentChart = () => {
             {/* Reference line at 100% */}
             <ReferenceLine y={100} stroke="#666" strokeDasharray="3 3" />
             
-            {/* Area below 100% (red) */}
-            <Area
-              type="monotone"
-              dataKey="percentage"
-              stroke="none"
-              fill="#ef4444"
-              fillOpacity={0.3}
-              baseValue={100}
-              isAnimationActive={false}
-            />
-            
-            {/* Area above 100% (green) */}
-            <Area
-              type="monotone"
-              dataKey="percentage"
-              stroke="none"
-              fill="#22c55e"
-              fillOpacity={0.3}
-              baseValue={100}
-              isAnimationActive={false}
-            />
-            
-            {/* Main line */}
+            {/* Area fill */}
             <Line 
               type="monotone" 
               dataKey="percentage" 
               stroke="#EA580C" 
               name="% Réalisation"
               strokeWidth={2}
-              isAnimationActive={false}
+              fill="url(#splitColor)"
+              fillOpacity={1}
             />
           </LineChart>
         </ResponsiveContainer>
