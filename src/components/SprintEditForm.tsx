@@ -20,7 +20,7 @@ interface SprintEditFormProps {
 
 export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps) => {
   const [editedSprint, setEditedSprint] = useState<Sprint>({ ...sprint });
-  const [showDailyCapacities, setShowDailyCapacities] = useState<boolean>(true);
+  const [showDailyCapacities, setShowDailyCapacities] = useState<boolean>(false);
   const { updateSprint } = useSprintStore();
   const { addResource } = useResourceStore();
 
@@ -115,19 +115,6 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
         };
       }
 
-      // Update sprint resources in the database
-      for (const resource of editedSprint.resources) {
-        const { error: updateError } = await supabase
-          .from('sprint_resources')
-          .update({
-            daily_capacities: resource.dailyCapacities
-          })
-          .eq('sprint_id', sprint.id)
-          .eq('resource_id', resource.id);
-
-        if (updateError) throw updateError;
-      }
-
       console.log('Updating sprint with data:', updatedFields);
       await updateSprint(sprint.id, updatedFields);
       
@@ -173,10 +160,6 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
       resources: prev.resources.filter(resource => resource.id !== resourceId)
     }));
   };
-
-  const totalPersonDays = editedSprint.resources.reduce((total, resource) => {
-    return total + (resource.dailyCapacities?.reduce((sum, dc) => sum + dc.capacity, 0) || 0);
-  }, 0);
 
   return (
     <>
@@ -239,10 +222,6 @@ export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps
                 }))}
               />
             </div>
-          </div>
-
-          <div>
-            <Label className="block text-sm font-medium mb-1">Total jours/homme : {totalPersonDays.toFixed(1)}</Label>
           </div>
 
           <SprintObjectiveSection
