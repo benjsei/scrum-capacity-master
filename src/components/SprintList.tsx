@@ -143,7 +143,7 @@ export const SprintList = () => {
                   <TableCell className="py-2">
                     {sprint.velocityAchieved !== undefined && sprint.velocityAchieved !== null ? (
                       <span>{sprint.velocityAchieved.toFixed(2)} SP/jour</span>
-                    ) : 'vide'}
+                    ) : '-'}
                   </TableCell>
                   <TableCell className="py-2">
                     {sprint.storyPointsCompleted !== undefined && sprint.storyPointsCompleted !== null && (
