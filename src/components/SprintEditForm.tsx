@@ -22,8 +22,9 @@ interface SprintEditFormProps {
 export const SprintEditForm = ({ sprint, onCancel, onSave }: SprintEditFormProps) => {
   const [editedSprint, setEditedSprint] = useState<Sprint>({ ...sprint });
   const [showDailyCapacities, setShowDailyCapacities] = useState<boolean>(false);
-  const { updateSprint } = useSprintStore();
+  const { updateSprint, calculateTheoreticalCapacity, getAverageVelocity } = useSprintStore();
   const { addResource } = useResourceStore();
+  const averageVelocity = getAverageVelocity();
 
   useEffect(() => {
     const loadSprintResources = async () => {
