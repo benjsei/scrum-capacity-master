@@ -149,7 +149,9 @@ export const TeamManagement = ({ managerId: propManagerId }: TeamManagementProps
                           <div className="w-full max-w-xs">
                             <Progress value={getTeamProgress(team.id)} className="h-2" />
                           </div>
-                          <MiniCommitmentChart teamId={team.id} />
+                          <div className="w-full">
+                            <MiniCommitmentChart teamId={team.id} height={80} />
+                          </div>
                         </div>
                         <div className="space-x-2">
                           <Button
