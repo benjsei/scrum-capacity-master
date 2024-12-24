@@ -23,18 +23,13 @@ export const CommitmentChart = () => {
       <h3 className="text-lg font-semibold mb-4">Respect des engagements</h3>
       <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <defs>
-              <clipPath id="clipAbove">
-                <rect x="0" y="0" width="100%" height="100" />
-              </clipPath>
-              <clipPath id="clipBelow">
-                <rect x="0" y="100" width="100%" height="100%" />
-              </clipPath>
-            </defs>
+          <LineChart 
+            data={data}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
-            <YAxis domain={[0, 'dataMax']} />
+            <YAxis />
             <Tooltip />
             <Legend />
             
@@ -45,18 +40,22 @@ export const CommitmentChart = () => {
             <Area
               type="monotone"
               dataKey="percentage"
-              fill="#ef4444"
               stroke="none"
-              clipPath="url(#clipBelow)"
+              fill="#ef4444"
+              fillOpacity={0.3}
+              baseValue={100}
+              isAnimationActive={false}
             />
             
             {/* Area above 100% (green) */}
             <Area
               type="monotone"
               dataKey="percentage"
-              fill="#22c55e"
               stroke="none"
-              clipPath="url(#clipAbove)"
+              fill="#22c55e"
+              fillOpacity={0.3}
+              baseValue={100}
+              isAnimationActive={false}
             />
             
             {/* Main line */}
@@ -66,6 +65,7 @@ export const CommitmentChart = () => {
               stroke="#EA580C" 
               name="% Réalisation"
               strokeWidth={2}
+              isAnimationActive={false}
             />
           </LineChart>
         </ResponsiveContainer>
