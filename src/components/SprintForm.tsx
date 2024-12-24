@@ -28,7 +28,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
 
   const { addSprint, calculateTheoreticalCapacity, getAverageVelocity, loadSprints, getActiveTeamSprints } = useSprintStore();
   const { activeTeam } = useScrumTeamStore();
-  const averageVelocity = getAverageVelocity();
+  const averageVelocity = getAverageVelocity(activeTeam?.id || '');
   const teamSprints = getActiveTeamSprints();
 
   useEffect(() => {
@@ -69,7 +69,9 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
 
   useEffect(() => {
     if (duration && resources.length > 0) {
-      const capacity = calculateTheoreticalCapacity(resources, Number(duration));
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + Number(duration) - 1);
+      const capacity = calculateTheoreticalCapacity(resources, startDate, endDate.toISOString().split('T')[0]);
       setTheoreticalCapacity(capacity);
 
       const presenceDays = resources.reduce((acc, resource) => {
@@ -78,7 +80,7 @@ export const SprintForm = ({ onComplete }: SprintFormProps) => {
       }, {});
       setResourcePresenceDays(presenceDays);
     }
-  }, [duration, resources, calculateTheoreticalCapacity]);
+  }, [duration, resources, calculateTheoreticalCapacity, startDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
