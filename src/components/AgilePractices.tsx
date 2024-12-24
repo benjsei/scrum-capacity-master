@@ -84,11 +84,10 @@ const AgilePractices = ({ teamId, dayFilter, firstIncompletePracticeId }: AgileP
           <h3 className="text-lg font-semibold text-primary">{type}</h3>
           <div className="space-y-4">
             {practices.map((practice) => {
-              const isHighlighted = practice.id === firstIncompletePracticeId;
-              const isExpanded = isHighlighted || expandedPractices.includes(practice.id);
+              const isExpanded = expandedPractices.includes(practice.id);
 
               return (
-                <Card key={practice.id} className={`p-4 ${isHighlighted ? 'border-2 border-primary' : ''}`}>
+                <Card key={practice.id} className={`p-4`}>
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <Checkbox
@@ -103,7 +102,6 @@ const AgilePractices = ({ teamId, dayFilter, firstIncompletePracticeId }: AgileP
                       <div className="flex flex-col flex-1">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">{practice.action}</span>
-                          {!isHighlighted && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -116,7 +114,6 @@ const AgilePractices = ({ teamId, dayFilter, firstIncompletePracticeId }: AgileP
                                 <Plus className="h-4 w-4" />
                               )}
                             </Button>
-                          )}
                         </div>
                         {isExpanded && (
                           <>

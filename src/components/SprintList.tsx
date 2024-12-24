@@ -131,7 +131,7 @@ export const SprintList = () => {
                   <TableCell className="py-2">
                     {sprint.storyPointsCompleted !== undefined && sprint.storyPointsCompleted !== null ? 
                       `${sprint.storyPointsCompleted}/${sprint.storyPointsCommitted}` :
-                      `vide/${sprint.storyPointsCommitted}`
+                      `-/${sprint.storyPointsCommitted}`
                     }
                   </TableCell>
                   <TableCell className="py-2">
