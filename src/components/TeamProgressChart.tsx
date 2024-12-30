@@ -14,7 +14,6 @@ export const TeamProgressChart = () => {
 
   const managerTeams = teams.filter(team => team.managerId === managerId);
 
-  // Initialize with all manager's teams selected
   useEffect(() => {
     if (managerTeams.length > 0 && selectedTeams.length === 0) {
       setSelectedTeams(managerTeams.map(t => t.id));
@@ -49,12 +48,12 @@ export const TeamProgressChart = () => {
         {managerTeams.map((team) => (
           <div key={team.id} className="flex items-center space-x-2">
             <Checkbox
-              id={`team-${team.id}`}
+              id={`progress-team-${team.id}`}
               checked={selectedTeams.includes(team.id)}
               onCheckedChange={() => toggleTeam(team.id)}
             />
             <label
-              htmlFor={`team-${team.id}`}
+              htmlFor={`progress-team-${team.id}`}
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
               {team.name}

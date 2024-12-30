@@ -15,10 +15,10 @@ export const TeamsCommitmentChart = () => {
   const managerTeams = teams.filter(team => team.managerId === managerId);
 
   useEffect(() => {
-    if (managerTeams.length > 0) {
+    if (managerTeams.length > 0 && selectedTeams.length === 0) {
       setSelectedTeams(managerTeams.map(t => t.id));
     }
-  }, [managerTeams]);
+  }, [managerTeams, selectedTeams.length]);
 
   const toggleTeam = (teamId: string) => {
     setSelectedTeams(prev =>
@@ -50,12 +50,12 @@ export const TeamsCommitmentChart = () => {
         {managerTeams.map((team, index) => (
           <div key={team.id} className="flex items-center space-x-2">
             <Checkbox
-              id={`team-commitment-${team.id}`}
+              id={`commitment-team-${team.id}`}
               checked={selectedTeams.includes(team.id)}
               onCheckedChange={() => toggleTeam(team.id)}
             />
             <label
-              htmlFor={`team-commitment-${team.id}`}
+              htmlFor={`commitment-team-${team.id}`}
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               style={{ color: colors[index % colors.length] }}
             >
