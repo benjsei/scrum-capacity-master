@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useSprintStore } from '../store/sprintStore';
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { useManagerStore } from '../store/managerStore';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 export const ManagerCommitmentChart = () => {
   const { managers } = useManagerStore();
@@ -99,6 +99,17 @@ export const ManagerCommitmentChart = () => {
             <YAxis />
             <Tooltip />
             <Legend />
+            <ReferenceLine 
+              y={100} 
+              stroke="#666" 
+              strokeDasharray="5 5"
+              label={{ 
+                value: "100%", 
+                position: "right",
+                fill: "#666",
+                fontSize: 12
+              }}
+            />
             {selectedManagers.map((managerId, index) => {
               const managerData = getManagerCommitmentData(managerId);
               const manager = managers.find(m => m.id === managerId);
