@@ -33,7 +33,7 @@ export const TeamsCommitmentChart = () => {
       .filter(sprint => 
         sprint.teamId === teamId && 
         sprint.storyPointsCompleted !== undefined && 
-        sprint.isSuccessful
+        sprint.isSuccessful !== undefined
       )
       .map((sprint) => ({
         name: new Date(sprint.startDate).toLocaleDateString(),
