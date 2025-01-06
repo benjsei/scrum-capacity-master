@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSprintStore } from '../store/sprintStore';
 import { useScrumTeamStore } from '../store/scrumTeamStore';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useParams } from 'react-router-dom';
 
 export const TeamsCommitmentChart = () => {
@@ -75,6 +75,17 @@ export const TeamsCommitmentChart = () => {
             <YAxis />
             <Tooltip />
             <Legend />
+            <ReferenceLine 
+              y={100} 
+              stroke="#666" 
+              strokeDasharray="5 5"
+              label={{ 
+                value: "100%", 
+                position: "right",
+                fill: "#666",
+                fontSize: 12
+              }}
+            />
             {selectedTeams.map((teamId, index) => {
               const teamData = getTeamCommitmentData(teamId);
               const team = teams.find(t => t.id === teamId);
