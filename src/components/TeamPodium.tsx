@@ -13,7 +13,7 @@ export const TeamPodium = () => {
       .filter(s => 
         s.teamId === teamId && 
         s.velocityAchieved !== undefined && 
-        s.isSuccessful !== undefined
+        s.storyPointsCompleted !== undefined
       )
       .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
       .slice(0, 3); // Only take the last 3 sprints
