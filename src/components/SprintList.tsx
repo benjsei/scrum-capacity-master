@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,7 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SprintEditForm } from "./SprintEditForm";
-import { Badge } from "@/components/ui/badge";
+import { SprintStatusBadge } from "./sprint/SprintStatusBadge";
+import { calculateTotalCapacity, calculateVelocity } from "@/utils/sprintCalculations";
 
 export const SprintList = () => {
   const { getActiveTeamSprints, completeSprint, loadSprints } = useSprintStore();
@@ -42,20 +42,6 @@ export const SprintList = () => {
     toast.success("Sprint terminé avec succès!");
   };
 
-  const getSprintStatus = (sprint: any) => {
-    if (sprint.storyPointsCompleted === undefined || sprint.storyPointsCompleted === null) {
-      return 'En cours';
-    }
-    if (sprint.isSuccessful === true) {
-      return 'Succès';
-    }
-    if (sprint.isSuccessful === false) {
-      return 'Échec';
-    }
-    const commitmentPercentage = (sprint.storyPointsCompleted / sprint.storyPointsCommitted) * 100;
-    return commitmentPercentage >= 80 ? 'Succès' : 'Échec';
-  };
-
   const toggleObjective = (sprintId: string) => {
     setExpandedObjectives(prev => ({
       ...prev,
@@ -63,39 +49,11 @@ export const SprintList = () => {
     }));
   };
 
-  const calculateTotalCapacity = (sprint: any) => {
-    if (!sprint.resources || !Array.isArray(sprint.resources)) return 0;
-    
-    return sprint.resources.reduce((total, resource) => {
-      if (!resource.dailyCapacities) return total;
-      const resourceTotal = resource.dailyCapacities.reduce((sum, dc) => {
-        return sum + (dc?.capacity || 0);
-      }, 0);
-      return total + (resourceTotal || 0);
-    }, 0);
-  };
-
   const getProgressColor = (percentage: number) => {
     if (percentage > 100) return "bg-emerald-700";
     if (percentage >= 90) return "bg-emerald-500";
     if (percentage >= 70) return "bg-orange-500";
     return "bg-red-500";
-  };
-
-  const getStatusBadge = (sprint: any) => {
-    const status = getSprintStatus(sprint);
-    if (status === 'En cours') {
-      return (
-        <Badge variant="secondary" className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          En cours
-        </Badge>
-      );
-    }
-    if (status === 'Succès') {
-      return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-    }
-    return <XCircle className="h-5 w-5 text-red-500" />;
   };
 
   return (
@@ -138,11 +96,16 @@ export const SprintList = () => {
                     {sprint.theoreticalCapacity?.toFixed(1) || 'vide'}
                   </TableCell>
                   <TableCell className="py-2">
-                    {calculateTotalCapacity(sprint).toFixed(1) || 'vide'}
+                    {calculateTotalCapacity(sprint).toFixed(1)}
                   </TableCell>
                   <TableCell className="py-2">
-                    {sprint.velocityAchieved !== undefined && sprint.velocityAchieved !== null ? (
-                      <span>{sprint.velocityAchieved.toFixed(2)} SP/jour</span>
+                    {sprint.storyPointsCompleted !== undefined && sprint.storyPointsCompleted !== null ? (
+                      <span>
+                        {calculateVelocity(
+                          sprint.storyPointsCompleted,
+                          calculateTotalCapacity(sprint)
+                        ).toFixed(2)} SP/j/h
+                      </span>
                     ) : '-'}
                   </TableCell>
                   <TableCell className="py-2">
@@ -166,7 +129,7 @@ export const SprintList = () => {
                     )}
                   </TableCell>
                   <TableCell className="py-2">
-                    {getStatusBadge(sprint)}
+                    <SprintStatusBadge sprint={sprint} />
                   </TableCell>
                   <TableCell className="py-2">
                     <div className="space-y-2">
@@ -217,7 +180,7 @@ export const SprintList = () => {
                           </Button>
                           {expandedObjectives[sprint.id] && (
                             <>
-                              <div className="text-sm mt-1">{sprint.objective || 'vide'}</div>
+                              <div className="text-sm mt-1">{sprint.objective}</div>
                               <div className={cn(
                                 "text-sm font-medium",
                                 sprint.objectiveAchieved ? "text-green-600" : "text-red-600"
