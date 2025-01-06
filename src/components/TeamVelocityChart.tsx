@@ -28,7 +28,10 @@ export const TeamVelocityChart = () => {
     );
   };
 
-  const allDates = [...new Set(sprints.map(sprint => sprint.startDate))].sort();
+  const allDates = [...new Set(sprints
+    .filter(sprint => sprint.velocityAchieved !== undefined && sprint.isSuccessful)
+    .map(sprint => sprint.startDate))]
+    .sort();
   
   const data = allDates
     .map(date => {
@@ -40,7 +43,8 @@ export const TeamVelocityChart = () => {
         const teamSprint = sprints.find(sprint => 
           sprint.teamId === team.id && 
           sprint.startDate === date &&
-          sprint.velocityAchieved !== undefined
+          sprint.velocityAchieved !== undefined &&
+          sprint.isSuccessful
         );
         if (teamSprint) {
           dataPoint[team.id] = teamSprint.velocityAchieved;

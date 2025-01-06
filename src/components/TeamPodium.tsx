@@ -9,7 +9,15 @@ export const TeamPodium = () => {
   const { managerId } = useParams();
 
   const calculateTeamVelocity = (teamId: string) => {
-    const teamSprints = sprints.filter(s => s.teamId === teamId && s.velocityAchieved !== undefined);
+    const teamSprints = sprints
+      .filter(s => 
+        s.teamId === teamId && 
+        s.velocityAchieved !== undefined && 
+        s.isSuccessful
+      )
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+      .slice(0, 3); // Only take the last 3 sprints
+
     if (teamSprints.length === 0) return 0;
     
     const totalVelocity = teamSprints.reduce((acc, sprint) => acc + (sprint.velocityAchieved || 0), 0);
