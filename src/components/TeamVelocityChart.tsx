@@ -5,6 +5,7 @@ import { useSprintStore } from '../store/sprintStore';
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useParams } from 'react-router-dom';
+import { calculateVelocity, calculateTotalCapacity } from '@/utils/sprintCalculations';
 
 export const TeamVelocityChart = () => {
   const { sprints } = useSprintStore();
@@ -29,7 +30,7 @@ export const TeamVelocityChart = () => {
   };
 
   const allDates = [...new Set(sprints
-    .filter(sprint => sprint.velocityAchieved !== undefined && sprint.storyPointsCompleted !== undefined)
+    .filter(sprint => sprint.storyPointsCompleted !== undefined && sprint.storyPointsCompleted !== null)
     .map(sprint => sprint.startDate))]
     .sort();
   
@@ -43,11 +44,12 @@ export const TeamVelocityChart = () => {
         const teamSprint = sprints.find(sprint => 
           sprint.teamId === team.id && 
           sprint.startDate === date &&
-          sprint.velocityAchieved !== undefined &&
-          sprint.storyPointsCompleted !== undefined
+          sprint.storyPointsCompleted !== undefined &&
+          sprint.storyPointsCompleted !== null
         );
         if (teamSprint) {
-          dataPoint[team.id] = teamSprint.velocityAchieved;
+          const totalPersonDays = calculateTotalCapacity(teamSprint);
+          dataPoint[team.id] = calculateVelocity(teamSprint.storyPointsCompleted!, totalPersonDays);
         }
       });
       return dataPoint;
@@ -62,7 +64,7 @@ export const TeamVelocityChart = () => {
 
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Vélocité par équipe (SP/JH)</h3>
+      <h3 className="text-lg font-semibold mb-4">Vélocité par équipe (SP/j/h)</h3>
       <div className="flex flex-wrap gap-4 mb-4">
         {managerTeams.map((team, index) => (
           <div key={team.id} className="flex items-center space-x-2">

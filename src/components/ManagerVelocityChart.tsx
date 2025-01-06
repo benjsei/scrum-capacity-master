@@ -5,6 +5,7 @@ import { useManagerStore } from '../store/managerStore';
 import { useSprintStore } from '../store/sprintStore';
 import { useScrumTeamStore } from '../store/scrumTeamStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { calculateVelocity, calculateTotalCapacity } from '@/utils/sprintCalculations';
 
 export const ManagerVelocityChart = () => {
   const { managers } = useManagerStore();
@@ -24,7 +25,10 @@ export const ManagerVelocityChart = () => {
     );
   };
 
-  const allDates = [...new Set(sprints.map(sprint => sprint.startDate))].sort();
+  const allDates = [...new Set(sprints
+    .filter(sprint => sprint.storyPointsCompleted !== undefined && sprint.storyPointsCompleted !== null)
+    .map(sprint => sprint.startDate))]
+    .sort();
   
   const data = allDates
     .map(date => {
@@ -38,13 +42,16 @@ export const ManagerVelocityChart = () => {
         const teamSprints = sprints.filter(sprint => 
           managerTeams.some(team => team.id === sprint.teamId) &&
           sprint.startDate === date &&
-          sprint.velocityAchieved !== undefined
+          sprint.storyPointsCompleted !== undefined &&
+          sprint.storyPointsCompleted !== null
         );
         
         if (teamSprints.length > 0) {
-          const avgVelocity = teamSprints.reduce((sum, sprint) => 
-            sum + (sprint.velocityAchieved || 0), 0) / teamSprints.length;
-          dataPoint[manager.id] = Math.round(avgVelocity * 100) / 100;
+          const totalVelocity = teamSprints.reduce((sum, sprint) => {
+            const totalPersonDays = calculateTotalCapacity(sprint);
+            return sum + calculateVelocity(sprint.storyPointsCompleted!, totalPersonDays);
+          }, 0);
+          dataPoint[manager.id] = totalVelocity / teamSprints.length;
         }
       });
       
@@ -54,12 +61,12 @@ export const ManagerVelocityChart = () => {
     .map(({ date, originalDate, ...rest }) => ({ date, ...rest }));
 
   const colors = [
-    '#1E40AF', '#15803D', '#B91C1C', '#6B21A8', '#C2410C',
-    '#0369A1', '#047857', '#BE123C', '#7E22CE', '#EA580C'
+    '#EA580C', '#2563EB', '#16A34A', '#9333EA', '#DB2777'
   ];
 
   return (
     <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">Vélocité moyenne par manager (SP/j/h)</h3>
       <div className="flex flex-wrap gap-4 mb-4">
         {managers.map((manager, index) => (
           <div key={manager.id} className="flex items-center space-x-2">
